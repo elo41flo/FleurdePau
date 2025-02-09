@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panier - Ma Boutique Crochet</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Raleway', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        /* Header & Menu */
+        header {
+            background-color: #fff;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        header .logo {
+            font-size: 2rem;
+            color: #742a08;
+            font-weight: bold;
+        }
+        nav {
+            margin-top: 10px;
+        }
+        nav a {
+            text-decoration: none;
+            color: #742a08;
+            margin: 0 1rem;
+            font-weight: bold;
+            padding: 0.5rem;
+            transition: 0.3s;
+        }
+        nav a:hover {
+            background-color: #742a08;
+            color: #fff;
+        }
+        /* Section Panier */
+        section#panier {
+            padding: 30px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .panier-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .panier-item h3 {
+            margin: 0;
+        }
+        .panier-item .prix {
+            font-size: 1.2rem;
+            color: #742a08;
+        }
+        .panier-item button {
+            background-color: #742a08;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .panier-item button:hover {
+            background-color: #a44b4b;
+        }
+        #total {
+            margin-top: 30px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #742a08;
+        }
+        .cta-btn {
+            text-decoration: none;
+            background-color: #742a08;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">Ma Boutique Crochet</div>
+        <nav>
+            <a href="index.html">Accueil</a>
+            <a href="produits.html">Produits</a>
+        </nav>
+    </header>
+
+    <!-- Section Panier -->
+    <section id="panier">
+        <h2>Votre Panier</h2>
+        <div id="panier-list">
+            <!-- Les produits ajoutés au panier apparaîtront ici -->
+        </div>
+        <div id="total">
+            Total: €0.00
+        </div>
+        <a href="#" class="cta-btn" onclick="passerCommande()">Passer à la caisse</a>
+    </section>
+
+    <script>
+        // Récupération du panier dans le localStorage
+        let panier = JSON.parse(localStorage.getItem('panier')) || [];
+        const panierList = document.getElementById('panier-list');
+        const totalElement = document.getElementById('total');
+        
+        // Affichage des produits du panier
+        panier.forEach(item => {
+            const div = document.createElement('div');
+            div.classList.add('panier-item');
+            div.innerHTML = `
+                <h3>${item.nom}</h3>
+                <p class="prix">€${item.prix}</p>
+                <button onclick="retirerDuPanier('${item.nom}')">Retirer</button>
+            `;
+            panierList.appendChild(div);
+        });
+
+        // Calcul du total
+        let total = panier.reduce((acc, item) => acc + item.prix, 0);
+        totalElement.innerText = `Total: €${total.toFixed(2)}`;
+
+        // Retirer un produit du panier
+        function retirerDuPanier(nomProduit) {
+            panier = panier.filter(item => item.nom !== nomProduit);
+            localStorage.setItem('panier', JSON.stringify(panier));
+            location.reload();  // Recharger pour mettre à jour la page
+        }
+
+        // Passer à la caisse
+        function passerCommande() {
+            alert("Commande passée !"); // Remplacer par une logique réelle de paiement
+            localStorage.removeItem('panier');  // Vider le panier après commande
+            location.reload();  // Recharger la page
+        }
+    </script>
+</body>
+</html>

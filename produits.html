@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gestion des Produits</title>
+    <style>
+        /* Style simple pour la page admin-produits */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        nav {
+            background-color: #444;
+            overflow: hidden;
+        }
+
+        nav a {
+            color: white;
+            padding: 14px 20px;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .form-container input, .form-container textarea, .form-container button {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-container button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        .form-container button:hover {
+            background-color: #45a049;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: #333;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Admin - Gestion des Produits</h1>
+    </header>
+
+    <!-- Menu de navigation -->
+    <nav>
+        <a href="admin.html">Accueil Admin</a>
+        <a href="commandes.html">Commandes</a> <!-- Lien vers la page des commandes -->
+        <a href="produits.html">Produits</a>  <!-- Lien vers la page des produits -->
+    </nav>
+
+    <main>
+        <div class="form-container">
+            <h2>Ajouter un Produit</h2>
+            <form id="produit-form">
+                <label for="nom">Nom du produit</label>
+                <input type="text" id="nom" name="nom" required />
+
+                <label for="categorie">Couleur</label>
+                <input type="text" id="categorie" name="categorie" required />
+
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="4" required></textarea>
+
+                <label for="prix">Prix</label>
+                <input type="number" id="prix" name="prix" step="0.01" required />
+
+                <label for="imageUrl">URL de l'image</label>
+                <input type="url" id="imageUrl" name="imageUrl" required />
+
+                <button type="submit">Ajouter le produit</button>
+            </form>
+        </div>
+
+        <div class="produits-list">
+            <h2>Liste des Produits</h2>
+            <!-- La liste des produits s'affichera ici après avoir ajouté des produits dans Firestore -->
+            <div id="produits-container"></div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 Fleur de Pau - Tous droits réservés</p>
+    </footer>
+
+    <script type="module">
+        // Importer Firebase et Firestore
+        import { db } from './firebase-config.js';
+        import { collection, addDoc, getDocs } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js';
+
+        // Références aux éléments du DOM
+        const produitForm = document.getElementById('produit-form');
+        const produitsContainer = document.getElementById('produits-container');
+
+        // Fonction pour ajouter un produit
+        const ajouterProduit = async (nom, categorie, description, prix, imageUrl) => {
+            try {
+                const docRef = await addDoc(collection(db, 'produits'), {
+                    nom: nom,
+                    categorie: categorie,  // Utiliser la variable correcte ici
+                    description: description,
+                    prix: prix,
+                    imageUrl: imageUrl
+                });
+                console.log("Produit ajouté avec ID: ", docRef.id);
+                afficherProduits();
+            } catch (e) {
+                console.error("Erreur lors de l'ajout du produit: ", e);
+            }
+        };
+
+        // Fonction pour afficher la liste des produits
+        const afficherProduits = async () => {
+            produitsContainer.innerHTML = ''; // Effacer le contenu précédent
+            try {
+                const querySnapshot = await getDocs(collection(db, 'produits'));
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const produitCard = document.createElement('div');
+                    produitCard.classList.add('produit-card');
+                    produitCard.innerHTML = `
+                        <h3>${data.nom}</h3>
+                        <p><strong>Couleur :</strong> ${data.categorie}</p>
+                        <p><strong>Description :</strong> ${data.description}</p>
+                        <p><strong>Prix :</strong> ${data.prix}€</p>
+                        <img src="${data.imageUrl}" alt="${data.nom}" style="width: 100px; height: 100px; object-fit: cover;">
+                    `;
+                    produitsContainer.appendChild(produitCard);
+                });
+            } catch (e) {
+                console.error("Erreur lors de la récupération des produits: ", e);
+            }
+        };
+
+        // Écouteur d'événements pour le formulaire d'ajout de produit
+        produitForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nom = e.target.nom.value;
+            const categorie = e.target.categorie.value;  // Récupérer la catégorie/couleur
+            const description = e.target.description.value;
+            const prix = e.target.prix.value;
+            const imageUrl = e.target.imageUrl.value;
+
+            // Ajouter le produit à Firestore
+            ajouterProduit(nom, categorie, description, prix, imageUrl);
+
+            // Réinitialiser le formulaire
+            e.target.reset();
+        });
+
+        // Afficher les produits au chargement de la page
+        window.onload = afficherProduits;
+    </script>
+</body>
+</html>

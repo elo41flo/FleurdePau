@@ -3,50 +3,329 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="index.css">
+    <title>Créations au Crochet - Artisanat Unique</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Raleway:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <title>Fleur de Pau - Page d'accueil</title>
+
+    <style>
+        /* Importation des polices */
+body {
+    margin: 0;
+    font-family: 'Raleway', sans-serif;
+    color: #333;
+    line-height: 1.6;
+    background-color: #f8f8f8;
+}
+
+header {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.logo {
+    font-family: 'Pacifico', cursive;
+    font-size: 1.8rem;
+    color: #444;
+    text-align: center;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+}
+
+nav ul li {
+    margin: 0 1rem;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: #555;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+nav ul li a:hover {
+    color: #d85c5c;
+}
+
+.hero {
+    background-image: url('images/téléchargement.jpg'); /* Chemin vers ton image */
+    background-size: cover; /* Ajuste l'image pour couvrir toute la section */
+    background-position: center; /* Centre l'image */
+    background-repeat: no-repeat; /* Empêche la répétition de l'image */
+    color: #fff; /* Assure que le texte reste lisible */
+    text-align: center; /* Centre le texte */
+    padding: 100px 20px; /* Ajoute de l'espace autour du contenu */
+}
+
+
+.hero-title {
+    font-size: 2.5rem;
+    color: #ffffff;
+    margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    color: #ffffff;
+    margin-bottom: 2rem;
+}
+
+.btn {
+    display: inline-block;
+    background-color: #5e380c;
+    color: #fff;
+    padding: 0.8rem 1.5rem;
+    text-decoration: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: #a44b4b;
+}
+
+.about, .creations, .contact {
+    padding: 2rem 0;
+    text-align: center;
+}
+
+h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #444;
+}
+
+.grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    text-align: center;
+    max-width: 300px;
+}
+
+.card img {
+    width: 100%;
+    border-radius: 10px;
+}
+
+.card h3 {
+    font-size: 1.2rem;
+    color: #444;
+    margin: 1rem 0;
+}
+
+footer {
+    text-align: center;
+    padding: 1rem;
+    background-color: #333;
+    color: #fff;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cart-icon {
+    position: relative;
+}
+
+.cart-icon a {
+    color: #555;
+    text-decoration: none;
+    font-size: 1.5rem;
+    position: relative;
+}
+
+.cart-icon a:hover {
+    color: #d85c5c;
+}
+
+.cart-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #d85c5c;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border-radius: 50%;
+    padding: 2px 6px;
+    display: inline-block;
+}
+
+/* ----- Responsive Styles ----- */
+
+/* Styles pour les petits écrans (smartphones) */
+@media (max-width: 768px) {
+    .logo {
+        font-size: 1.5rem;
+    }
+    nav ul {
+        flex-direction: column;
+    }
+    nav ul li {
+        margin: 1rem 0;
+    }
+    .hero {
+        padding: 50px 20px;
+    }
+    .hero-title {
+        font-size: 2rem;
+    }
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    .btn {
+        padding: 0.8rem 1rem;
+        font-size: 0.9rem;
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Deux éléments par ligne */
+        gap: 1rem;
+    }
+    .card {
+        width: 100%;
+        max-width: none;
+    }
+    footer {
+        font-size: 0.9rem;
+    }
+
+    /* Section Créations responsive */
+    .creations .grid {
+        grid-template-columns: 1fr 1fr; /* 2 créations par ligne */
+        gap: 1.2rem;
+    }
+
+    .creations .card {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+/* Styles pour les écrans moyens (tablettes) */
+@media (max-width: 1024px) {
+    .hero-title {
+        font-size: 2.2rem;
+    }
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr; /* Trois éléments par ligne */
+        gap: 1.5rem;
+    }
+    .card {
+        width: 100%;
+    }
+    footer {
+        font-size: 1rem;
+    }
+
+    /* Section Créations responsive */
+    .creations .grid {
+        grid-template-columns: 1fr 1fr 1fr; /* 3 créations par ligne */
+        gap: 1.5rem;
+    }
+    .creations .card {
+        width: 100%;
+    }
+}
+
+/* Styles pour les grands écrans (ordinateurs de bureau) */
+@media (min-width: 1200px) {
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr; /* Quatre éléments par ligne */
+        gap: 2rem;
+    }
+
+    /* Section Créations responsive */
+    .creations .grid {
+        grid-template-columns: 1fr 1fr 1fr 1fr; /* 4 créations par ligne */
+        gap: 2rem;
+    }
+}
+    </style>
 </head>
 <body>
     <header class="header">
         <div class="container">
             <div class="header-content">
-                <h1 class="logo">Fleur de Pau</h1>
+                <h1 class="logo">Fleur De Pau</h1>
                 <nav>
                     <ul>
                         <li><a href="index.html">Accueil</a></li>
-                        <li><a href="boutique.html">Mes créations</a></li>
+                        <li><a href="boutique.html">Boutique</a></li>
                         <li><a href="contact.html">Contact</a></li>
                     </ul>
                 </nav>
                 <div class="cart-icon">
-                    <a href="panier.html">
+                    <a href="cart.html">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="cart-count">0</span>
                     </a>
                 </div>
             </div>
         </div>
-    </header>
-
+    </header>    
+    
     <main>
         <section class="hero">
             <h2 class="hero-title">L'Art du Crochet, fait avec passion</h2>
             <p class="hero-subtitle">Découvrez des pièces uniques, faites à la main, pour embellir votre quotidien.</p>
             <a href="boutique.html" class="btn">Explorer les créations</a>
-        </section>
+        </section>        
 
         <section id="about" class="about">
             <div class="container">
                 <h2>À propos</h2>
-                <p>Bienvenue dans mon univers ! Je suis une artisante passionnée, spécialisée dans la création au crochet. Chaque pièce est réalisée avec soin et amour pour apporter une touche de douceur et d'originalité à votre maison.</p>
+                <p>Bienvenue dans mon univers ! Je suis une artisane passionnée, spécialisée dans la création au crochet. Chaque pièce est réalisée avec soin et amour pour apporter une touche de douceur et d'originalité à votre maison.</p>
             </div>
         </section>
+        <section class="image-section">
+            <div class="container">
+                <center><img src="images\Моток пряжи.jpg" alt="Création artisanale" style="width: 50%; max-width: 1200px; border-radius: 10px;"></center>
+            </div>
+        </section>
+        <section id="contact" class="contact">
+            <div class="container">
+                <h2>Contact</h2>
+                <p>Pour toute question ou commande personnalisée, n'hésitez pas à me contacter :</p>
+                <a href="mailto:artisan@crochet.com" class="btn">Me contacter</a>
+            </div>
+        </section>
+    </main>
 
     <footer class="footer">
         <p>© 2025 Fleur de Pau - Tous droits réservés</p>
     </footer>
-
-    <script src="index.js"></script>
 </body>
 </html>

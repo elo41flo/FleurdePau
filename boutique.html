@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produits - Ma Boutique Crochet</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Raleway', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        /* Header & Menu */
+        header {
+            background-color: #fff;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        header .logo {
+            font-size: 2rem;
+            color: #742a08;
+            font-weight: bold;
+        }
+        nav {
+            margin-top: 10px;
+        }
+        nav a {
+            text-decoration: none;
+            color: #742a08;
+            margin: 0 1rem;
+            font-weight: bold;
+            padding: 0.5rem;
+            transition: 0.3s;
+        }
+        nav a:hover {
+            background-color: #742a08;
+            color: #fff;
+        }
+        /* Section des produits */
+        #produits {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 30px;
+        }
+        .produit-card {
+            background-color: #fff;
+            width: 220px;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .produit-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .produit-card h3 {
+            font-size: 1.2rem;
+            color: #333;
+            margin: 10px 0;
+        }
+        .produit-card p {
+            color: #777;
+            margin-bottom: 10px;
+        }
+        .produit-card button {
+            background-color: #742a08;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .produit-card button:hover {
+            background-color: #a44b4b;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">Ma Boutique Crochet</div>
+        <nav>
+            <a href="index.html">Accueil</a>
+            <a href="panier.html">Panier</a>
+        </nav>
+    </header>
+
+    <!-- Section des produits -->
+    <section id="produits">
+        <div class="produit-card">
+            <img src="produit1.jpg" alt="Produit 1">
+            <h3>Chapeau en Crochet</h3>
+            <p>Un magnifique chapeau fait main, idéal pour l'été !</p>
+            <p class="price">€25,00</p>
+            <button onclick="ajouterPanier('Chapeau en Crochet', 25)">Ajouter au panier</button>
+        </div>
+        <div class="produit-card">
+            <img src="produit2.jpg" alt="Produit 2">
+            <h3>Paniers en Crochet</h3>
+            <p>Des paniers pratiques et décoratifs pour tous les jours.</p>
+            <p class="price">€35,00</p>
+            <button onclick="ajouterPanier('Panier en Crochet', 35)">Ajouter au panier</button>
+        </div>
+        <!-- Ajoutez d'autres produits ici -->
+    </section>
+
+    <script>
+        let panier = [];
+
+        function ajouterPanier(nomProduit, prix) {
+            panier.push({ nom: nomProduit, prix: prix });
+            alert(nomProduit + " ajouté au panier !");
+            localStorage.setItem('panier', JSON.stringify(panier));  // Sauvegarde dans le localStorage
+        }
+    </script>
+</body>
+</html>
