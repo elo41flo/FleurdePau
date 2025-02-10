@@ -3,68 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panier - Ma Boutique Crochet</title>
+    <title>Panier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Raleway:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Global Styles */
         body {
-            font-family: 'Raleway', sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
+            font-family: 'Raleway', sans-serif;
             color: #333;
+            line-height: 1.6;
+            background-color: #f8f8f8;
         }
-        /* Header & Menu */
+        
         header {
             background-color: #fff;
-            padding: 20px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            font-family: 'Pacifico', cursive;
+            font-size: 1.8rem;
+            color: #444;
             text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        header .logo {
-            font-size: 2rem;
-            color: #742a08;
-            font-weight: bold;
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            padding: 0;
         }
-        nav {
-            margin-top: 10px;
-        }
-        nav a {
-            text-decoration: none;
-            color: #742a08;
+        
+        nav ul li {
             margin: 0 1rem;
+        }
+        
+        nav ul li a {
+            text-decoration: none;
+            color: #555;
             font-weight: bold;
-            padding: 0.5rem;
-            transition: 0.3s;
+            transition: color 0.3s;
         }
-        nav a:hover {
-            background-color: #742a08;
-            color: #fff;
+        
+        nav ul li a:hover {
+            color: #d85c5c;
         }
+
+        /* Icônes */
+        #logout-icon, #cart-icon {
+            font-size: 24px; /* Taille des icônes */
+            color: #333; /* Couleur des icônes */
+            cursor: pointer; /* Pour indiquer qu'elles sont cliquables */
+        }
+        
+        /* Icône de déconnexion au survol */
+        #logout-icon:hover {
+            color: #d85c5c; /* Couleur au survol pour la déconnexion */
+        }
+        
+        /* Icône du panier au survol */
+        #cart-icon:hover {
+            color: #5e380c; /* Couleur au survol pour le panier */
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-icons {
+            position: absolute;
+            top: 20px; /* Ajuste si nécessaire en fonction de ton design */
+            right: 10px; /* Ajuste pour l'aligner avec ton panier */
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 10; /* Pour qu'elle soit au-dessus des autres éléments */
+        }
+        
         /* Section Panier */
         section#panier {
-            padding: 30px;
+            padding: 100px 20px 30px; /* Ajusté pour éviter le chevauchement avec le menu */
             max-width: 900px;
             margin: 0 auto;
         }
+        h2 {
+            text-align: center;
+            color: #742a08;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
         .panier-item {
             padding: 15px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             background-color: #fff;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .panier-item h3 {
             margin: 0;
+            font-size: 1.2rem;
         }
         .panier-item .prix {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: #742a08;
+            font-weight: bold;
         }
         .panier-item button {
             background-color: #742a08;
             color: white;
-            padding: 10px 20px;
+            padding: 8px 15px;
             border: none;
             border-radius: 4px;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: background-color 0.3s;
         }
@@ -73,28 +140,57 @@
         }
         #total {
             margin-top: 30px;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: bold;
+            text-align: center;
             color: #742a08;
         }
         .cta-btn {
+            display: block;
             text-decoration: none;
             background-color: #742a08;
             color: white;
             padding: 12px 30px;
             border-radius: 5px;
             font-weight: bold;
+            text-align: center;
+            margin: 20px auto 0;
+            width: fit-content;
+            transition: background-color 0.3s;
+        }
+        .cta-btn:hover {
+            background-color: #a44b4b;
         }
     </style>
 </head>
 <body>
     <!-- Header -->
-    <header>
-        <div class="logo">Ma Boutique Crochet</div>
-        <nav>
-            <a href="index.html">Accueil</a>
-            <a href="produits.html">Produits</a>
-        </nav>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo">Fleur De Pau</h1>
+                <nav>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="boutique.html">Boutique</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </nav>
+                <section id="header-icons" class="header-icons">
+                    <!-- Icône de déconnexion avant -->
+                    <i class="fas fa-sign-out-alt" id="logout-icon"></i>
+                    
+                    <!-- Icône du panier après -->
+                    <!-- Icône du panier -->
+                    <div class="cart-icon">
+                        <a href="panier.html">  <!-- Modifié ici pour rediriger vers "panier.html" -->
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count">0</span>
+                        </a>
+                    </div>
+                </section>
+            </div>
+        </div>
     </header>
 
     <!-- Section Panier -->
@@ -106,7 +202,7 @@
         <div id="total">
             Total: €0.00
         </div>
-        <a href="#" class="cta-btn" onclick="passerCommande()">Passer à la caisse</a>
+        <a href="paiement.html" class="cta-btn" id="checkout-button">Passer à la caisse</a>
     </section>
 
     <script>
@@ -114,7 +210,8 @@
         let panier = JSON.parse(localStorage.getItem('panier')) || [];
         const panierList = document.getElementById('panier-list');
         const totalElement = document.getElementById('total');
-        
+        const checkoutButton = document.getElementById('checkout-button');
+
         // Affichage des produits du panier
         panier.forEach(item => {
             const div = document.createElement('div');
@@ -135,15 +232,19 @@
         function retirerDuPanier(nomProduit) {
             panier = panier.filter(item => item.nom !== nomProduit);
             localStorage.setItem('panier', JSON.stringify(panier));
-            location.reload();  // Recharger pour mettre à jour la page
+            location.reload(); // Recharger pour mettre à jour la page
         }
 
-        // Passer à la caisse
-        function passerCommande() {
-            alert("Commande passée !"); // Remplacer par une logique réelle de paiement
-            localStorage.removeItem('panier');  // Vider le panier après commande
-            location.reload();  // Recharger la page
-        }
+        // Rediriger vers la page de paiement
+        checkoutButton.addEventListener('click', () => {
+            if (panier.length === 0) {
+                alert("Votre panier est vide. Ajoutez des produits avant de passer à la caisse.");
+                return false;
+            }
+
+            // Sauvegarder le montant total dans localStorage pour l'utiliser dans checkout.html
+            localStorage.setItem('total', total);
+        });
     </script>
 </body>
 </html>

@@ -3,50 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Produits - Ma Boutique Crochet</title>
+    <title>Boutique</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Raleway:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Global Styles */
         body {
-            font-family: 'Raleway', sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
+            font-family: 'Raleway', sans-serif;
             color: #333;
+            line-height: 1.6;
+            background-color: #f8f8f8;
         }
-        /* Header & Menu */
+        
         header {
             background-color: #fff;
-            padding: 20px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            font-family: 'Pacifico', cursive;
+            font-size: 1.8rem;
+            color: #444;
             text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        header .logo {
-            font-size: 2rem;
-            color: #742a08;
-            font-weight: bold;
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            padding: 0;
         }
-        nav {
-            margin-top: 10px;
-        }
-        nav a {
-            text-decoration: none;
-            color: #742a08;
+        
+        nav ul li {
             margin: 0 1rem;
+        }
+        
+        nav ul li a {
+            text-decoration: none;
+            color: #555;
             font-weight: bold;
-            padding: 0.5rem;
-            transition: 0.3s;
+            transition: color 0.3s;
         }
-        nav a:hover {
-            background-color: #742a08;
-            color: #fff;
+        
+        nav ul li a:hover {
+            color: #d85c5c;
         }
+
+        /* Icônes */
+        #logout-icon, #cart-icon {
+            font-size: 24px; /* Taille des icônes */
+            color: #333; /* Couleur des icônes */
+            cursor: pointer; /* Pour indiquer qu'elles sont cliquables */
+        }
+        
+        /* Icône de déconnexion au survol */
+        #logout-icon:hover {
+            color: #d85c5c; /* Couleur au survol pour la déconnexion */
+        }
+        
+        /* Icône du panier au survol */
+        #cart-icon:hover {
+            color: #5e380c; /* Couleur au survol pour le panier */
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-icons {
+            position: absolute;
+            top: 20px; /* Ajuste si nécessaire en fonction de ton design */
+            right: 10px; /* Ajuste pour l'aligner avec ton panier */
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 10; /* Pour qu'elle soit au-dessus des autres éléments */
+        }
+
         /* Section des produits */
         #produits {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
             gap: 20px;
-            padding: 30px;
+            padding: 100px 20px 30px; /* Ajustement pour éviter le chevauchement avec le header */
         }
         .produit-card {
             background-color: #fff;
@@ -56,6 +110,10 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
             transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .produit-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         }
         .produit-card img {
             width: 100%;
@@ -72,6 +130,12 @@
             color: #777;
             margin-bottom: 10px;
         }
+        .produit-card .price {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #742a08;
+            margin-bottom: 10px;
+        }
         .produit-card button {
             background-color: #742a08;
             color: white;
@@ -84,16 +148,131 @@
         .produit-card button:hover {
             background-color: #a44b4b;
         }
+
+         /* Styles pour les petits écrans (smartphones) */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.5rem;
+            }
+            nav ul {
+                flex-direction: column;
+            }
+            nav ul li {
+                margin: 1rem 0;
+            }
+            .hero {
+                padding: 50px 20px;
+            }
+            .hero-title {
+                font-size: 2rem;
+            }
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+            .btn {
+                padding: 0.8rem 1rem;
+                font-size: 0.9rem;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr; /* Deux éléments par ligne */
+                gap: 1rem;
+            }
+            .card {
+                width: 100%;
+                max-width: none;
+            }
+            footer {
+                font-size: 0.9rem;
+            }
+            /* Section Créations responsive */
+            .creations .grid {
+                grid-template-columns: 1fr 1fr; /* 2 créations par ligne */
+                gap: 1.2rem;
+            }
+        
+            .creations .card {
+                width: 100%;
+                max-width: none;
+            }
+        }
+        
+        /* Styles pour les écrans moyens (tablettes) */
+        @media (max-width: 1024px) {
+            .hero-title {
+                font-size: 2.2rem;
+            }
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr; /* Trois éléments par ligne */
+                gap: 1.5rem;
+            }
+            .card {
+                width: 100%;
+            }
+            footer {
+                font-size: 1rem;
+            }
+        
+            /* Section Créations responsive */
+            .creations .grid {
+                grid-template-columns: 1fr 1fr 1fr; /* 3 créations par ligne */
+                gap: 1.5rem;
+            }
+            .creations .card {
+                width: 100%;
+            }
+        }
+        
+        /* Styles pour les grands écrans (ordinateurs de bureau) */
+        @media (min-width: 1200px) {
+            .grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr 1fr; /* Quatre éléments par ligne */
+                gap: 2rem;
+            }
+        
+            /* Section Créations responsive */
+            .creations .grid {
+                grid-template-columns: 1fr 1fr 1fr 1fr; /* 4 créations par ligne */
+                gap: 2rem;
+            }
+        }
     </style>
 </head>
 <body>
     <!-- Header -->
-    <header>
-        <div class="logo">Ma Boutique Crochet</div>
-        <nav>
-            <a href="index.html">Accueil</a>
-            <a href="panier.html">Panier</a>
-        </nav>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo">Fleur De Pau</h1>
+                <nav>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="boutique.html">Boutique</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </nav>
+                <section id="header-icons" class="header-icons">
+                    <!-- Icône de déconnexion avant -->
+                    <i class="fas fa-sign-out-alt" id="logout-icon"></i>
+                    
+                    <!-- Icône du panier après -->
+                    <!-- Icône du panier -->
+                    <div class="cart-icon">
+                        <a href="panier.html">  <!-- Modifié ici pour rediriger vers "panier.html" -->
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count">0</span>
+                        </a>
+                    </div>
+                </section>
+            </div>
+        </div>
     </header>
 
     <!-- Section des produits -->
@@ -116,7 +295,8 @@
     </section>
 
     <script>
-        let panier = [];
+        // Charger le panier existant depuis le localStorage
+        let panier = JSON.parse(localStorage.getItem('panier')) || [];
 
         function ajouterPanier(nomProduit, prix) {
             panier.push({ nom: nomProduit, prix: prix });
@@ -126,3 +306,4 @@
     </script>
 </body>
 </html>
+
