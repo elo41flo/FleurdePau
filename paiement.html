@@ -3,52 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paiement - Ma Boutique Crochet</title>
+    <title>Paiement</title>
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;600&family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://www.paypal.com/sdk/js?client-id=AYouHwrSsZYBHQDxKiOJO9_Z1vJ5Iz-PQysXibK9UyuIPtYYsjdqu0diibcE6F8C4l7xWc5PCh7AY33m&currency=EUR"></script>
     <style>
         /* Global Styles */
         body {
-            font-family: 'Raleway', sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
+            font-family: 'Raleway', sans-serif;
             color: #333;
+            line-height: 1.6;
+            background-color: #f8f8f8;
         }
-
-        /* Header & Menu */
+        
         header {
-            background-color: #742a08;
-            color: #fff;
-            padding: 15px 0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            position: fixed;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            position: sticky;
             top: 0;
-            width: 100%;
             z-index: 1000;
         }
-        header .logo {
-            font-family: 'Pacifico', cursive;
-            font-size: 2rem;
-            text-align: center;
-            color: #fff;
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
         }
-        nav {
+        
+        .logo {
+            font-family: 'Pacifico', cursive;
+            font-size: 1.8rem;
+            color: #444;
+            text-align: center;
+        }
+        
+        nav ul {
+            list-style: none;
+            padding: 0;
             display: flex;
             justify-content: center;
-            margin-top: 10px;
+            gap: 20px;
         }
-        nav a {
+    
+        nav ul li {
+            margin: 0;
+        }
+    
+        nav ul li a {
             text-decoration: none;
-            color: #fff;
-            margin: 0 15px;
+            color: #333; /* Couleur initiale noire */
             font-weight: bold;
-            padding: 8px 12px;
-            border-radius: 5px;
-            transition: background-color 0.3s;
+            font-size: 1rem;
+            position: relative;
+            transition: color 0.3s ease; /* Transition fluide pour la couleur */
         }
-        nav a:hover {
-            background-color: #a44b4b;
+    
+        /* Couleur marron sur hover */
+        nav ul li a:hover {
+            color: #742a08; /* Couleur marron */
+        }
+        
+        .header-icons {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-icons i {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .header-icons i:hover {
+            color: #d85c5c;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Icônes */
+        #logout-icon, #cart-icon {
+            font-size: 24px; /* Taille des icônes */
+            color: #333; /* Couleur des icônes */
+            cursor: pointer; /* Pour indiquer qu'elles sont cliquables */
+        }
+        
+        /* Icône de déconnexion au survol */
+        #logout-icon:hover {
+            color: #d85c5c; /* Couleur au survol pour la déconnexion */
+        }
+        
+        /* Icône du panier au survol */
+        #cart-icon:hover {
+            color: #5e380c; /* Couleur au survol pour le panier */
         }
 
         /* Section Paiement */
@@ -75,13 +132,15 @@
 <body>
     <!-- Header -->
     <header>
-        <div class="logo">Ma Boutique Crochet</div>
+        <div class="logo">Fleur de Pau</div>
         <nav>
-            <a href="index.html">Accueil</a>
-            <a href="produits.html">Produits</a>
-            <a href="panier.html">Panier</a>
-            <a href="paiement.html" style="background-color: #a44b4b;">Paiement</a>
+            <ul>
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="produits.html">Produits</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
         </nav>
+        
     </header>
 
     <!-- Section Paiement -->

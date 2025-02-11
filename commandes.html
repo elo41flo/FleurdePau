@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fleur de Pau - Gestion des Commandes</title>
+    <title>Gestion des Commandes</title>
     <style>
         /* Ton CSS ici */
         body {
@@ -29,6 +29,7 @@
             color: white;
             border: none;
             cursor: pointer;
+            margin-right: 10px;
         }
 
         .btn:hover {
@@ -41,42 +42,42 @@
             padding: 0;
             background-color: #f4f4f4;
         }
-    
-            header {
-                background-color: #333;
-                color: white;
-                padding: 1rem;
-                text-align: center;
-            }
-    
-            nav {
-                background-color: #444;
-                overflow: hidden;
-            }
-    
-            nav a {
-                color: white;
-                padding: 14px 20px;
-                display: inline-block;
-                text-decoration: none;
-            }
-    
-            nav a:hover {
-                background-color: #ddd;
-                color: black;
-            }
-    
-            main {
-                padding: 20px;
-            }
-    
-            footer {
-                text-align: center;
-                padding: 1rem;
-                background-color: #333;
-                color: white;
-            }
-        
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        nav {
+            background-color: #444;
+            overflow: hidden;
+        }
+
+        nav a {
+            color: white;
+            padding: 14px 20px;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: #333;
+            color: white;
+        }
+
     </style>
 </head>
 <body>
@@ -101,7 +102,7 @@
     <script type="module">
         // Importer Firebase depuis le CDN
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
     
         // Configuration Firebase
         const firebaseConfig = {
@@ -118,13 +119,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
     
-        // Fonction pour charger les commandes
-        const chargerCommandes = async () => {
+        // Fonction pour charger les commandes payées
+        const chargerCommandesPayees = async () => {
             const commandesContainer = document.getElementById('commandes-container');
             commandesContainer.innerHTML = '';
     
             try {
-                const commandesSnapshot = await getDocs(collection(db, 'commandes'));
+                // Filtrer les commandes payées et non archivées
+                const commandesQuery = query(collection(db, 'commandes'), where('payée', '==', true), where('archive', '==', false));
+                const commandesSnapshot = await getDocs(commandesQuery);
                 commandesSnapshot.forEach((docSnapshot) => {
                     const data = docSnapshot.data();
                     const commandeCard = document.createElement('div');
@@ -134,14 +137,31 @@
                         <p><strong>Client :</strong> ${data.nom}</p>
                         <p><strong>Produit :</strong> ${data.produit}</p>
                         <p><strong>Statut :</strong> ${data.statut}</p>
+                        <p><strong>Payée :</strong> ${data.payée ? 'Oui' : 'Non'}</p>
                         <button class="btn" data-id="${docSnapshot.id}" data-statut="${data.statut}">
                             Marquer comme ${data.statut === 'En attente' ? 'Envoyé' : 'En attente'}
+                        </button>
+                        <button class="btn" data-id="${docSnapshot.id}" data-action="archive">
+                            Archiver
                         </button>
                     `;
                     commandesContainer.appendChild(commandeCard);
     
-                    // Ajouter un écouteur pour chaque bouton
-                    commandeCard.querySelector('.btn').addEventListener('click', async (e) => {
+                    // Ajouter un écouteur pour chaque bouton de mise à jour du statut
+                    commandeCard.querySelector('.btn[data-action="archive"]').addEventListener('click', async (e) => {
+                        const id = e.target.dataset.id;
+                        const commandeRef = doc(db, 'commandes', id);
+                        try {
+                            await updateDoc(commandeRef, { archive: true });
+                            console.log(`Commande #${id} archivée`);
+                            chargerCommandesPayees(); // Recharger les commandes
+                        } catch (error) {
+                            console.error("Erreur lors de l'archivage de la commande:", error);
+                        }
+                    });
+    
+                    // Ajouter un écouteur pour chaque bouton de changement de statut
+                    commandeCard.querySelector('.btn[data-statut]').addEventListener('click', async (e) => {
                         const id = e.target.dataset.id;
                         const statutActuel = e.target.dataset.statut;
                         const nouveauStatut = statutActuel === 'En attente' ? 'Envoyé' : 'En attente';
@@ -151,23 +171,23 @@
                         console.log(`Nouveau statut: ${nouveauStatut}`);
     
                         // Mettre à jour le statut dans Firestore
-                        const commandeRef = doc(db, 'commandes', id); // Correct appel de doc
+                        const commandeRef = doc(db, 'commandes', id);
                         try {
                             await updateDoc(commandeRef, { statut: nouveauStatut });
                             console.log(`Statut mis à jour dans Firestore`);
-                            chargerCommandes(); // Recharger les commandes
+                            chargerCommandesPayees(); // Recharger les commandes
                         } catch (error) {
                             console.error("Erreur lors de la mise à jour du statut:", error);
                         }
                     });
                 });
             } catch (error) {
-                console.error("Erreur lors du chargement des commandes :", error);
+                console.error("Erreur lors du chargement des commandes payées :", error);
             }
         };
     
-        // Charger les commandes au démarrage
-        window.onload = chargerCommandes;
+        // Charger les commandes payées au démarrage
+        window.onload = chargerCommandesPayees;
     </script>
     
 </body>

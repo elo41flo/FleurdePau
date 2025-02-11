@@ -6,17 +6,15 @@
     <title>Panier</title>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Raleway:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Global Styles */
         body {
             margin: 0;
             font-family: 'Raleway', sans-serif;
             color: #333;
-            line-height: 1.6;
             background-color: #f8f8f8;
         }
-        
+
         header {
             background-color: #fff;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -25,87 +23,74 @@
             top: 0;
             z-index: 1000;
         }
-        
+
         .container {
             width: 90%;
             max-width: 1200px;
             margin: 0 auto;
         }
-        
+
         .logo {
             font-family: 'Pacifico', cursive;
             font-size: 1.8rem;
             color: #444;
             text-align: center;
         }
-        
+
         nav ul {
             list-style: none;
             display: flex;
             justify-content: center;
             padding: 0;
         }
-        
+
         nav ul li {
             margin: 0 1rem;
         }
-        
+
         nav ul li a {
             text-decoration: none;
             color: #555;
             font-weight: bold;
             transition: color 0.3s;
         }
-        
+
         nav ul li a:hover {
             color: #d85c5c;
         }
 
-        /* Icônes */
-        #logout-icon, #cart-icon {
-            font-size: 24px; /* Taille des icônes */
-            color: #333; /* Couleur des icônes */
-            cursor: pointer; /* Pour indiquer qu'elles sont cliquables */
-        }
-        
-        /* Icône de déconnexion au survol */
-        #logout-icon:hover {
-            color: #d85c5c; /* Couleur au survol pour la déconnexion */
-        }
-        
-        /* Icône du panier au survol */
-        #cart-icon:hover {
-            color: #5e380c; /* Couleur au survol pour le panier */
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
         .header-icons {
             position: absolute;
-            top: 20px; /* Ajuste si nécessaire en fonction de ton design */
-            right: 10px; /* Ajuste pour l'aligner avec ton panier */
+            top: 20px;
+            right: 20px;
             display: flex;
             align-items: center;
             gap: 20px;
-            z-index: 10; /* Pour qu'elle soit au-dessus des autres éléments */
         }
-        
-        /* Section Panier */
+
+        .header-icons i {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .header-icons i:hover {
+            color: #d85c5c;
+        }
+
         section#panier {
-            padding: 100px 20px 30px; /* Ajusté pour éviter le chevauchement avec le menu */
+            padding: 100px 20px 30px;
             max-width: 900px;
             margin: 0 auto;
         }
+
         h2 {
             text-align: center;
             color: #742a08;
             font-size: 2rem;
             margin-bottom: 20px;
         }
+
         .panier-item {
             padding: 15px;
             margin-bottom: 15px;
@@ -116,15 +101,18 @@
             justify-content: space-between;
             align-items: center;
         }
+
         .panier-item h3 {
             margin: 0;
             font-size: 1.2rem;
         }
+
         .panier-item .prix {
             font-size: 1.1rem;
             color: #742a08;
             font-weight: bold;
         }
+
         .panier-item button {
             background-color: #742a08;
             color: white;
@@ -135,9 +123,11 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
+
         .panier-item button:hover {
             background-color: #a44b4b;
         }
+
         #total {
             margin-top: 30px;
             font-size: 1.5rem;
@@ -145,6 +135,7 @@
             text-align: center;
             color: #742a08;
         }
+
         .cta-btn {
             display: block;
             text-decoration: none;
@@ -158,93 +149,151 @@
             width: fit-content;
             transition: background-color 0.3s;
         }
+
         .cta-btn:hover {
+            background-color: #a44b4b;
+        }
+
+        #formulaire-commande {
+            display: none;
+            margin-top: 20px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #formulaire-commande label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        #formulaire-commande input, #formulaire-commande textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #formulaire-commande button {
+            background-color: #742a08;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #formulaire-commande button:hover {
             background-color: #a44b4b;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
+    <header>
         <div class="container">
-            <div class="header-content">
-                <h1 class="logo">Fleur De Pau</h1>
-                <nav>
-                    <ul>
-                        <li><a href="index.html">Accueil</a></li>
-                        <li><a href="boutique.html">Boutique</a></li>
-                        <li><a href="contact.html">Contact</a></li>
-                    </ul>
-                </nav>
-                <section id="header-icons" class="header-icons">
-                    <!-- Icône de déconnexion avant -->
-                    <i class="fas fa-sign-out-alt" id="logout-icon"></i>
-                    
-                    <!-- Icône du panier après -->
-                    <!-- Icône du panier -->
-                    <div class="cart-icon">
-                        <a href="panier.html">  <!-- Modifié ici pour rediriger vers "panier.html" -->
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="cart-count">0</span>
-                        </a>
-                    </div>
-                </section>
+            <h1 class="logo">Fleur De Pau</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Accueil</a></li>
+                    <li><a href="boutique.html">Boutique</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="header-icons">
+                <i class="fas fa-sign-out-alt" id="logout-icon"></i>
+                <i class="fas fa-shopping-cart" id="cart-icon"></i>
             </div>
         </div>
     </header>
 
-    <!-- Section Panier -->
     <section id="panier">
         <h2>Votre Panier</h2>
-        <div id="panier-list">
-            <!-- Les produits ajoutés au panier apparaîtront ici -->
+        <div id="panier-list"></div>
+        <div id="total">Total: €0.00</div>
+        <button class="cta-btn" onclick="afficherFormulaireCommande()">Commander</button>
+
+        <div id="formulaire-commande">
+            <h2>Informations de Livraison</h2>
+            <form id="commandeForm">
+                <label for="nom">Nom complet :</label>
+                <input type="text" id="nom" name="nom" required>
+
+                <label for="email">Email :</label>
+                <input type="email" id="email" name="email" required>
+
+                <label for="telephone">Téléphone :</label>
+                <input type="text" id="telephone" name="telephone" required>
+
+                <label for="adresse">Adresse :</label>
+                <textarea id="adresse" name="adresse" required></textarea>
+
+                <button type="button" onclick="finaliserCommande()">Valider et Commander</button>
+            </form>
         </div>
-        <div id="total">
-            Total: €0.00
-        </div>
-        <a href="paiement.html" class="cta-btn" id="checkout-button">Passer à la caisse</a>
     </section>
 
     <script>
-        // Récupération du panier dans le localStorage
         let panier = JSON.parse(localStorage.getItem('panier')) || [];
         const panierList = document.getElementById('panier-list');
         const totalElement = document.getElementById('total');
-        const checkoutButton = document.getElementById('checkout-button');
 
-        // Affichage des produits du panier
-        panier.forEach(item => {
-            const div = document.createElement('div');
-            div.classList.add('panier-item');
-            div.innerHTML = `
-                <h3>${item.nom}</h3>
-                <p class="prix">€${item.prix}</p>
-                <button onclick="retirerDuPanier('${item.nom}')">Retirer</button>
-            `;
-            panierList.appendChild(div);
-        });
+        function afficherPanier() {
+            panierList.innerHTML = '';
+            let total = 0;
 
-        // Calcul du total
-        let total = panier.reduce((acc, item) => acc + item.prix, 0);
-        totalElement.innerText = `Total: €${total.toFixed(2)}`;
+            panier.forEach(item => {
+                const div = document.createElement('div');
+                div.classList.add('panier-item');
+                div.innerHTML = `
+                    <h3>${item.nom}</h3>
+                    <p class="prix">€${item.prix}</p>
+                    <button onclick="retirerDuPanier('${item.nom}')">Retirer</button>
+                `;
+                panierList.appendChild(div);
+                total += item.prix;
+            });
 
-        // Retirer un produit du panier
+            totalElement.textContent = `Total: €${total.toFixed(2)}`;
+        }
+
         function retirerDuPanier(nomProduit) {
             panier = panier.filter(item => item.nom !== nomProduit);
             localStorage.setItem('panier', JSON.stringify(panier));
-            location.reload(); // Recharger pour mettre à jour la page
+            afficherPanier();
         }
 
-        // Rediriger vers la page de paiement
-        checkoutButton.addEventListener('click', () => {
-            if (panier.length === 0) {
-                alert("Votre panier est vide. Ajoutez des produits avant de passer à la caisse.");
-                return false;
+        function afficherFormulaireCommande() {
+            document.getElementById('formulaire-commande').style.display = 'block';
+        }
+
+        function finaliserCommande() {
+            const nom = document.getElementById('nom').value;
+            const email = document.getElementById('email').value;
+            const telephone = document.getElementById('telephone').value;
+            const adresse = document.getElementById('adresse').value;
+
+            if (!nom || !email || !telephone || !adresse) {
+                alert('Veuillez remplir tous les champs.');
+                return;
             }
 
-            // Sauvegarder le montant total dans localStorage pour l'utiliser dans checkout.html
-            localStorage.setItem('total', total);
-        });
+            const commande = {
+                client: { nom, email, telephone, adresse },
+                produits: panier,
+                total: panier.reduce((acc, item) => acc + item.prix, 0)
+            };
+
+            // Enregistrer la commande dans localStorage (ou l'envoyer à un backend)
+            localStorage.setItem('commande', JSON.stringify(commande));
+
+            // Rediriger vers la page de paiement
+            window.location.href = 'paiement.html';
+        }
+
+        afficherPanier();
     </script>
 </body>
 </html>
