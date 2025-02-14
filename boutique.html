@@ -285,7 +285,6 @@
         // Charger les produits au chargement de la page
         window.onload = chargerProduits;
     </script>
-    
 </head>
 <body>
     <!-- Header -->
@@ -305,7 +304,7 @@
                     <div class="cart-icon">
                         <a href="panier.html">
                             <i class="fas fa-shopping-cart"></i>
-                            <span class="cart-count">0</span>
+                            <span class="cart-count">0</span> <!-- Compteur du panier -->
                         </a>
                     </div>
                 </section>
@@ -323,11 +322,24 @@
         // Charger le panier existant depuis le localStorage
         let panier = JSON.parse(localStorage.getItem('panier')) || [];
 
-        function ajouterPanier(nomProduit, prix) {
-            panier.push({ nom: nomProduit, prix: prix });
-            alert(nomProduit + " ajouté au panier !");
-            localStorage.setItem('panier', JSON.stringify(panier));  // Sauvegarde dans le localStorage
+        // Fonction pour mettre à jour le compteur du panier
+        function mettreAJourCompteurPanier() {
+            const compteur = document.querySelector(".cart-count");
+            compteur.textContent = panier.length; // Affiche le nombre d'articles dans le panier
         }
+
+        // Fonction pour ajouter un produit au panier
+        function ajouterPanier(nomProduit, prix) {
+            panier.push({ nom: nomProduit, prix: prix }); // Ajoute le produit
+            alert(nomProduit + " ajouté au panier !");
+            localStorage.setItem('panier', JSON.stringify(panier)); // Sauvegarde dans le localStorage
+            mettreAJourCompteurPanier(); // Met à jour le compteur après l'ajout
+        }
+
+        // Appeler la mise à jour du compteur au chargement de la page
+        window.onload = () => {
+            mettreAJourCompteurPanier(); // Mettre à jour le compteur au chargement
+        };
     </script>
     <script type="module">
         // Script Firebase ici (copié depuis plus haut)

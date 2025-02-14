@@ -237,63 +237,70 @@
 
     <script>
         let panier = JSON.parse(localStorage.getItem('panier')) || [];
-        const panierList = document.getElementById('panier-list');
-        const totalElement = document.getElementById('total');
+const panierList = document.getElementById('panier-list');
+const totalElement = document.getElementById('total');
 
-        function afficherPanier() {
-            panierList.innerHTML = '';
-            let total = 0;
+function afficherPanier() {
+    panierList.innerHTML = '';
+    let total = 0;
 
-            panier.forEach(item => {
-                const div = document.createElement('div');
-                div.classList.add('panier-item');
-                div.innerHTML = `
-                    <h3>${item.nom}</h3>
-                    <p class="prix">€${item.prix}</p>
-                    <button onclick="retirerDuPanier('${item.nom}')">Retirer</button>
-                `;
-                panierList.appendChild(div);
-                total += item.prix;
-            });
+    panier.forEach(item => {
+        const div = document.createElement('div');
+        div.classList.add('panier-item');
+        div.innerHTML = `
+            <h3>${item.nom}</h3>
+            <p class="prix">€${item.prix.toFixed(2)}</p>
+            <button onclick="retirerDuPanier('${item.nom}')">Retirer</button>
+        `;
+        panierList.appendChild(div);
+        total += item.prix;
+    });
 
-            totalElement.textContent = `Total: €${total.toFixed(2)}`;
-        }
+    totalElement.textContent = `Total: €${total.toFixed(2)}`;
+}
 
-        function retirerDuPanier(nomProduit) {
-            panier = panier.filter(item => item.nom !== nomProduit);
-            localStorage.setItem('panier', JSON.stringify(panier));
-            afficherPanier();
-        }
+function ajouterAuPanier(nom, prix) {
+    const produit = { nom, prix };
+    panier.push(produit);
+    localStorage.setItem('panier', JSON.stringify(panier)); // Sauvegarde dans localStorage
+    afficherPanier(); // Met à jour l'affichage
+}
 
-        function afficherFormulaireCommande() {
-            document.getElementById('formulaire-commande').style.display = 'block';
-        }
+function retirerDuPanier(nomProduit) {
+    panier = panier.filter(item => item.nom !== nomProduit);
+    localStorage.setItem('panier', JSON.stringify(panier)); // Mise à jour du localStorage
+    afficherPanier(); // Met à jour l'affichage
+}
 
-        function finaliserCommande() {
-            const nom = document.getElementById('nom').value;
-            const email = document.getElementById('email').value;
-            const telephone = document.getElementById('telephone').value;
-            const adresse = document.getElementById('adresse').value;
+function afficherFormulaireCommande() {
+    document.getElementById('formulaire-commande').style.display = 'block';
+}
 
-            if (!nom || !email || !telephone || !adresse) {
-                alert('Veuillez remplir tous les champs.');
-                return;
-            }
+function finaliserCommande() {
+    const nom = document.getElementById('nom').value;
+    const email = document.getElementById('email').value;
+    const telephone = document.getElementById('telephone').value;
+    const adresse = document.getElementById('adresse').value;
 
-            const commande = {
-                client: { nom, email, telephone, adresse },
-                produits: panier,
-                total: panier.reduce((acc, item) => acc + item.prix, 0)
-            };
+    if (!nom || !email || !telephone || !adresse) {
+        alert('Veuillez remplir tous les champs.');
+        return;
+    }
 
-            // Enregistrer la commande dans localStorage (ou l'envoyer à un backend)
-            localStorage.setItem('commande', JSON.stringify(commande));
+    const commande = {
+        client: { nom, email, telephone, adresse },
+        produits: panier,
+        total: panier.reduce((acc, item) => acc + item.prix, 0)
+    };
 
-            // Rediriger vers la page de paiement
-            window.location.href = 'paiement.html';
-        }
+    localStorage.setItem('commande', JSON.stringify(commande));
 
-        afficherPanier();
+    // Rediriger vers la page de paiement
+    window.location.href = 'paiement.html';
+}
+
+// Appel initial pour afficher le panier au chargement de la page
+afficherPanier();
     </script>
 </body>
 </html>
