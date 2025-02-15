@@ -1,17 +1,22 @@
-// api/server.js
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');
 const mailjet = require('node-mailjet');
+const path = require('path'); // Importation de path pour gérer les chemins de fichiers
 require('dotenv').config();
 
-// Initialisation de Firebase Admin SDK
-const serviceAccount = require('../config/serviceAccountKey.json');
+// Initialisation de Firebase Admin SDK avec des variables d'environnement
+const serviceAccount = {
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Remplacer les \n par des sauts de ligne
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+};
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://fleurdepau-1ce7d.firebaseio.com"
+  databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}.firebaseio.com`, // Dynamique selon ton projet Firebase
 });
+
 const db = admin.firestore();
 
 // Initialisation de Mailjet avec les clés API
@@ -25,6 +30,9 @@ const app = express();
 
 // Middleware pour parser les données JSON
 app.use(bodyParser.json());
+
+// Servir le fichier favicon.ico à partir du dossier public
+app.use('/favicon.ico', express.static(path.join(__dirname, 'public', 'favicon.ico')));
 
 // Route de test pour vérifier le serveur
 app.get('/', (req, res) => {
@@ -85,10 +93,7 @@ app.post('/send-order-email', async (req, res) => {
     const orderDetails = await getOrderFromFirestore(orderId);
 
     const clientTextPart = "Merci pour votre commande ! Votre commande a été bien enregistrée.";
-    const clientHtmlPart = `
-      <h3>Merci pour votre commande !</h3>
-      <p>Votre commande a été bien enregistrée. Vous recevrez bientôt un email avec les détails.</p>
-    `;
+    const clientHtmlPart = ` <h3>Merci pour votre commande !</h3> <p>Votre commande a été bien enregistrée. Vous recevrez bientôt un email avec les détails.</p> `;
 
     const clientMessage = {
       From: { Email: "elo.robert41@gmail.com", Name: "FleurdePau" },
@@ -99,10 +104,7 @@ app.post('/send-order-email', async (req, res) => {
     };
 
     const managerTextPart = "Une nouvelle commande a été passée. Les détails de la commande sont enregistrés dans l'espace admin.";
-    const managerHtmlPart = `
-      <h3>Nouvelle commande reçue !</h3>
-      <p>Une nouvelle commande a été passée. Les détails de la commande sont enregistrés dans l'espace admin.</p>
-    `;
+    const managerHtmlPart = ` <h3>Nouvelle commande reçue !</h3> <p>Une nouvelle commande a été passée. Les détails de la commande sont enregistrés dans l'espace admin.</p> `;
 
     const managerMessage = {
       From: { Email: "elo.robert41@gmail.com", Name: "FleurdePau" },
@@ -128,5 +130,5 @@ app.post('/send-order-email', async (req, res) => {
   }
 });
 
-// Vercel attend une fonction exportée, donc on exporte l'application
+// Vercel attend une fonction exportée, donc on exporte l'application en tant que fonction
 module.exports = app;

@@ -1,5 +1,0 @@
-# Ignorer les fichiers sensibles
-.env
-node_modules/
-git rm --cached "node js/config/serviceAccountKey.json"
-node js/
