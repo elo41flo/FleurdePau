@@ -1,17 +1,18 @@
-// Importation des dépendances
+// api/server.js
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');
 const mailjet = require('node-mailjet');
-require('dotenv').config(); // Pour charger les variables d'environnement
+require('dotenv').config();
 
 // Initialisation de Firebase Admin SDK
-const serviceAccount = require('./config/serviceAccountKey.json');
+const serviceAccount = require('../config/serviceAccountKey.json');
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://fleurdepau-1ce7d.firebaseio.com" // Remplace par ton URL Firebase
+  databaseURL: "https://fleurdepau-1ce7d.firebaseio.com"
 });
-const db = admin.firestore(); // Accès à Firestore
+const db = admin.firestore();
 
 // Initialisation de Mailjet avec les clés API
 const mailjetClient = mailjet.apiConnect(
@@ -21,7 +22,6 @@ const mailjetClient = mailjet.apiConnect(
 
 // Initialisation de l'application Express
 const app = express();
-const port = 3000;
 
 // Middleware pour parser les données JSON
 app.use(bodyParser.json());
@@ -34,7 +34,6 @@ app.get('/', (req, res) => {
 // Fonction pour enregistrer une commande dans Firestore
 const saveOrderToFirestore = async (orderDetails) => {
   try {
-    // Ajoute la commande dans Firestore dans la collection 'orders'
     await db.collection('orders').add(orderDetails);
     console.log('Commande enregistrée avec succès');
   } catch (error) {
@@ -46,21 +45,12 @@ const saveOrderToFirestore = async (orderDetails) => {
 app.post('/create-order', async (req, res) => {
   const { produit, quantité, prix, orderId, userEmail } = req.body;
 
-  // Vérification des données
   if (!produit || !quantité || !prix || !orderId || !userEmail) {
     return res.status(400).send('Détails de la commande incomplets');
   }
 
-  // Détails de la commande
-  const orderDetails = {
-    produit,
-    quantité,
-    prix,
-    orderId,
-    userEmail
-  };
+  const orderDetails = { produit, quantité, prix, orderId, userEmail };
 
-  // Enregistrement dans Firestore
   try {
     await saveOrderToFirestore(orderDetails);
     res.status(200).send('Commande enregistrée avec succès');
@@ -87,40 +77,27 @@ const getOrderFromFirestore = async (orderId) => {
 app.post('/send-order-email', async (req, res) => {
   const { orderId, userEmail } = req.body;
 
-  // Vérification des données fournies
   if (!orderId || !userEmail) {
     return res.status(400).send('ID de commande ou email manquant');
   }
 
   try {
-    // Récupérer les détails de la commande depuis Firestore
     const orderDetails = await getOrderFromFirestore(orderId);
 
-    // Préparer le texte de l'email pour le client (sans les détails)
     const clientTextPart = "Merci pour votre commande ! Votre commande a été bien enregistrée.";
     const clientHtmlPart = `
       <h3>Merci pour votre commande !</h3>
       <p>Votre commande a été bien enregistrée. Vous recevrez bientôt un email avec les détails.</p>
     `;
 
-    // Création du message pour le client
     const clientMessage = {
-      From: {
-        Email: "elo.robert41@gmail.com", // Ton email
-        Name: "FleurdePau"
-      },
-      To: [
-        {
-          Email: userEmail, // Email du client
-          Name: "Client"
-        }
-      ],
+      From: { Email: "elo.robert41@gmail.com", Name: "FleurdePau" },
+      To: [{ Email: userEmail, Name: "Client" }],
       Subject: "Confirmation de commande",
       TextPart: clientTextPart,
       HTMLPart: clientHtmlPart
     };
 
-    // Création du message pour le gérant (ton amie)
     const managerTextPart = "Une nouvelle commande a été passée. Les détails de la commande sont enregistrés dans l'espace admin.";
     const managerHtmlPart = `
       <h3>Nouvelle commande reçue !</h3>
@@ -128,31 +105,16 @@ app.post('/send-order-email', async (req, res) => {
     `;
 
     const managerMessage = {
-      From: {
-        Email: "elo.robert41@gmail.com", // Ton email
-        Name: "FleurdePau"
-      },
-      To: [
-        {
-          Email: "eloiser41@gmail.com", // Email de ton amie
-          Name: "Gérant"
-        }
-      ],
+      From: { Email: "elo.robert41@gmail.com", Name: "FleurdePau" },
+      To: [{ Email: "eloiser41@gmail.com", Name: "Gérant" }],
       Subject: "Nouvelle commande reçue",
       TextPart: managerTextPart,
       HTMLPart: managerHtmlPart
     };
 
-    // Envoi des emails
-    const clientRequest = mailjetClient
-      .post('send', { version: '3.1' })
-      .request({ Messages: [clientMessage] });
+    const clientRequest = mailjetClient.post('send', { version: '3.1' }).request({ Messages: [clientMessage] });
+    const managerRequest = mailjetClient.post('send', { version: '3.1' }).request({ Messages: [managerMessage] });
 
-    const managerRequest = mailjetClient
-      .post('send', { version: '3.1' })
-      .request({ Messages: [managerMessage] });
-
-    // Attendre que les deux emails soient envoyés
     await Promise.all([clientRequest, managerRequest]);
 
     console.log("Emails envoyés avec succès");
@@ -166,7 +128,5 @@ app.post('/send-order-email', async (req, res) => {
   }
 });
 
-// Lancer le serveur
-app.listen(port, () => {
-  console.log(`Serveur démarré sur http://localhost:${port}`);
-});
+// Vercel attend une fonction exportée, donc on exporte l'application
+module.exports = app;
