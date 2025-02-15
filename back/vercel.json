@@ -1,0 +1,11 @@
+{
+    "builds": [
+      {
+        "src": "front/*",
+        "use": "@vercel/static"
+      }
+    ],
+    "outputDirectory": "front",  
+    "cleanUrls": true
+  }
+  
