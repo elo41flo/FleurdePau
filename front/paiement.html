@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement</title>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;600&family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://www.paypal.com/sdk/js?client-id=AYouHwrSsZYBHQDxKiOJO9_Z1vJ5Iz-PQysXibK9UyuIPtYYsjdqu0diibcE6F8C4l7xWc5PCh7AY33m&currency=EUR"></script>
+    <style>
+        /* Global Styles */
+        body {
+            margin: 0;
+            font-family: 'Raleway', sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background-color: #f8f8f8;
+        }
+        
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            font-family: 'Pacifico', cursive;
+            font-size: 1.8rem;
+            color: #444;
+            text-align: center;
+        }
+        
+        nav ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+    
+        nav ul li {
+            margin: 0;
+        }
+    
+        nav ul li a {
+            text-decoration: none;
+            color: #333; /* Couleur initiale noire */
+            font-weight: bold;
+            font-size: 1rem;
+            position: relative;
+            transition: color 0.3s ease; /* Transition fluide pour la couleur */
+        }
+    
+        /* Couleur marron sur hover */
+        nav ul li a:hover {
+            color: #742a08; /* Couleur marron */
+        }
+        
+        .header-icons {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-icons i {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .header-icons i:hover {
+            color: #d85c5c;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Icônes */
+        #logout-icon, #cart-icon {
+            font-size: 24px; /* Taille des icônes */
+            color: #333; /* Couleur des icônes */
+            cursor: pointer; /* Pour indiquer qu'elles sont cliquables */
+        }
+        
+        /* Icône de déconnexion au survol */
+        #logout-icon:hover {
+            color: #d85c5c; /* Couleur au survol pour la déconnexion */
+        }
+        
+        /* Icône du panier au survol */
+        #cart-icon:hover {
+            color: #5e380c; /* Couleur au survol pour le panier */
+        }
+
+        /* Section Paiement */
+        main {
+            padding: 100px 20px 30px; /* Ajusté pour éviter le chevauchement avec le menu */
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2rem;
+            color: #742a08;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        #paypal-button-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">Fleur de Pau</div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="produits.html">Produits</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+        
+    </header>
+
+    <!-- Section Paiement -->
+    <main>
+        <h1>Paiement</h1>
+        <p>Montant à payer : <span id="total-price"></span> €</p>
+        <div id="paypal-button-container"></div>
+    </main>
+
+    <script>
+        // Récupérer le montant total depuis localStorage
+        const total = localStorage.getItem("total") || 0;
+        document.getElementById("total-price").textContent = parseFloat(total).toFixed(2);
+
+        // Intégrer le bouton PayPal
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: total // Montant dynamique basé sur le panier
+                        },
+                        description: "Paiement de votre commande chez Ma Boutique Crochet"
+                    }]
+                });
+            },
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                    alert('Paiement réussi pour ' + details.payer.name.given_name);
+                    console.log(details);
+
+                    // Rediriger vers une page de confirmation (success.html)
+                    window.location.href = "success.html";
+                });
+            },
+            onCancel: function(data) {
+                alert("Le paiement a été annulé.");
+            },
+            onError: function(err) {
+                console.error(err);
+                alert("Une erreur est survenue pendant le paiement.");
+            }
+        }).render('#paypal-button-container');
+    </script>
+</body>
+</html>
