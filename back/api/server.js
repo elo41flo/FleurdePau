@@ -4,8 +4,8 @@ const admin = require('firebase-admin');
 const mailjet = require('node-mailjet');
 const path = require('path');
 require('dotenv').config();
-require('dotenv').config();
 
+// Vérification des variables d'environnement
 console.log("FIREBASE_PRIVATE_KEY:", process.env.FIREBASE_PRIVATE_KEY ? "LOADED" : "NOT LOADED"); // Debug
 console.log(process.env.MAILJET_API_KEY_PUBLIC);
 
@@ -136,5 +136,9 @@ app.post('/send-order-email', async (req, res) => {
   }
 });
 
-// Exportation pour Vercel
-module.exports = app;
+// Démarrer le serveur localement
+const PORT = process.env.PORT || 3000; // Utilise le port 3000 ou celui défini dans les variables d'environnement
+app.listen(PORT, () => {
+  console.log(`Serveur démarré sur http://localhost:${PORT}`);
+});
+
