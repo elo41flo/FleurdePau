@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fleur de Pau</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Raleway:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Importation des polices */
+        body {
+            margin: 0;
+            font-family: 'Raleway', sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background-color: #f8f8f8;
+        }
+        
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            font-family: 'Pacifico', cursive;
+            font-size: 1.8rem;
+            color: #444;
+            text-align: center;
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            padding: 0;
+        }
+        
+        nav ul li {
+            margin: 0 1rem;
+        }
+        
+        nav ul li a {
+            text-decoration: none;
+            color: #555;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            color: #d85c5c;
+        }
+        
+        .hero {
+            background-image: url('images/téléchargement.jpg'); /* Chemin vers ton image */
+            background-size: cover; /* Ajuste l'image pour couvrir toute la section */
+            background-position: center; /* Centre l'image */
+            background-repeat: no-repeat; /* Empêche la répétition de l'image */
+            color: #fff; /* Assure que le texte reste lisible */
+            text-align: center; /* Centre le texte */
+            padding: 100px 20px; /* Ajoute de l'espace autour du contenu */
+        }
+        
+        
+        .hero-title {
+            font-size: 2.5rem;
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: #ffffff;
+            margin-bottom: 2rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: #5e380c;
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #a44b4b;
+        }
+        
+        .about, .creations, .contact {
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #444;
+        }
+        
+        .grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+        
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            text-align: center;
+            max-width: 300px;
+        }
+        
+        .card img {
+            width: 100%;
+            border-radius: 10px;
+        }
+        
+        .card h3 {
+            font-size: 1.2rem;
+            color: #444;
+            margin: 1rem 0;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: #333;
+            color: #fff;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-icons {
+            position: absolute;
+            top: 20px; /* Ajuste si nécessaire en fonction de ton design */
+            right: 10px; /* Ajuste pour l'aligner avec ton panier */
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 10; /* Pour qu'elle soit au-dessus des autres éléments */
+        }
+        
+        /* Icônes */
+        #logout-icon, #cart-icon {
+            font-size: 24px; /* Taille des icônes */
+            color: #333; /* Couleur des icônes */
+            cursor: pointer; /* Pour indiquer qu'elles sont cliquables */
+        }
+        
+        /* Icône de déconnexion au survol */
+        #logout-icon:hover {
+            color: #d85c5c; /* Couleur au survol pour la déconnexion */
+        }
+        
+        /* Icône du panier au survol */
+        #cart-icon:hover {
+            color: #5e380c; /* Couleur au survol pour le panier */
+        }
+        
+        /* ----- Responsive Styles ----- */
+        
+        /* Styles pour les petits écrans (smartphones) */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.5rem;
+            }
+            nav ul {
+                flex-direction: column;
+            }
+            nav ul li {
+                margin: 1rem 0;
+            }
+            .hero {
+                padding: 50px 20px;
+            }
+            .hero-title {
+                font-size: 2rem;
+            }
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+            .btn {
+                padding: 0.8rem 1rem;
+                font-size: 0.9rem;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr; /* Deux éléments par ligne */
+                gap: 1rem;
+            }
+            .card {
+                width: 100%;
+                max-width: none;
+            }
+            footer {
+                font-size: 0.9rem;
+            }
+            /* Section Créations responsive */
+            .creations .grid {
+                grid-template-columns: 1fr 1fr; /* 2 créations par ligne */
+                gap: 1.2rem;
+            }
+        
+            .creations .card {
+                width: 100%;
+                max-width: none;
+            }
+        }
+        
+        /* Styles pour les écrans moyens (tablettes) */
+        @media (max-width: 1024px) {
+            .hero-title {
+                font-size: 2.2rem;
+            }
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr; /* Trois éléments par ligne */
+                gap: 1.5rem;
+            }
+            .card {
+                width: 100%;
+            }
+            footer {
+                font-size: 1rem;
+            }
+        
+            /* Section Créations responsive */
+            .creations .grid {
+                grid-template-columns: 1fr 1fr 1fr; /* 3 créations par ligne */
+                gap: 1.5rem;
+            }
+            .creations .card {
+                width: 100%;
+            }
+        }
+        
+        /* Styles pour les grands écrans (ordinateurs de bureau) */
+        @media (min-width: 1200px) {
+            .grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr 1fr; /* Quatre éléments par ligne */
+                gap: 2rem;
+            }
+        
+            /* Section Créations responsive */
+            .creations .grid {
+                grid-template-columns: 1fr 1fr 1fr 1fr; /* 4 créations par ligne */
+                gap: 2rem;
+            }
+        }
+            </style>
+        </head>
+        <body>
+            <header class="header">
+                <div class="container">
+                    <div class="header-content">
+                        <h1 class="logo">Fleur De Pau</h1>
+                        <nav>
+                            <ul>
+                                <li><a href="index.html">Accueil</a></li>
+                                <li><a href="boutique.html">Boutique</a></li>
+                                <li><a href="contact.html">Contact</a></li>
+                            </ul>
+                        </nav>
+                        <section id="header-icons" class="header-icons">
+                            <!-- Icône de déconnexion avant -->
+                            <i class="fas fa-sign-out-alt" id="logout-icon"></i>
+                            
+                            <!-- Icône du panier après -->
+                            <!-- Icône du panier -->
+                            <div class="cart-icon">
+                                <a href="panier.html">  <!-- Modifié ici pour rediriger vers "panier.html" -->
+                                    <i class="fas fa-shopping-cart"></i>
+                                    <span class="cart-count">0</span>
+                                </a>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </header>    
+            
+            <main>
+                <section class="hero">
+                    <h2 class="hero-title">L'art d'être soi-même</h2>
+                    <p class="hero-subtitle">Découvrez des pièces uniques, faites à la main.</p>
+                    <a href="boutique.html" class="btn">Explorer la boutique</a>
+                </section>        
+        
+                <section id="about" class="about">
+                    <div class="container">
+                        <h2>À propos</h2>
+                        <p>Bienvenue ans l'univers Fleur de Pau, je suis artiste tatoueuse, et passionnée de crochet ! Chaque pièce est réalisée avec soin et amour pour apporter une touche de douceur et d'originalité.</p>
+                    </div>
+                </section>
+                <section class="image-section">
+                    <div class="container">
+                        <center><img src="images\Моток пряжи.jpg" alt="Création artisanale" style="width: 50%; max-width: 1200px; border-radius: 10px;"></center>
+                    </div>
+                </section>
+                <section id="contact" class="contact">
+                    <div class="container">
+                        <h2>Contact</h2>
+                        <p>Pour toute question ou commande personnalisée, n'hésitez pas à me contacter :</p>
+                        <a href="mailto:artisan@crochet.com" class="btn">Me contacter</a>
+                    </div>
+                </section>
+            </main>
+        
+            <footer class="footer">
+                <p>© 2025 Fleur de Pau - Tous droits réservés</p>
+            </footer>
+        
+            <script type="module">
+                import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+                import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
+        
+                const firebaseConfig = {
+                    apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+                    authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+                    projectId: "fleurdepau-1ce7d",
+                    storageBucket: "fleurdepau-1ce7d.appspot.com",
+                    messagingSenderId: "394738141831",
+                    appId: "1:394738141831:web:a0cd5b9d0227267b248622"
+                };
+        
+                // Initialisation Firebase
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+        
+                // Fonction de déconnexion
+                const logoutIcon = document.getElementById("logout-icon");
+        
+                logoutIcon.addEventListener("click", async () => {
+                    try {
+                        await signOut(auth);  // Déconnexion
+                        window.location.href = "login.html";  // Redirection vers la page de connexion
+                    } catch (error) {
+                        console.error("Erreur lors de la déconnexion:", error);
+                    }
+                });
+        
+                // Vérification de l'état de la connexion
+                auth.onAuthStateChanged(user => {
+                    if (!user) {
+                        // Si l'utilisateur n'est pas connecté, redirige vers login.html
+                        window.location.href = "login.html";
+                    }
+                });
+            </script>
+        </body>
+        </html>
