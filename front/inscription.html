@@ -98,6 +98,51 @@
             font-size: 0.9rem;
             margin-bottom: 1rem;
         }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.6rem; /* Réduit la taille du titre sur petits écrans */
+            }
+
+            input, button {
+                padding: 0.9rem; /* Augmente le padding des champs et boutons */
+                font-size: 1.1rem; /* Augmente légèrement la taille de la police */
+            }
+
+            .toggle {
+                font-size: 1rem;
+            }
+        }
+
+        /* Pour les très petits écrans (smartphones) */
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+                max-width: 350px; /* Réduit la taille du conteneur */
+            }
+
+            h2 {
+                font-size: 1.4rem; /* Taille du titre plus petite pour les petits écrans */
+            }
+
+            input, button {
+                padding: 0.8rem;
+                font-size: 1rem; /* Taille de police plus petite sur les petits écrans */
+            }
+
+            .toggle {
+                font-size: 0.9rem;
+            }
+
+            label {
+                font-size: 0.9rem; /* Réduit la taille des labels */
+            }
+        }
     </style>
 </head>
 <body>

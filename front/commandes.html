@@ -5,42 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Commandes</title>
     <style>
-        /* Ton CSS ici */
         body {
             font-family: Arial, sans-serif;
             background-color: #f9f9f9;
-        }
-
-        .commandes {
-            max-width: 600px;
-            margin: 2rem auto;
-        }
-
-        .commande-card {
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .btn {
-            padding: 0.5rem 1rem;
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-
-        .btn:hover {
-            background-color: #45a049;
-        }
-        /* Style simple pour le menu de navigation */
-        body {
-            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
         }
 
         header {
@@ -67,8 +36,36 @@
             color: black;
         }
 
-        main {
-            padding: 20px;
+        .commandes {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 20px;
+        }
+
+        .commande-card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .commande-card h3 {
+            margin-top: 0;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
         }
 
         footer {
@@ -76,6 +73,65 @@
             padding: 1rem;
             background-color: #333;
             color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            nav a {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+
+            .commandes {
+                padding: 0 10px;
+            }
+
+            .commande-card {
+                padding: 0.8rem;
+            }
+
+            .btn {
+                padding: 0.8rem 1.2rem;
+                font-size: 14px;
+                margin-right: 5px;
+            }
+
+            header h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Pour les petits écrans (smartphones) */
+        @media (max-width: 480px) {
+            nav {
+                text-align: center;
+            }
+
+            nav a {
+                display: block;
+                padding: 10px 0;
+            }
+
+            .commandes {
+                margin: 1rem auto;
+                padding: 0 10px;
+            }
+
+            .commande-card {
+                padding: 0.8rem;
+                margin-bottom: 1rem;
+            }
+
+            .btn {
+                width: 100%;
+                font-size: 16px;
+                padding: 12px 0;
+                margin: 5px 0;
+            }
+
+            header h1 {
+                font-size: 1.2rem;
+            }
         }
 
     </style>
@@ -189,6 +245,5 @@
         // Charger les commandes payées au démarrage
         window.onload = chargerCommandesPayees;
     </script>
-    
 </body>
 </html>
