@@ -241,37 +241,6 @@
             }
         }
     </style>
-</head>
-<body>
-    <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <h1 class="logo">Fleur De Pau</h1>
-                <nav>
-                    <ul>
-                        <li><a href="index.html">Accueil</a></li>
-                        <li><a href="boutique.html">Boutique</a></li>
-                        <li><a href="contact.html">Contact</a></li>
-                    </ul>
-                </nav>
-                <section id="header-icons" class="header-icons">
-                    <i class="fas fa-sign-out-alt" id="logout-icon"></i>
-                    <div class="cart-icon">
-                        <a href="panier.html">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="cart-count">0</span> <!-- Compteur du panier -->
-                        </a>
-                    </div>
-                </section>
-            </div>
-        </div>
-    </header>
-
-    <!-- Section des produits -->
-    <main>
-        <div id="produits"></div>
-    </main>
     <script type="module">
         // Import des modules Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
@@ -358,6 +327,32 @@
             }
         });
     </script>
-    
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">Ma Boutique</div>
+                <nav>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="boutique.html">Boutique</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        <div class="header-icons">
+            <i id="cart-icon" class="fas fa-shopping-cart">
+                <span class="cart-count">0</span>
+            </i>
+            <i id="logout-icon" class="fas fa-sign-out-alt"></i>
+        </div>
+    </header>
+
+    <section id="produits">
+        <!-- Les produits seront chargés ici par JavaScript -->
+    </section>
+
 </body>
 </html>
