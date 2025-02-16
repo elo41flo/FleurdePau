@@ -352,6 +352,13 @@ logoutIcon.addEventListener("click", async () => {
     }
 });
 
+// Vérification de l'état de la connexion
+auth.onAuthStateChanged(user => {
+    if (!user) {
+        // Si l'utilisateur n'est pas connecté, redirige vers login.html
+        window.location.href = "login.html";
+    }
+});
     </script>
     <script type="module">
         // Script Firebase ici (copié depuis plus haut)
