@@ -367,6 +367,18 @@
 
         // Appel initial pour afficher le panier au chargement de la page
         afficherPanier();
+
+        const logoutIcon = document.getElementById("logout-icon");
+
+logoutIcon.addEventListener("click", async () => {
+    try {
+        await signOut(auth);  // Déconnexion
+        window.location.href = "login.html";  // Redirection vers la page de connexion
+    } catch (error) {
+        console.error("Erreur lors de la déconnexion:", error);
+    }
+});
+
     </script>
 </body>
 </html>
