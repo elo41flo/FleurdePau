@@ -329,10 +329,10 @@
     </script>
 </head>
 <body>
-    <header>
+    <header class="header">
         <div class="container">
             <div class="header-content">
-                <div class="logo">Ma Boutique</div>
+                <h1 class="logo">Fleur De Pau</h1>
                 <nav>
                     <ul>
                         <li><a href="index.html">Accueil</a></li>
@@ -340,17 +340,24 @@
                         <li><a href="contact.html">Contact</a></li>
                     </ul>
                 </nav>
+    
+                <!-- Section des icônes (Déconnexion et Panier) -->
+                <section id="header-icons" class="header-icons">
+                    <!-- Icône de déconnexion -->
+                    <i class="fas fa-sign-out-alt" id="logout-icon"></i>
+    
+                    <!-- Icône du panier -->
+                    <div class="cart-icon">
+                        <a href="panier.html">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count">0</span>
+                        </a>
+                    </div>
+                </section>
             </div>
         </div>
-        <!-- Icône du panier -->
-<div class="cart-icon">
-    <a href="panier.html">  
-        <i class="fas fa-shopping-cart"></i>
-        <span class="cart-count">0</span>
-    </a>
-</div>
-
     </header>
+    
 
     <section id="produits">
         <!-- Les produits seront chargés ici par JavaScript -->
