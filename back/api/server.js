@@ -3,17 +3,18 @@ const bodyParser = require('body-parser');
 const admin = require('firebase-admin');
 const mailjet = require('node-mailjet');
 const path = require('path');
+const axios = require('axios');  // Pour les requêtes vers PayPal
 require('dotenv').config();
 
-// Vérification des variables d'environnement
-console.log("FIREBASE_PRIVATE_KEY:", process.env.FIREBASE_PRIVATE_KEY ? "LOADED" : "NOT LOADED"); // Debug
-console.log(process.env.MAILJET_API_KEY_PUBLIC);
+// 🔍 Vérification des variables d'environnement
+console.log("FIREBASE_PRIVATE_KEY:", process.env.FIREBASE_PRIVATE_KEY ? "LOADED" : "NOT LOADED");
+console.log("MAILJET_API_KEY_PUBLIC:", process.env.MAILJET_API_KEY_PUBLIC ? "LOADED" : "NOT LOADED");
+console.log("PAYPAL_CLIENT_ID:", process.env.PAYPAL_CLIENT_ID ? "LOADED" : "NOT LOADED");
 
-// Initialisation de Firebase Admin SDK avec des variables d'environnement
-console.log(process.env.FIREBASE_PRIVATE_KEY); // Vérifie que la clé privée est lue correctement
+// 🔥 Initialisation Firebase Admin SDK
 const serviceAccount = {
   projectId: process.env.FIREBASE_PROJECT_ID,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Remplacer les \n par des sauts de ligne
+  privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
   clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
 };
 
@@ -24,71 +25,44 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-// Initialisation de Mailjet avec les clés API
+// ✉️ Initialisation Mailjet
 const mailjetClient = mailjet.apiConnect(
   process.env.MAILJET_API_KEY_PUBLIC,
   process.env.MAILJET_API_KEY_PRIVATE
 );
 
-// Initialisation de l'application Express
+// 🚀 Création de l'application Express
 const app = express();
 
-// Middleware pour parser les données JSON
+// 🛠️ Middleware
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, '../../front'))); // Servir les fichiers statiques
 
-// Servir le fichier favicon.ico à partir du dossier public
-app.use('/favicon.ico', express.static(path.join(__dirname, 'public', 'favicon.ico')));
-
-// Route de test pour vérifier le serveur
+console.log("Chemin de login.html :", path.resolve(__dirname, '../front/login.html'));
+// 🏠 Route principale
 app.get('/', (req, res) => {
-  res.send('Serveur FleurdePau en cours d\'exécution !');
+  res.sendFile(path.join(__dirname, '../../front/login.html'));
 });
 
-// Fonction pour enregistrer une commande dans Firestore
-const saveOrderToFirestore = async (orderDetails) => {
-  try {
-    await db.collection('orders').add(orderDetails);
-    console.log('Commande enregistrée avec succès');
-  } catch (error) {
-    console.error('Erreur lors de l\'enregistrement de la commande :', error);
-    throw error; // Propager l'erreur pour pouvoir la capturer dans la route
-  }
-};
-
-// Route pour recevoir une commande
-app.post('/create-order', async (req, res) => {
+// 📦 Route pour enregistrer une commande
+app.post('/api/create-order', async (req, res) => {
   const { produit, quantité, prix, orderId, userEmail } = req.body;
 
   if (!produit || !quantité || !prix || !orderId || !userEmail) {
     return res.status(400).send('Détails de la commande incomplets');
   }
 
-  const orderDetails = { produit, quantité, prix, orderId, userEmail };
-
   try {
-    await saveOrderToFirestore(orderDetails);
+    await db.collection('orders').add({ produit, quantité, prix, orderId, userEmail });
     res.status(200).send('Commande enregistrée avec succès');
   } catch (error) {
+    console.error('Erreur lors de l\'enregistrement de la commande :', error);
     res.status(500).send('Erreur lors de l\'enregistrement de la commande');
   }
 });
 
-// Fonction pour récupérer une commande depuis Firestore
-const getOrderFromFirestore = async (orderId) => {
-  try {
-    const orderDoc = await db.collection('orders').doc(orderId).get();
-    if (!orderDoc.exists) {
-      throw new Error('Commande non trouvée');
-    }
-    return orderDoc.data();
-  } catch (error) {
-    console.error("Erreur lors de la récupération de la commande :", error);
-    throw error; // Propager l'erreur
-  }
-};
-
-// Route pour envoyer un e-mail après la création de la commande
-app.post('/send-order-email', async (req, res) => {
+// ✉️ Route pour envoyer un email après une commande
+app.post('/api/send-order-email', async (req, res) => {
   const { orderId, userEmail } = req.body;
 
   if (!orderId || !userEmail) {
@@ -96,49 +70,97 @@ app.post('/send-order-email', async (req, res) => {
   }
 
   try {
-    const orderDetails = await getOrderFromFirestore(orderId);
-
-    const clientTextPart = "Merci pour votre commande ! Votre commande a été bien enregistrée.";
-    const clientHtmlPart = ` <h3>Merci pour votre commande !</h3> <p>Votre commande a été bien enregistrée. Vous recevrez bientôt un email avec les détails.</p> `;
+    const orderDoc = await db.collection('orders').doc(orderId).get();
+    if (!orderDoc.exists) {
+      return res.status(404).send('Commande non trouvée');
+    }
 
     const clientMessage = {
       From: { Email: "elo.robert41@gmail.com", Name: "FleurdePau" },
       To: [{ Email: userEmail, Name: "Client" }],
       Subject: "Confirmation de commande",
-      TextPart: clientTextPart,
-      HTMLPart: clientHtmlPart
+      TextPart: "Merci pour votre commande !",
+      HTMLPart: "<h3>Merci pour votre commande !</h3><p>Votre commande a été bien enregistrée.</p>"
     };
-
-    const managerTextPart = "Une nouvelle commande a été passée. Les détails de la commande sont enregistrés dans l'espace admin.";
-    const managerHtmlPart = ` <h3>Nouvelle commande reçue !</h3> <p>Une nouvelle commande a été passée. Les détails de la commande sont enregistrés dans l'espace admin.</p> `;
 
     const managerMessage = {
       From: { Email: "elo.robert41@gmail.com", Name: "FleurdePau" },
       To: [{ Email: "eloiser41@gmail.com", Name: "Gérant" }],
       Subject: "Nouvelle commande reçue",
-      TextPart: managerTextPart,
-      HTMLPart: managerHtmlPart
+      TextPart: "Une nouvelle commande a été passée.",
+      HTMLPart: "<h3>Nouvelle commande reçue !</h3><p>Vérifiez l'espace admin.</p>"
     };
 
-    const clientRequest = mailjetClient.post('send', { version: '3.1' }).request({ Messages: [clientMessage] });
-    const managerRequest = mailjetClient.post('send', { version: '3.1' }).request({ Messages: [managerMessage] });
+    await Promise.all([
+      mailjetClient.post('send', { version: '3.1' }).request({ Messages: [clientMessage] }),
+      mailjetClient.post('send', { version: '3.1' }).request({ Messages: [managerMessage] })
+    ]);
 
-    await Promise.all([clientRequest, managerRequest]);
-
-    console.log("Emails envoyés avec succès");
     res.status(200).send('Emails envoyés avec succès');
   } catch (error) {
     console.error('Erreur lors de l\'envoi des emails :', error);
-    res.status(500).json({
-      message: 'Erreur lors de l\'envoi des emails',
-      errorDetails: error.message || 'Aucune information supplémentaire'
-    });
+    res.status(500).send('Erreur lors de l\'envoi des emails');
   }
 });
 
-// Démarrer le serveur localement
-const PORT = process.env.PORT || 3000; // Utilise le port 3000 ou celui défini dans les variables d'environnement
-app.listen(PORT, () => {
-  console.log(`Serveur démarré sur http://localhost:${PORT}`);
+// 🏦 **Intégration de PayPal**
+
+// ✅ Route pour créer une commande PayPal
+app.post('/api/paypal/create-order', async (req, res) => {
+  const { prix, devise = 'EUR' } = req.body;
+
+  try {
+    // 🔑 Obtenir le token d'accès PayPal
+    const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64');
+    const tokenResponse = await axios.post(`${process.env.PAYPAL_API}/v1/oauth2/token`, 'grant_type=client_credentials', {
+      headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    const accessToken = tokenResponse.data.access_token;
+
+    // 📦 Créer une commande PayPal
+    const orderResponse = await axios.post(`${process.env.PAYPAL_API}/v2/checkout/orders`, {
+      intent: 'CAPTURE',
+      purchase_units: [{ amount: { currency_code: devise, value: prix } }]
+    }, {
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
+    });
+
+    res.json({ id: orderResponse.data.id }); // Retourne l'ID de commande PayPal
+  } catch (error) {
+    console.error('Erreur PayPal:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Erreur lors de la création de la commande PayPal' });
+  }
 });
 
+// ✅ Route pour capturer le paiement
+app.post('/api/paypal/capture-order', async (req, res) => {
+  const { orderID } = req.body;
+
+  try {
+    // 🔑 Obtenir le token d'accès PayPal
+    const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64');
+    const tokenResponse = await axios.post(`${process.env.PAYPAL_API}/v1/oauth2/token`, 'grant_type=client_credentials', {
+      headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    const accessToken = tokenResponse.data.access_token;
+
+    // 🎯 Capturer le paiement
+    const captureResponse = await axios.post(`${process.env.PAYPAL_API}/v2/checkout/orders/${orderID}/capture`, {}, {
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
+    });
+
+    res.json(captureResponse.data);
+  } catch (error) {
+    console.error('Erreur PayPal:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Erreur lors de la capture du paiement PayPal' });
+  }
+});
+
+// 🎯 Démarrer le serveur en local (si nécessaire)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`));
+
+// ✅ Exporter l'application pour Vercel
+module.exports = app;

@@ -153,6 +153,7 @@
             appId: "1:394738141831:web:a0cd5b9d0227267b248622"
         };
 
+        // Initialisation de Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
@@ -160,22 +161,25 @@
         const loginForm = document.getElementById('login-form');
         const errorMessage = document.getElementById('error-message');
 
+        // Vérification de l'état de l'utilisateur authentifié
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 if (user.email === EMAIL_GERANTE) {
-                    window.location.href = 'admin.html';
+                    window.location.href = 'admin.html'; // Si l'utilisateur est un administrateur
                 } else {
-                    window.location.href = 'index.html';
+                    window.location.href = 'index.html'; // Sinon, redirection vers la page principale
                 }
             }
         });
 
+        // Traitement de la soumission du formulaire de connexion
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
             try {
+                // Connexion de l'utilisateur avec l'email et le mot de passe
                 await signInWithEmailAndPassword(auth, email, password);
                 if (email === EMAIL_GERANTE) {
                     window.location.href = 'admin.html';
@@ -183,7 +187,7 @@
                     window.location.href = 'index.html';
                 }
             } catch (error) {
-                errorMessage.textContent = "Erreur : " + error.message;
+                errorMessage.textContent = "Erreur : " + error.message; // Affichage de l'erreur
             }
         });
     </script>
