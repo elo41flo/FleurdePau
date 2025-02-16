@@ -189,6 +189,72 @@
         #formulaire-commande button:hover {
             background-color: #a44b4b;
         }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            nav ul li {
+                margin: 0;
+            }
+
+            section#panier {
+                padding: 60px 20px 20px;
+            }
+
+            .panier-item {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 20px;
+            }
+
+            .panier-item button {
+                margin-top: 10px;
+                width: 100%;
+            }
+
+            #total {
+                font-size: 1.3rem;
+            }
+
+            .cta-btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .panier-item h3 {
+                font-size: 1rem;
+            }
+
+            .panier-item .prix {
+                font-size: 1rem;
+            }
+
+            .panier-item button {
+                font-size: 0.8rem;
+            }
+
+            #formulaire-commande input,
+            #formulaire-commande textarea {
+                font-size: 0.9rem;
+            }
+
+            #formulaire-commande button {
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -237,70 +303,70 @@
 
     <script>
         let panier = JSON.parse(localStorage.getItem('panier')) || [];
-const panierList = document.getElementById('panier-list');
-const totalElement = document.getElementById('total');
+        const panierList = document.getElementById('panier-list');
+        const totalElement = document.getElementById('total');
 
-function afficherPanier() {
-    panierList.innerHTML = '';
-    let total = 0;
+        function afficherPanier() {
+            panierList.innerHTML = '';
+            let total = 0;
 
-    panier.forEach(item => {
-        const div = document.createElement('div');
-        div.classList.add('panier-item');
-        div.innerHTML = `
-            <h3>${item.nom}</h3>
-            <p class="prix">€${item.prix.toFixed(2)}</p>
-            <button onclick="retirerDuPanier('${item.nom}')">Retirer</button>
-        `;
-        panierList.appendChild(div);
-        total += item.prix;
-    });
+            panier.forEach(item => {
+                const div = document.createElement('div');
+                div.classList.add('panier-item');
+                div.innerHTML = `
+                    <h3>${item.nom}</h3>
+                    <p class="prix">€${item.prix.toFixed(2)}</p>
+                    <button onclick="retirerDuPanier('${item.nom}')">Retirer</button>
+                `;
+                panierList.appendChild(div);
+                total += item.prix;
+            });
 
-    totalElement.textContent = `Total: €${total.toFixed(2)}`;
-}
+            totalElement.textContent = `Total: €${total.toFixed(2)}`;
+        }
 
-function ajouterAuPanier(nom, prix) {
-    const produit = { nom, prix };
-    panier.push(produit);
-    localStorage.setItem('panier', JSON.stringify(panier)); // Sauvegarde dans localStorage
-    afficherPanier(); // Met à jour l'affichage
-}
+        function ajouterAuPanier(nom, prix) {
+            const produit = { nom, prix };
+            panier.push(produit);
+            localStorage.setItem('panier', JSON.stringify(panier)); // Sauvegarde dans localStorage
+            afficherPanier(); // Met à jour l'affichage
+        }
 
-function retirerDuPanier(nomProduit) {
-    panier = panier.filter(item => item.nom !== nomProduit);
-    localStorage.setItem('panier', JSON.stringify(panier)); // Mise à jour du localStorage
-    afficherPanier(); // Met à jour l'affichage
-}
+        function retirerDuPanier(nomProduit) {
+            panier = panier.filter(item => item.nom !== nomProduit);
+            localStorage.setItem('panier', JSON.stringify(panier)); // Mise à jour du localStorage
+            afficherPanier(); // Met à jour l'affichage
+        }
 
-function afficherFormulaireCommande() {
-    document.getElementById('formulaire-commande').style.display = 'block';
-}
+        function afficherFormulaireCommande() {
+            document.getElementById('formulaire-commande').style.display = 'block';
+        }
 
-function finaliserCommande() {
-    const nom = document.getElementById('nom').value;
-    const email = document.getElementById('email').value;
-    const telephone = document.getElementById('telephone').value;
-    const adresse = document.getElementById('adresse').value;
+        function finaliserCommande() {
+            const nom = document.getElementById('nom').value;
+            const email = document.getElementById('email').value;
+            const telephone = document.getElementById('telephone').value;
+            const adresse = document.getElementById('adresse').value;
 
-    if (!nom || !email || !telephone || !adresse) {
-        alert('Veuillez remplir tous les champs.');
-        return;
-    }
+            if (!nom || !email || !telephone || !adresse) {
+                alert('Veuillez remplir tous les champs.');
+                return;
+            }
 
-    const commande = {
-        client: { nom, email, telephone, adresse },
-        produits: panier,
-        total: panier.reduce((acc, item) => acc + item.prix, 0)
-    };
+            const commande = {
+                client: { nom, email, telephone, adresse },
+                produits: panier,
+                total: panier.reduce((acc, item) => acc + item.prix, 0)
+            };
 
-    localStorage.setItem('commande', JSON.stringify(commande));
+            localStorage.setItem('commande', JSON.stringify(commande));
 
-    // Rediriger vers la page de paiement
-    window.location.href = 'paiement.html';
-}
+            // Rediriger vers la page de paiement
+            window.location.href = 'paiement.html';
+        }
 
-// Appel initial pour afficher le panier au chargement de la page
-afficherPanier();
+        // Appel initial pour afficher le panier au chargement de la page
+        afficherPanier();
     </script>
 </body>
 </html>

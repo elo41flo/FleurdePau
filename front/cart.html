@@ -8,6 +8,8 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            padding: 0;
+            background-color: #f9f9f9;
         }
 
         table {
@@ -36,10 +38,48 @@
             color: white;
             border: none;
             cursor: pointer;
+            font-size: 16px;
         }
 
         button:hover {
             background-color: #a44b4b;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            table th, table td {
+                padding: 12px; /* Un peu plus d'espace pour les petites résolutions */
+            }
+
+            button {
+                padding: 12px 25px; /* Taille de bouton augmentée pour les petits écrans */
+                font-size: 18px; /* Agrandir la taille du texte pour le bouton */
+            }
+
+            .total {
+                font-size: 18px; /* Taille du texte du total ajustée */
+            }
+
+            body {
+                margin: 10px; /* Réduction des marges pour les petits écrans */
+            }
+        }
+
+        /* Pour les très petits écrans, comme les smartphones */
+        @media (max-width: 480px) {
+            table {
+                font-size: 14px; /* Réduction de la taille de la table */
+            }
+
+            button {
+                width: 100%; /* Le bouton prend toute la largeur */
+                font-size: 20px; /* Taille du texte du bouton augmentée */
+                padding: 15px 0; /* Ajuster le padding du bouton */
+            }
+
+            .total {
+                font-size: 20px; /* Taille du texte du total pour s'adapter au petit écran */
+            }
         }
     </style>
 </head>

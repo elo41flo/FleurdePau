@@ -23,6 +23,9 @@
         nav {
             background-color: #444;
             overflow: hidden;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;  /* Permet aux liens de se placer sur plusieurs lignes si nécessaire */
         }
 
         nav a {
@@ -30,6 +33,7 @@
             padding: 14px 20px;
             display: inline-block;
             text-decoration: none;
+            text-align: center;
         }
 
         nav a:hover {
@@ -39,6 +43,8 @@
 
         main {
             padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         footer {
@@ -46,6 +52,46 @@
             padding: 1rem;
             background-color: #333;
             color: white;
+        }
+
+        /* Responsive: Lorsque la largeur de l'écran est inférieure à 768px */
+        @media (max-width: 768px) {
+            nav a {
+                padding: 12px 15px;
+                font-size: 14px; /* Réduction de la taille du texte pour les petits écrans */
+            }
+
+            header h1 {
+                font-size: 1.5rem; /* Taille du titre ajustée pour petits écrans */
+            }
+
+            footer {
+                font-size: 14px; /* Taille du texte du footer ajustée */
+            }
+
+            main {
+                padding: 10px;
+            }
+        }
+
+        /* Responsive: Lorsque la largeur de l'écran est inférieure à 480px */
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 1.2rem; /* Réduction de la taille du titre pour les très petits écrans */
+            }
+
+            nav a {
+                padding: 10px;
+                font-size: 12px; /* Réduction de la taille du texte pour les petits écrans */
+            }
+
+            footer {
+                font-size: 12px; /* Réduction de la taille du texte du footer */
+            }
+
+            main {
+                padding: 8px;
+            }
         }
     </style>
 </head>
