@@ -67,14 +67,14 @@
             cursor: pointer; /* Pour indiquer qu'elles sont cliquables */
         }
         
-        /* Icône de déconnexion au survol */
+        /* Icône de déconnexion */
         #logout-icon:hover {
-            color: #d85c5c; /* Couleur au survol pour la déconnexion */
+            color: #d85c5c;
         }
-        
-        /* Icône du panier au survol */
+
+        /* Icône du panier */
         #cart-icon:hover {
-            color: #5e380c; /* Couleur au survol pour le panier */
+            color: #5e380c;
         }
 
         .header-content {
@@ -84,13 +84,20 @@
         }
         
         .header-icons {
-            position: absolute;
-            top: 20px; /* Ajuste si nécessaire en fonction de ton design */
-            right: 10px; /* Ajuste pour l'aligner avec ton panier */
             display: flex;
             align-items: center;
             gap: 20px;
-            z-index: 10; /* Pour qu'elle soit au-dessus des autres éléments */
+            position: absolute;
+            top: 20px; /* Ajuster cette valeur pour que les icônes soient bien positionnées en haut */
+            right: 20px; /* Garder les icônes à droite de l'écran */
+            z-index: 10;
+        }
+        
+        /* Éléments dans les icônes */
+        .header-icons a {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
         }
 
         /* Section des produits */
@@ -340,23 +347,25 @@
                         <li><a href="contact.html">Contact</a></li>
                     </ul>
                 </nav>
-    
-                <!-- Section des icônes (Déconnexion et Panier) -->
                 <section id="header-icons" class="header-icons">
+                    <!-- Icône Mon Compte -->
+                    <a href="mon-compte.html">
+                        <i class="fas fa-user" id="account-icon"></i>
+                    </a>
+    
                     <!-- Icône de déconnexion -->
                     <i class="fas fa-sign-out-alt" id="logout-icon"></i>
-    
+                    
                     <!-- Icône du panier -->
-                    <div class="cart-icon">
-                        <a href="panier.html">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="cart-count">0</span>
-                        </a>
-                    </div>
+                    <a href="panier.html" id="cart-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count">0</span>
+                    </a>
                 </section>
             </div>
         </div>
     </header>
+    
     
 
     <section id="produits">
