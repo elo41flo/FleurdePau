@@ -266,15 +266,17 @@
             const couleur = document.getElementById('product-couleur').value;
             const prix = parseFloat(document.getElementById('product-price').value);
             const imageUrl = document.getElementById('product-imageUrl').value;
-
+        
             if (!nom || !description || !couleur || !prix || !imageUrl) {
                 alert("Tous les champs sont obligatoires.");
                 return;
             }
-
+        
+            console.log({ nom, description, couleur, prix, imageUrl });  // Ajoute un log pour voir les données avant l'envoi
+        
             const form = e.target;
             const id = form.dataset.id;
-
+        
             try {
                 if (id) {
                     await updateDoc(doc(db, 'produits', id), { nom, description, couleur, prix, imageUrl });
@@ -290,6 +292,7 @@
                 console.error("Erreur:", error);
             }
         };
+        
 
         // Supprimer un produit
         const supprimerProduit = async (id) => {

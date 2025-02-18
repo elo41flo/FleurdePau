@@ -336,41 +336,31 @@
     </script>
 </head>
 <body>
-    <header class="header">
+    <header>
         <div class="container">
             <div class="header-content">
-                <h1 class="logo">Fleur De Pau</h1>
+                <div class="logo">
+                    Fleur de Pau
+                </div>
                 <nav>
                     <ul>
                         <li><a href="index.html">Accueil</a></li>
                         <li><a href="boutique.html">Boutique</a></li>
-                        <li><a href="contact.html">Contact</a></li>
                     </ul>
                 </nav>
-                <section id="header-icons" class="header-icons">
-                    <!-- Icône Mon Compte -->
-                    <a href="mon-compte.html">
-                        <i class="fas fa-user" id="account-icon"></i>
-                    </a>
-    
-                    <!-- Icône de déconnexion -->
-                    <i class="fas fa-sign-out-alt" id="logout-icon"></i>
-                    
-                    <!-- Icône du panier -->
-                    <a href="panier.html" id="cart-icon">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="cart-count">0</span>
-                    </a>
-                </section>
+                <div class="header-icons">
+                    <i id="cart-icon" class="fas fa-shopping-cart"></i>
+                    <span class="cart-count">0</span>
+                    <i id="logout-icon" class="fas fa-sign-out-alt"></i>
+                </div>
             </div>
         </div>
     </header>
-    
-    
 
-    <section id="produits">
-        <!-- Les produits seront chargés ici par JavaScript -->
-    </section>
+    <!-- Section des produits -->
+    <div id="produits" class="container">
+        <!-- Les produits seront ajoutés ici dynamiquement -->
+    </div>
 
 </body>
 </html>
