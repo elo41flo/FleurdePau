@@ -93,6 +93,9 @@
             <p id="user-shipping">Chargement...</p>
         </div>
     </div>
+    <div class="delete-account">
+        <button id="delete-account-btn" class="btn" style="background-color: #e74c3c; width: 100%;">Supprimer mon compte</button>
+    </div>    
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
@@ -137,6 +140,23 @@
                     }
                     document.getElementById("orders-list").innerHTML = ordersHTML;
                 }
+
+                // Gérer le bouton "Supprimer mon compte"
+        document.getElementById("delete-account-btn").addEventListener("click", async () => {
+            if (confirm("Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.")) {
+                try {
+                    // Supprimer les données de l'utilisateur dans Firestore
+                    await deleteDoc(doc(db, "users", user.uid)); // Supprimer le document utilisateur de Firestore
+                    // Supprimer l'utilisateur de Firebase Auth
+                    await deleteUser(user);
+                    alert("Votre compte a été supprimé avec succès.");
+                    window.location.href = "index.html"; // Rediriger l'utilisateur vers la page d'accueil ou autre page
+                } catch (error) {
+                    console.error("Erreur lors de la suppression du compte : ", error.message);
+                    alert("Une erreur est survenue, veuillez réessayer.");
+                }
+            }
+        });
             } else {
                 window.location.href = "login.html";
             }
