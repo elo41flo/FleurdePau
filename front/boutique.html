@@ -3,279 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boutique</title>
+    <title>Fleur de Pau</title>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Raleway:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body {
-            margin: 0;
-            font-family: 'Raleway', sans-serif;
-            color: #333;
-            line-height: 1.6;
-            background-color: #f8f8f8;
-        }
-        
-        header {
-            background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            padding: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .logo {
-            font-family: 'Pacifico', cursive;
-            font-size: 1.8rem;
-            color: #444;
-            text-align: center;
-        }
-        
-        nav ul {
-            list-style: none;
-            display: flex;
-            justify-content: center;
-            padding: 0;
-        }
-        
-        nav ul li {
-            margin: 0 1rem;
-        }
-        
-        nav ul li a {
-            text-decoration: none;
-            color: #555;
-            font-weight: bold;
-            transition: color 0.3s;
-        }
-        
-        nav ul li a:hover {
-            color: #d85c5c;
-        }
-
-        /* Icônes */
-        #logout-icon, #cart-icon {
-            font-size: 24px; /* Taille des icônes */
-            color: #333; /* Couleur des icônes */
-            cursor: pointer; /* Pour indiquer qu'elles sont cliquables */
-        }
-        
-        /* Icône de déconnexion */
-        #logout-icon:hover {
-            color: #d85c5c;
-        }
-
-        /* Icône du panier */
-        #cart-icon:hover {
-            color: #5e380c;
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .header-icons {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            position: absolute;
-            top: 20px; /* Ajuster cette valeur pour que les icônes soient bien positionnées en haut */
-            right: 20px; /* Garder les icônes à droite de l'écran */
-            z-index: 10;
-        }
-        
-        /* Éléments dans les icônes */
-        .header-icons a {
-            font-size: 24px;
-            color: #333;
-            cursor: pointer;
-        }
-
-        /* Section des produits */
-        #produits {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 20px;
-            padding: 100px 20px 30px; /* Ajustement pour éviter le chevauchement avec le header */
-        }
-        .produit-card {
-            background-color: #fff;
-            width: 220px;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        .produit-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-        }
-        .produit-card img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-        .produit-card h3 {
-            font-size: 1.2rem;
-            color: #333;
-            margin: 10px 0;
-        }
-        .produit-card p {
-            color: #777;
-            margin-bottom: 10px;
-        }
-        .produit-card .price {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #742a08;
-            margin-bottom: 10px;
-        }
-        .produit-card button {
-            background-color: #742a08;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .produit-card button:hover {
-            background-color: #a44b4b;
-        }
-
-        /* Styles pour les petits écrans (smartphones) */
-        @media (max-width: 768px) {
-            .logo {
-                font-size: 1.5rem;
-            }
-            nav ul {
-                flex-direction: column;
-            }
-            nav ul li {
-                margin: 1rem 0;
-            }
-            .hero {
-                padding: 50px 20px;
-            }
-            .hero-title {
-                font-size: 2rem;
-            }
-            .hero-subtitle {
-                font-size: 1rem;
-            }
-            .btn {
-                padding: 0.8rem 1rem;
-                font-size: 0.9rem;
-            }
-            .grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr; /* Deux éléments par ligne */
-                gap: 1rem;
-            }
-            .card {
-                width: 100%;
-                max-width: none;
-            }
-            footer {
-                font-size: 0.9rem;
-            }
-            /* Section Créations responsive */
-            .creations .grid {
-                grid-template-columns: 1fr 1fr; /* 2 créations par ligne */
-                gap: 1.2rem;
-            }
-        
-            .creations .card {
-                width: 100%;
-                max-width: none;
-            }
-        }
-        
-        /* Styles pour les écrans moyens (tablettes) */
-        @media (max-width: 1024px) {
-            .hero-title {
-                font-size: 2.2rem;
-            }
-            .hero-subtitle {
-                font-size: 1.1rem;
-            }
-            .grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr 1fr; /* Trois éléments par ligne */
-                gap: 1.5rem;
-            }
-            .card {
-                width: 100%;
-            }
-            footer {
-                font-size: 1rem;
-            }
-        
-            /* Section Créations responsive */
-            .creations .grid {
-                grid-template-columns: 1fr 1fr 1fr; /* 3 créations par ligne */
-                gap: 1.5rem;
-            }
-            .creations .card {
-                width: 100%;
-            }
-        }
-        
-        /* Styles pour les grands écrans (ordinateurs de bureau) */
-        @media (min-width: 1200px) {
-            .grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr 1fr 1fr; /* Quatre éléments par ligne */
-                gap: 2rem;
-            }
-        
-            /* Section Créations responsive */
-            .creations .grid {
-                grid-template-columns: 1fr 1fr 1fr 1fr; /* 4 créations par ligne */
-                gap: 2rem;
-            }
-        }
-
+        body { font-family: 'Raleway', sans-serif; margin: 0; padding: 0; }
+        header { background-color: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); padding: 1rem 2rem; position: sticky; top: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; }
+        .header-content { display: flex; flex-direction: row; justify-content: space-between; width: 100%; align-items: center; }
+        .logo { font-family: 'Pacifico', cursive; font-size: 1.8rem; color: #444; margin: 10px 0; }
+        nav ul { list-style: none; display: flex; justify-content: flex-end; padding: 0; margin: 0; }
+        nav ul li { margin: 0 1rem; }
+        nav ul li a { text-decoration: none; color: #555; font-weight: bold; transition: color 0.3s; }
+        nav ul li a:hover { color: #d85c5c; }
+        .header-icons { display: flex; justify-content: flex-start; gap: 20px; position: absolute; top: 10px; right: 20px; }
+        .header-icons a, .header-icons i { font-size: 24px; color: #333; cursor: pointer; }
+        .produits-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem; padding: 2rem; }
+        .produit { background: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 1rem; text-align: center; margin-bottom: 2rem; transition: transform 0.3s; }
+        .produit:hover { transform: scale(1.05); }
+        .produit img { width: 100%; max-width: 250px; border-radius: 10px; margin-bottom: 1rem; }
+        .btn { background-color: #5e380c; color: #fff; padding: 0.8rem 1.5rem; text-decoration: none; border-radius: 25px; font-size: 1rem; transition: background-color 0.3s; }
+        .btn:hover { background-color: #a44b4b; }
     </style>
+    <!-- Ajouter le SDK Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+            projectId: "fleurdepau-1ce7d",
+            storageBucket: "fleurdepau-1ce7d.appspot.com",
+            messagingSenderId: "394738141831",
+            appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+            measurementId: "G-D1J6X7BH9S"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let userEmail = null;
+
+        // Charger les produits depuis Firebase
+        const chargerProduits = async () => {
+            const produitsContainer = document.getElementById("produits");
+            produitsContainer.innerHTML = "";
+            const produitsSnapshot = await getDocs(collection(db, "produits"));
+
+            produitsSnapshot.forEach((doc) => {
+                const produit = doc.data();
+                const produitCard = document.createElement("div");
+                produitCard.classList.add("produit");
+                produitCard.innerHTML = ` 
+                    <img src="${produit.imageUrl}" alt="${produit.nom}">
+                    <h3>${produit.nom}</h3>
+                    <p>${produit.description}</p>
+                    <span class="prix">${produit.prix}€</span>
+                    <button class="add-to-cart" data-nom="${produit.nom}" data-prix="${produit.prix}">Ajouter au panier</button>
+                `;
+                produitsContainer.appendChild(produitCard);
+            });
+
+            // Ajouter les événements sur les boutons "Ajouter au panier"
+            document.querySelectorAll(".add-to-cart").forEach(button => {
+                button.addEventListener("click", function() {
+                    const nom = this.getAttribute("data-nom");
+                    const prix = parseFloat(this.getAttribute("data-prix"));
+                    ajouterPanier(nom, prix);
+                });
+            });
+        };
+
+        // Ajouter un produit au panier
+        function ajouterPanier(nom, prix) {
+            console.log(`Produit ajouté au panier: ${nom} - ${prix}€`);
+            alert(`Produit "${nom}" ajouté au panier !`);
+            mettreAJourCompteurPanier();
+        }
+
+        // Récupérer l'email utilisateur pour le panier
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userEmail = user.email;
+                console.log("Utilisateur connecté:", userEmail);
+                mettreAJourCompteurPanier();
+            } else {
+                console.warn("Aucun utilisateur connecté");
+                userEmail = null;
+            }
+        });
+
+        // Mettre à jour le compteur du panier
+        async function mettreAJourCompteurPanier() {
+            try {
+                if (!userEmail) {
+                    throw new Error('Utilisateur non connecté');
+                }
+                // Simulation d'une requête pour récupérer le nombre d'articles dans le panier
+                console.log(`Mise à jour du compteur pour l'utilisateur : ${userEmail}`);
+                
+                // On simule un panier avec un nombre aléatoire
+                const count = Math.floor(Math.random() * 10);  // Nombre aléatoire pour la démonstration
+                console.log('Compteur du panier:', count);
+
+                // Mettre à jour le compteur de panier sur l'interface
+                document.querySelector(".cart-count").textContent = count;
+            } catch (error) {
+                console.error('Erreur mise à jour compteur:', error);
+                alert('Erreur mise à jour du compteur : ' + error.message);
+            }
+        }
+
+        // Exécuter le chargement des produits et la mise à jour du compteur
+        window.onload = () => {
+            chargerProduits();
+            mettreAJourCompteurPanier();
+        };
+
+        // Déconnexion
+        const logoutIcon = document.getElementById("logout-icon");
+        logoutIcon.addEventListener("click", async () => {
+            try {
+                await signOut(auth);  // Déconnexion
+                window.location.href = "login.html";  // Redirection vers la page de connexion
+            } catch (error) {
+                console.error("Erreur lors de la déconnexion:", error);
+            }
+        });
+    </script>
 </head>
 <body>
     <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">Fleur de Pau</div>
-                <nav>
-                    <ul>
-                        <li><a href="index.html">Accueil</a></li>
-                        <li><a href="boutique.html">Boutique</a></li>
-                    </ul>
-                </nav>
-                <div class="header-icons">
-                    <i id="cart-icon" class="fas fa-shopping-cart"></i>
-                    <span class="cart-count">0</span>
-                    <i id="logout-icon" class="fas fa-sign-out-alt"></i>
-                </div>
-            </div>
+        <h1 class="logo">Fleur De Pau</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="boutique.html">Boutique</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="header-icons">
+            <a href="mon-compte.html"><i class="fas fa-user"></i></a>
+            <i id="logout-icon" class="fas fa-sign-out-alt"></i>
+            <a href="panier.html"><i class="fas fa-shopping-cart"></i><span class="cart-count">0</span></a>
         </div>
     </header>
-
-    <!-- Section des produits -->
-    <div id="produits" class="container">
-        <!-- Les produits seront ajoutés ici dynamiquement -->
-    </div>
-
-    <script src="panier.js"></script>
-    <script type="module" src="firebase.js"></script>
-    
+    <div id="produits" class="produits-grid"></div>
 </body>
 </html>
