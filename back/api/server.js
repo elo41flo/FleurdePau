@@ -61,6 +61,31 @@ app.post('/api/create-order', async (req, res) => {
   }
 });
 
+// Serveur - Ajout au panier (nouvelle route)
+app.post('/api/add-to-cart', async (req, res) => {
+  const { produit, quantité, userEmail } = req.body;
+
+  if (!produit || !quantité || !userEmail) {
+    return res.status(400).send('Détails du panier incomplets');
+  }
+
+  try {
+    const cartRef = db.collection('carts').doc(userEmail);
+    const cartDoc = await cartRef.get();
+
+    let cart = cartDoc.exists ? cartDoc.data().cart : [];
+    cart.push({ produit, quantité });  // Ajouter le produit au panier
+
+    await cartRef.set({ cart });  // Enregistrer le panier mis à jour dans Firestore
+
+    res.status(200).send('Produit ajouté au panier');
+  } catch (error) {
+    console.error('Erreur lors de l\'ajout au panier :', error);
+    res.status(500).send('Erreur lors de l\'ajout au panier');
+  }
+});
+
+
 // ✉️ Route pour envoyer un email après une commande
 app.post('/api/send-order-email', async (req, res) => {
   const { orderId, userEmail } = req.body;

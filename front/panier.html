@@ -306,71 +306,77 @@
     </section>
 
     <script>
-        let panier = JSON.parse(localStorage.getItem('panier')) || [];
-        const panierList = document.getElementById('panier-list');
-        const totalElement = document.getElementById('total');
-
-        function afficherPanier() {
-            panierList.innerHTML = '';
-            let total = 0;
-
-            panier.forEach(item => {
-                const div = document.createElement('div');
-                div.classList.add('panier-item');
-                div.innerHTML = `
-                    <h3>${item.nom}</h3>
-                    <p class="prix">€${item.prix.toFixed(2)}</p>
-                    <button onclick="retirerDuPanier('${item.nom}')">Retirer</button>
-                `;
-                panierList.appendChild(div);
-                total += item.prix;
-            });
-
-            totalElement.textContent = `Total: €${total.toFixed(2)}`;
-        }
-
-        function ajouterAuPanier(nom, prix) {
-            const produit = { nom, prix };
-            panier.push(produit);
-            localStorage.setItem('panier', JSON.stringify(panier)); // Sauvegarde dans localStorage
-            afficherPanier(); // Met à jour l'affichage
-        }
-
-        function retirerDuPanier(nomProduit) {
-            panier = panier.filter(item => item.nom !== nomProduit);
-            localStorage.setItem('panier', JSON.stringify(panier)); // Mise à jour du localStorage
-            afficherPanier(); // Met à jour l'affichage
-        }
-
-        function afficherFormulaireCommande() {
-            document.getElementById('formulaire-commande').style.display = 'block';
-        }
-
-        function finaliserCommande() {
-            const nom = document.getElementById('nom').value;
-            const email = document.getElementById('email').value;
-            const telephone = document.getElementById('telephone').value;
-            const adresse = document.getElementById('adresse').value;
-
-            if (!nom || !email || !telephone || !adresse) {
-                alert('Veuillez remplir tous les champs.');
-                return;
+            let panier = JSON.parse(localStorage.getItem('panier')) || [];
+            const panierList = document.getElementById('panier-list');
+            const totalElement = document.getElementById('total');
+        
+            // Afficher les produits du panier
+            function afficherPanier() {
+                panierList.innerHTML = '';
+                let total = 0;
+        
+                panier.forEach(item => {
+                    const div = document.createElement('div');
+                    div.classList.add('panier-item');
+                    div.innerHTML = `
+                        <h3>${item.nom}</h3>
+                        <p class="prix">€${item.prix.toFixed(2)}</p>
+                        <button onclick="retirerDuPanier('${item.nom}')">Retirer</button>
+                    `;
+                    panierList.appendChild(div);
+                    total += item.prix;
+                });
+        
+                totalElement.textContent = `Total: €${total.toFixed(2)}`;
             }
-
-            const commande = {
-                client: { nom, email, telephone, adresse },
-                produits: panier,
-                total: panier.reduce((acc, item) => acc + item.prix, 0)
-            };
-
-            localStorage.setItem('commande', JSON.stringify(commande));
-
-            // Rediriger vers la page de paiement
-            window.location.href = 'paiement.html';
-        }
-
-        // Appel initial pour afficher le panier au chargement de la page
-        afficherPanier();
+        
+            // Ajouter un produit au panier
+            function ajouterAuPanier(nom, prix) {
+                const produit = { nom, prix };
+                panier.push(produit);
+                localStorage.setItem('panier', JSON.stringify(panier));  // Sauvegarde dans localStorage
+                afficherPanier(); // Met à jour l'affichage
+            }
+        
+            // Retirer un produit du panier
+            function retirerDuPanier(nomProduit) {
+                panier = panier.filter(item => item.nom !== nomProduit);
+                localStorage.setItem('panier', JSON.stringify(panier)); // Mise à jour du localStorage
+                afficherPanier(); // Met à jour l'affichage
+            }
+        
+            // Afficher le formulaire de commande
+            function afficherFormulaireCommande() {
+                document.getElementById('formulaire-commande').style.display = 'block';
+            }
+        
+            // Finaliser la commande
+            function finaliserCommande() {
+                const nom = document.getElementById('nom').value;
+                const email = document.getElementById('email').value;
+                const telephone = document.getElementById('telephone').value;
+                const adresse = document.getElementById('adresse').value;
+        
+                if (!nom || !email || !telephone || !adresse) {
+                    alert('Veuillez remplir tous les champs.');
+                    return;
+                }
+        
+                const commande = {
+                    client: { nom, email, telephone, adresse },
+                    produits: panier,
+                    total: panier.reduce((acc, item) => acc + item.prix, 0)
+                };
+        
+                localStorage.setItem('commande', JSON.stringify(commande));
+        
+                // Rediriger vers la page de paiement
+                window.location.href = 'paiement.html';
+            }
+        
+            // Appel initial pour afficher le panier au chargement de la page
+            afficherPanier();
+        
 
         const logoutIcon = document.getElementById("logout-icon");
 
