@@ -1,6 +1,8 @@
 const express = require('express');
+const app = express();
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');
+const cors = require('cors');
 const mailjet = require('node-mailjet');
 const path = require('path');
 const axios = require('axios');  // Pour les requêtes vers PayPal
@@ -12,6 +14,11 @@ console.log("MAILJET_API_KEY_PUBLIC:", process.env.MAILJET_API_KEY_PUBLIC ? "LOA
 console.log("PAYPAL_CLIENT_ID:", process.env.PAYPAL_CLIENT_ID ? "LOADED" : "NOT LOADED");
 
 // 🔥 Initialisation Firebase Admin SDK
+if (!process.env.FIREBASE_PRIVATE_KEY || !process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL) {
+    console.error("Erreur : variables d'environnement Firebase manquantes !");
+    process.exit(1);
+}
+
 const serviceAccount = {
   projectId: process.env.FIREBASE_PROJECT_ID,
   privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
@@ -31,14 +38,23 @@ const mailjetClient = mailjet.apiConnect(
   process.env.MAILJET_API_KEY_PRIVATE
 );
 
-// 🚀 Création de l'application Express
-const app = express();
-
 // 🛠️ Middleware
+app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../../front'))); // Servir les fichiers statiques
 
 console.log("Chemin de login.html :", path.resolve(__dirname, '../front/login.html'));
+
+// ✅ Middleware d'authentification
+const authenticate = (req, res, next) => {
+  const userEmail = req.headers['user-email']; // Utilise l'email passé dans l'en-tête ou un token JWT
+  if (!userEmail) {
+    return res.status(401).json({ message: 'Non authentifié' });
+  }
+  req.userEmail = userEmail;
+  next();
+};
+
 // 🏠 Route principale
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../../front/login.html'));
@@ -61,30 +77,65 @@ app.post('/api/create-order', async (req, res) => {
   }
 });
 
-// Serveur - Ajout au panier (nouvelle route)
-app.post('/api/add-to-cart', async (req, res) => {
-  const { produit, quantité, userEmail } = req.body;
+// 📦 Route pour récupérer le nombre d'articles dans le panier
+app.get('/api/get-cart-count', async (req, res) => {
+  try {
+    const userEmail = req.query.userEmail;  // Récupère l'email depuis les paramètres de la requête
+    if (!userEmail) {
+      return res.status(400).json({ message: "Email manquant" });
+    }
+
+    const panier = await getCartForUser(userEmail);
+
+    if (!panier) {
+      return res.status(404).json({ message: "Panier non trouvé" });
+    }
+
+    const count = panier.items.length;
+    return res.json({ count });
+  } catch (error) {
+    console.error("Erreur lors de la récupération du panier :", error);
+    return res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+
+
+// 📦 Route pour ajouter un produit au panier
+app.post('/api/add-to-cart', authenticate, async (req, res) => {
+  const { produit, quantité } = req.body;
+  const userEmail = req.userEmail;
 
   if (!produit || !quantité || !userEmail) {
-    return res.status(400).send('Détails du panier incomplets');
+    return res.status(400).send('Détails du produit ou utilisateur manquants');
   }
 
   try {
-    const cartRef = db.collection('carts').doc(userEmail);
-    const cartDoc = await cartRef.get();
+    const userCartRef = db.collection('carts').doc(userEmail);
+    const userCartDoc = await userCartRef.get();
 
-    let cart = cartDoc.exists ? cartDoc.data().cart : [];
-    cart.push({ produit, quantité });  // Ajouter le produit au panier
+    if (!userCartDoc.exists) {
+      await userCartRef.set({ items: [] });
+    }
 
-    await cartRef.set({ cart });  // Enregistrer le panier mis à jour dans Firestore
+    const panier = userCartDoc.exists ? userCartDoc.data().items : [];
 
-    res.status(200).send('Produit ajouté au panier');
+    const existingProductIndex = panier.findIndex(item => item.produit.nom === produit.nom);
+
+    if (existingProductIndex !== -1) {
+      panier[existingProductIndex].quantité += quantité;
+    } else {
+      panier.push({ produit, quantité });
+    }
+
+    await userCartRef.update({ items: panier });
+
+    res.status(200).send('Produit ajouté au panier avec succès');
   } catch (error) {
     console.error('Erreur lors de l\'ajout au panier :', error);
     res.status(500).send('Erreur lors de l\'ajout au panier');
   }
 });
-
 
 // ✉️ Route pour envoyer un email après une commande
 app.post('/api/send-order-email', async (req, res) => {
@@ -128,22 +179,18 @@ app.post('/api/send-order-email', async (req, res) => {
   }
 });
 
-// 🏦 **Intégration de PayPal**
+// ✅ Routes PayPal
 
-// ✅ Route pour créer une commande PayPal
 app.post('/api/paypal/create-order', async (req, res) => {
   const { prix, devise = 'EUR' } = req.body;
 
   try {
-    // 🔑 Obtenir le token d'accès PayPal
     const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64');
     const tokenResponse = await axios.post(`${process.env.PAYPAL_API}/v1/oauth2/token`, 'grant_type=client_credentials', {
       headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' }
     });
 
     const accessToken = tokenResponse.data.access_token;
-
-    // 📦 Créer une commande PayPal
     const orderResponse = await axios.post(`${process.env.PAYPAL_API}/v2/checkout/orders`, {
       intent: 'CAPTURE',
       purchase_units: [{ amount: { currency_code: devise, value: prix } }]
@@ -151,27 +198,23 @@ app.post('/api/paypal/create-order', async (req, res) => {
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
     });
 
-    res.json({ id: orderResponse.data.id }); // Retourne l'ID de commande PayPal
+    res.json({ id: orderResponse.data.id });
   } catch (error) {
     console.error('Erreur PayPal:', error.response?.data || error.message);
     res.status(500).json({ error: 'Erreur lors de la création de la commande PayPal' });
   }
 });
 
-// ✅ Route pour capturer le paiement
 app.post('/api/paypal/capture-order', async (req, res) => {
   const { orderID } = req.body;
 
   try {
-    // 🔑 Obtenir le token d'accès PayPal
     const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64');
     const tokenResponse = await axios.post(`${process.env.PAYPAL_API}/v1/oauth2/token`, 'grant_type=client_credentials', {
       headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' }
     });
 
     const accessToken = tokenResponse.data.access_token;
-
-    // 🎯 Capturer le paiement
     const captureResponse = await axios.post(`${process.env.PAYPAL_API}/v2/checkout/orders/${orderID}/capture`, {}, {
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
     });
@@ -183,9 +226,14 @@ app.post('/api/paypal/capture-order', async (req, res) => {
   }
 });
 
-// 🎯 Démarrer le serveur en local (si nécessaire)
+// 📦 Gestion des erreurs globales
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Erreur interne du serveur');
+});
+
+// Démarrage du serveur
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`));
 
-// ✅ Exporter l'application pour Vercel
 module.exports = app;

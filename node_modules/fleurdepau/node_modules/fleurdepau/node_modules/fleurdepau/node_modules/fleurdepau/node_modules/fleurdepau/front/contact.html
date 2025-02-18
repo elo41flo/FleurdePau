@@ -198,18 +198,23 @@
         </section>
     </main>
 
-    <script>
-        const logoutIcon = document.getElementById("logout-icon");
-
-logoutIcon.addEventListener("click", async () => {
-    try {
-        await signOut(auth);  // Déconnexion
-        window.location.href = "login.html";  // Redirection vers la page de connexion
-    } catch (error) {
-        console.error("Erreur lors de la déconnexion:", error);
-    }
-});
-
+    <script type="module">
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
+        
+        const auth = getAuth();
+    
+        // Ajouter l'événement de déconnexion
+        document.getElementById("logout-icon").addEventListener("click", async () => {
+            try {
+                await signOut(auth);
+                alert("Vous êtes maintenant déconnecté.");
+                // Redirection ou mise à jour de l'interface
+                window.location.href = "index.html";  // Exemple de redirection vers la page d'accueil
+            } catch (error) {
+                console.error("Erreur lors de la déconnexion:", error);
+            }
+        });
     </script>
+    
 </body>
 </html>
