@@ -305,83 +305,105 @@
 
     <script>
         let panier = JSON.parse(localStorage.getItem("panier")) || [];
-
+    
+        // Afficher le panier et les quantités modifiables
         function afficherPanier() {
             let panierContainer = document.getElementById("panier-list");
             let totalElement = document.getElementById("total");
             panierContainer.innerHTML = "";
             let total = 0;
-
+    
             if (panier.length === 0) {
                 panierContainer.innerHTML = "<p>Votre panier est vide.</p>";
                 totalElement.textContent = "Total: €0.00";
                 return;
             }
-
+    
             panier.forEach((item, index) => {
                 let panierItem = document.createElement("div");
                 panierItem.classList.add("panier-item");
                 panierItem.innerHTML = `
                     <h3>${item.nom}</h3>
-                    <p class="prix">${item.prix}€ x ${item.quantite}</p>
+                    <p class="prix">${item.prix}€</p>
+                    <input type="number" value="${item.quantite}" min="1" max="99" class="quantite-input" data-index="${index}">
                     <button onclick="retirerDuPanier(${index})">Supprimer</button>
                 `;
                 panierContainer.appendChild(panierItem);
                 total += item.prix * item.quantite;
             });
-
+    
             totalElement.textContent = `Total: €${total.toFixed(2)}`;
+    
+            // Ajout d'un écouteur pour la modification des quantités
+            const quantityInputs = document.querySelectorAll(".quantite-input");
+            quantityInputs.forEach(input => {
+                input.addEventListener("change", (event) => {
+                    let index = event.target.dataset.index;
+                    let newQuantity = parseInt(event.target.value);
+                    if (newQuantity > 0) {
+                        panier[index].quantite = newQuantity;
+                        localStorage.setItem("panier", JSON.stringify(panier));
+                        afficherPanier();
+                    }
+                });
+            });
         }
-
+    
+        // Ajouter un produit au panier
         function ajouterAuPanier(nom, prix) {
             let produitExistant = panier.find(item => item.nom === nom);
-
+    
             if (produitExistant) {
                 produitExistant.quantite += 1;
             } else {
                 panier.push({ nom, prix, quantite: 1 });
             }
-
+    
             localStorage.setItem("panier", JSON.stringify(panier));
             afficherPanier();
         }
-
+    
+        // Retirer un produit du panier
         function retirerDuPanier(index) {
             panier.splice(index, 1);
             localStorage.setItem("panier", JSON.stringify(panier));
             afficherPanier();
         }
-
+    
+        // Afficher le formulaire de commande
         function afficherFormulaireCommande() {
             document.getElementById("formulaire-commande").style.display = "block";
         }
-
+    
+        // Finaliser la commande
         function finaliserCommande() {
             const nom = document.getElementById("nom").value.trim();
             const email = document.getElementById("email").value.trim();
             const telephone = document.getElementById("telephone").value.trim();
             const adresse = document.getElementById("adresse").value.trim();
-
+    
             if (!nom || !email || !telephone || !adresse) {
                 alert("Veuillez remplir tous les champs.");
                 return;
             }
-
+    
             let totalCommande = panier.reduce((total, item) => total + item.prix * item.quantite, 0);
-
+    
             const commande = {
                 client: { nom, email, telephone, adresse },
                 panier,
                 total: totalCommande
             };
-
+    
             console.log("Commande validée :", commande);
             localStorage.removeItem("panier");
             alert("Votre commande a été passée !");
             location.reload();
         }
-
+    
+        // Afficher le panier au chargement de la page
         document.addEventListener("DOMContentLoaded", afficherPanier);
     </script>
+    
 </body>
 </html>
