@@ -268,14 +268,12 @@
                     <li><a href="contact.html">Contact</a></li>
                 </ul>
             </nav>
-            <!-- Icône du panier -->
-<div class="cart-icon">
-    <a href="panier.html">  
-        <i class="fas fa-shopping-cart"></i>
-        <span class="cart-count">0</span>
-    </a>
-</div>
-
+            <div class="cart-icon">
+                <a href="panier.html">  
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count">0</span>
+                </a>
+            </div>
         </div>
     </header>
 
@@ -306,89 +304,84 @@
     </section>
 
     <script>
-            let panier = JSON.parse(localStorage.getItem('panier')) || [];
-            const panierList = document.getElementById('panier-list');
-            const totalElement = document.getElementById('total');
-        
-            // Afficher les produits du panier
-            function afficherPanier() {
-                panierList.innerHTML = '';
-                let total = 0;
-        
-                panier.forEach(item => {
-                    const div = document.createElement('div');
-                    div.classList.add('panier-item');
-                    div.innerHTML = `
-                        <h3>${item.nom}</h3>
-                        <p class="prix">€${item.prix.toFixed(2)}</p>
-                        <button onclick="retirerDuPanier('${item.nom}')">Retirer</button>
-                    `;
-                    panierList.appendChild(div);
-                    total += item.prix;
-                });
-        
-                totalElement.textContent = `Total: €${total.toFixed(2)}`;
+        let panier = JSON.parse(localStorage.getItem("panier")) || [];
+
+        function afficherPanier() {
+            let panierContainer = document.getElementById("panier-list");
+            let totalElement = document.getElementById("total");
+            panierContainer.innerHTML = "";
+            let total = 0;
+
+            if (panier.length === 0) {
+                panierContainer.innerHTML = "<p>Votre panier est vide.</p>";
+                totalElement.textContent = "Total: €0.00";
+                return;
             }
-        
-            // Ajouter un produit au panier
-            function ajouterAuPanier(nom, prix) {
-                const produit = { nom, prix };
-                panier.push(produit);
-                localStorage.setItem('panier', JSON.stringify(panier));  // Sauvegarde dans localStorage
-                afficherPanier(); // Met à jour l'affichage
+
+            panier.forEach((item, index) => {
+                let panierItem = document.createElement("div");
+                panierItem.classList.add("panier-item");
+                panierItem.innerHTML = `
+                    <h3>${item.nom}</h3>
+                    <p class="prix">${item.prix}€ x ${item.quantite}</p>
+                    <button onclick="retirerDuPanier(${index})">Supprimer</button>
+                `;
+                panierContainer.appendChild(panierItem);
+                total += item.prix * item.quantite;
+            });
+
+            totalElement.textContent = `Total: €${total.toFixed(2)}`;
+        }
+
+        function ajouterAuPanier(nom, prix) {
+            let produitExistant = panier.find(item => item.nom === nom);
+
+            if (produitExistant) {
+                produitExistant.quantite += 1;
+            } else {
+                panier.push({ nom, prix, quantite: 1 });
             }
-        
-            // Retirer un produit du panier
-            function retirerDuPanier(nomProduit) {
-                panier = panier.filter(item => item.nom !== nomProduit);
-                localStorage.setItem('panier', JSON.stringify(panier)); // Mise à jour du localStorage
-                afficherPanier(); // Met à jour l'affichage
-            }
-        
-            // Afficher le formulaire de commande
-            function afficherFormulaireCommande() {
-                document.getElementById('formulaire-commande').style.display = 'block';
-            }
-        
-            // Finaliser la commande
-            function finaliserCommande() {
-                const nom = document.getElementById('nom').value;
-                const email = document.getElementById('email').value;
-                const telephone = document.getElementById('telephone').value;
-                const adresse = document.getElementById('adresse').value;
-        
-                if (!nom || !email || !telephone || !adresse) {
-                    alert('Veuillez remplir tous les champs.');
-                    return;
-                }
-        
-                const commande = {
-                    client: { nom, email, telephone, adresse },
-                    produits: panier,
-                    total: panier.reduce((acc, item) => acc + item.prix, 0)
-                };
-        
-                localStorage.setItem('commande', JSON.stringify(commande));
-        
-                // Rediriger vers la page de paiement
-                window.location.href = 'paiement.html';
-            }
-        
-            // Appel initial pour afficher le panier au chargement de la page
+
+            localStorage.setItem("panier", JSON.stringify(panier));
             afficherPanier();
-        
+        }
 
-        const logoutIcon = document.getElementById("logout-icon");
+        function retirerDuPanier(index) {
+            panier.splice(index, 1);
+            localStorage.setItem("panier", JSON.stringify(panier));
+            afficherPanier();
+        }
 
-logoutIcon.addEventListener("click", async () => {
-    try {
-        await signOut(auth);  // Déconnexion
-        window.location.href = "login.html";  // Redirection vers la page de connexion
-    } catch (error) {
-        console.error("Erreur lors de la déconnexion:", error);
-    }
-});
+        function afficherFormulaireCommande() {
+            document.getElementById("formulaire-commande").style.display = "block";
+        }
 
+        function finaliserCommande() {
+            const nom = document.getElementById("nom").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const telephone = document.getElementById("telephone").value.trim();
+            const adresse = document.getElementById("adresse").value.trim();
+
+            if (!nom || !email || !telephone || !adresse) {
+                alert("Veuillez remplir tous les champs.");
+                return;
+            }
+
+            let totalCommande = panier.reduce((total, item) => total + item.prix * item.quantite, 0);
+
+            const commande = {
+                client: { nom, email, telephone, adresse },
+                panier,
+                total: totalCommande
+            };
+
+            console.log("Commande validée :", commande);
+            localStorage.removeItem("panier");
+            alert("Votre commande a été passée !");
+            location.reload();
+        }
+
+        document.addEventListener("DOMContentLoaded", afficherPanier);
     </script>
 </body>
 </html>

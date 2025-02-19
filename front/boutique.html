@@ -25,118 +25,9 @@
         .btn:hover { background-color: #a44b4b; }
     </style>
     <!-- Ajouter le SDK Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
-            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
-            projectId: "fleurdepau-1ce7d",
-            storageBucket: "fleurdepau-1ce7d.appspot.com",
-            messagingSenderId: "394738141831",
-            appId: "1:394738141831:web:a0cd5b9d0227267b248622",
-            measurementId: "G-D1J6X7BH9S"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        let userEmail = null;
-
-        // Charger les produits depuis Firebase
-        const chargerProduits = async () => {
-            const produitsContainer = document.getElementById("produits");
-            produitsContainer.innerHTML = "";
-            const produitsSnapshot = await getDocs(collection(db, "produits"));
-
-            produitsSnapshot.forEach((doc) => {
-                const produit = doc.data();
-                const produitCard = document.createElement("div");
-                produitCard.classList.add("produit");
-                produitCard.innerHTML = ` 
-                    <img src="${produit.imageUrl}" alt="${produit.nom}">
-                    <h3>${produit.nom}</h3>
-                    <p>${produit.description}</p>
-                    <span class="prix">${produit.prix}€</span>
-                    <button class="add-to-cart" data-nom="${produit.nom}" data-prix="${produit.prix}">Ajouter au panier</button>
-                `;
-                produitsContainer.appendChild(produitCard);
-            });
-
-            // Ajouter les événements sur les boutons "Ajouter au panier"
-            document.querySelectorAll(".add-to-cart").forEach(button => {
-                button.addEventListener("click", function() {
-                    const nom = this.getAttribute("data-nom");
-                    const prix = parseFloat(this.getAttribute("data-prix"));
-                    ajouterPanier(nom, prix);
-                });
-            });
-        };
-
-        // Ajouter un produit au panier
-        function ajouterPanier(nom, prix) {
-            console.log(`Produit ajouté au panier: ${nom} - ${prix}€`);
-            alert(`Produit "${nom}" ajouté au panier !`);
-            mettreAJourCompteurPanier();
-        }
-
-        // Récupérer l'email utilisateur pour le panier
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                userEmail = user.email;
-                console.log("Utilisateur connecté:", userEmail);
-                mettreAJourCompteurPanier();
-            } else {
-                console.warn("Aucun utilisateur connecté");
-                userEmail = null;
-            }
-        });
-
-        // Mettre à jour le compteur du panier
-        async function mettreAJourCompteurPanier() {
-            try {
-                if (!userEmail) {
-                    throw new Error('Utilisateur non connecté');
-                }
-                // Simulation d'une requête pour récupérer le nombre d'articles dans le panier
-                console.log(`Mise à jour du compteur pour l'utilisateur : ${userEmail}`);
-                
-                // On simule un panier avec un nombre aléatoire
-                const count = Math.floor(Math.random() * 10);  // Nombre aléatoire pour la démonstration
-                console.log('Compteur du panier:', count);
-
-                // Mettre à jour le compteur de panier sur l'interface
-                document.querySelector(".cart-count").textContent = count;
-            } catch (error) {
-                console.error('Erreur mise à jour compteur:', error);
-                alert('Erreur mise à jour du compteur : ' + error.message);
-            }
-        }
-
-        // Exécuter le chargement des produits et la mise à jour du compteur
-        window.onload = () => {
-            chargerProduits();
-            mettreAJourCompteurPanier();
-        };
-
-        // Déconnexion
-        const logoutIcon = document.getElementById("logout-icon");
-        logoutIcon.addEventListener("click", async () => {
-            try {
-                await signOut(auth);  // Déconnexion
-                window.location.href = "login.html";  // Redirection vers la page de connexion
-            } catch (error) {
-                console.error("Erreur lors de la déconnexion:", error);
-            }
-        });
-    </script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
 </head>
 <body>
     <header>
@@ -155,5 +46,87 @@
         </div>
     </header>
     <div id="produits" class="produits-grid"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+            projectId: "fleurdepau-1ce7d",
+            storageBucket: "fleurdepau-1ce7d.appspot.com",
+            messagingSenderId: "394738141831",
+            appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+            measurementId: "G-D1J6X7BH9S"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        function mettreAJourCompteur() {
+            let compteurElement = document.querySelector(".cart-count");
+            if (!compteurElement) return;
+
+            let panier = JSON.parse(localStorage.getItem("panier")) || [];
+            let totalArticles = panier.reduce((total, item) => total + item.quantite, 0);
+            compteurElement.innerText = totalArticles;
+        }
+
+        function ajouterAuPanier(id, nom, prix) {
+            let panier = JSON.parse(localStorage.getItem("panier")) || [];
+            let item = panier.find(item => item.id === id);
+
+            if (item) {
+                item.quantite += 1;
+            } else {
+                panier.push({ id, nom, prix, quantite: 1 });
+            }
+
+            localStorage.setItem("panier", JSON.stringify(panier));
+            mettreAJourCompteur();
+        }
+
+        async function chargerProduits() {
+            const produitsContainer = document.getElementById("produits");
+            produitsContainer.innerHTML = "";
+            const produitsSnapshot = await getDocs(collection(db, "produits"));
+
+            produitsSnapshot.forEach((doc) => {
+                const produit = doc.data();
+                const produitCard = document.createElement("div");
+                produitCard.classList.add("produit");
+                produitCard.innerHTML = ` 
+                    <img src="${produit.imageUrl}" alt="${produit.nom}">
+                    <h3>${produit.nom}</h3>
+                    <p>${produit.description}</p>
+                    <span class="prix">${produit.prix}€</span>
+                    <button class="add-to-cart" data-id="${doc.id}" data-nom="${produit.nom}" data-prix="${produit.prix}">Ajouter au panier</button>
+                `;
+                produitsContainer.appendChild(produitCard);
+            });
+
+            document.querySelectorAll(".add-to-cart").forEach(button => {
+                button.addEventListener("click", function() {
+                    const id = this.getAttribute("data-id");
+                    const nom = this.getAttribute("data-nom");
+                    const prix = parseFloat(this.getAttribute("data-prix"));
+                    ajouterAuPanier(id, nom, prix);
+                });
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            mettreAJourCompteur();
+            chargerProduits();
+        });
+
+        document.getElementById("logout-icon").addEventListener("click", async () => {
+            await signOut(auth);
+            window.location.href = "login.html";
+        });
+    </script>
 </body>
 </html>

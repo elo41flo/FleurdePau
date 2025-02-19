@@ -240,7 +240,6 @@
             </a>
         </section>
     </header>
-
     <main>
         <section class="hero">
             <h2 class="hero-title">L'art d'être soi-même</h2>
@@ -272,5 +271,54 @@
     <footer>
         <p>© 2025 Fleur de Pau - Tous droits réservés</p>
     </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("Page chargée, mise à jour du compteur panier...");
+            mettreAJourCompteurPanier(); // Met à jour le compteur du panier au chargement
+        });
+    
+        function mettreAJourCompteurPanier() {
+            // Vérifie si l'utilisateur est connecté
+            let userId = localStorage.getItem('userId');
+            console.log("User ID récupéré:", userId);
+    
+            if (!userId) {
+                console.log("Aucun utilisateur connecté. Le panier est vide.");
+                return; // Sortie immédiate si aucun utilisateur
+            }
+    
+            // Récupération du panier de l'utilisateur
+            let panier = JSON.parse(localStorage.getItem(`panier_${userId}`)) || [];
+            console.log("Panier récupéré:", panier);
+    
+            // Mise à jour du compteur dans l'icône du panier
+            const panierCountElement = document.querySelector('.cart-count');
+            panierCountElement.textContent = panier.length;
+            console.log("Compteur panier mis à jour :", panier.length);
+        }
+    
+        function ajouterAuPanier(produit) {
+            let userId = localStorage.getItem('userId');
+    
+            if (!userId) {
+                alert("Vous devez être connecté pour ajouter un article au panier.");
+                return;
+            }
+    
+            // Récupération du panier actuel de l'utilisateur
+            let panier = JSON.parse(localStorage.getItem(`panier_${userId}`)) || [];
+    
+            // Ajout du nouveau produit
+            panier.push(produit);
+    
+            // Sauvegarde du panier mis à jour
+            localStorage.setItem(`panier_${userId}`, JSON.stringify(panier));
+            console.log("Produit ajouté au panier:", produit);
+    
+            // Mise à jour du compteur
+            mettreAJourCompteurPanier();
+        }
+    </script>
 </body>
 </html>
