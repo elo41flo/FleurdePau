@@ -215,6 +215,26 @@
             }
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            mettreAJourCompteur();
+    
+            // Écoute les changements du localStorage pour synchroniser le panier entre les onglets
+            window.addEventListener("storage", () => {
+                mettreAJourCompteur();
+            });
+        });
+    
+        function mettreAJourCompteur() {
+            let compteurElement = document.querySelector(".cart-count");
+            if (!compteurElement) return;
+    
+            let panier = JSON.parse(localStorage.getItem("panier")) || [];
+            let totalArticles = panier.reduce((total, item) => total + item.quantite, 0);
+            compteurElement.innerText = totalArticles;
+            compteurElement.style.display = totalArticles > 0 ? "inline-block" : "none";
+        }
+    </script>
     
 </body>
 </html>

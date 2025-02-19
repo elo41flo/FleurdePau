@@ -206,6 +206,45 @@
             }
         }
     </style>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+        // Configuration Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+            projectId: "fleurdepau-1ce7d",
+            storageBucket: "fleurdepau-1ce7d.appspot.com",
+            messagingSenderId: "394738141831",
+            appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+            measurementId: "G-D1J6X7BH9S"
+        };
+
+        // Initialisation de Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Fonction pour gérer la déconnexion
+        document.addEventListener("DOMContentLoaded", () => {
+            const logoutButton = document.getElementById("logout-icon");
+            if (logoutButton) {
+                logoutButton.addEventListener("click", async () => {
+                    try {
+                        await signOut(auth);
+                        window.location.href = "login.html";  // Rediriger vers la page de connexion
+                    } catch (error) {
+                        console.error("Erreur lors de la déconnexion:", error);
+                    }
+                    // Effacer les données utilisateur dans le stockage local
+                    localStorage.removeItem("userId");
+                    localStorage.removeItem("panier");
+                });
+            }
+        });
+    </script>
 </head>
 <body>
     <header class="header">
@@ -231,7 +270,9 @@
             </a>
 
             <!-- Icône de déconnexion -->
-            <i class="fas fa-sign-out-alt"></i>
+            <a href="login.html" id="logout-icon">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
 
             <!-- Icône du panier -->
             <a href="panier.html">
@@ -240,6 +281,7 @@
             </a>
         </section>
     </header>
+
     <main>
         <section class="hero">
             <h2 class="hero-title">L'art d'être soi-même</h2>
@@ -253,9 +295,10 @@
                 <p>Bienvenue dans l'univers Fleur de Pau, je suis artiste tatoueuse et passionnée de crochet ! Chaque pièce est réalisée avec soin et amour pour apporter une touche de douceur et d'originalité.</p>
             </div>
         </section>
+
         <section class="image-section">
             <div class="container">
-                <center><img src="images\2.jpg" alt="Création artisanale" style="width: 50%; max-width: 1200px; border-radius: 10px;"></center>
+                <center><img src="images/2.jpg" alt="Création artisanale" style="width: 50%; max-width: 1200px; border-radius: 10px;"></center>
             </div>
         </section>
 
@@ -273,50 +316,32 @@
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("Page chargée, mise à jour du compteur panier...");
-            mettreAJourCompteurPanier(); // Met à jour le compteur du panier au chargement
+        document.addEventListener("DOMContentLoaded", () => {
+            mettreAJourCompteur();
+    
+            // Écouteur pour mettre à jour le compteur si le panier change dans un autre onglet
+            window.addEventListener("storage", () => {
+                mettreAJourCompteur();
+            });
         });
     
-        function mettreAJourCompteurPanier() {
-            // Vérifie si l'utilisateur est connecté
-            let userId = localStorage.getItem('userId');
-            console.log("User ID récupéré:", userId);
+        function mettreAJourCompteur() {
+            let compteurElement = document.querySelector(".cart-count");
+            if (!compteurElement) return;
     
-            if (!userId) {
-                console.log("Aucun utilisateur connecté. Le panier est vide.");
-                return; // Sortie immédiate si aucun utilisateur
-            }
-    
-            // Récupération du panier de l'utilisateur
-            let panier = JSON.parse(localStorage.getItem(`panier_${userId}`)) || [];
-            console.log("Panier récupéré:", panier);
-    
-            // Mise à jour du compteur dans l'icône du panier
-            const panierCountElement = document.querySelector('.cart-count');
-            panierCountElement.textContent = panier.length;
-            console.log("Compteur panier mis à jour :", panier.length);
+            let panier = JSON.parse(localStorage.getItem("panier")) || [];
+            let totalArticles = panier.reduce((total, item) => total + item.quantite, 0);
+            compteurElement.innerText = totalArticles;
+            compteurElement.style.display = totalArticles > 0 ? "inline-block" : "none";
         }
     
         function ajouterAuPanier(produit) {
-            let userId = localStorage.getItem('userId');
-    
-            if (!userId) {
-                alert("Vous devez être connecté pour ajouter un article au panier.");
-                return;
-            }
-    
-            // Récupération du panier actuel de l'utilisateur
+            let userId = localStorage.getItem('userId') || 'guest';
             let panier = JSON.parse(localStorage.getItem(`panier_${userId}`)) || [];
     
-            // Ajout du nouveau produit
             panier.push(produit);
-    
-            // Sauvegarde du panier mis à jour
             localStorage.setItem(`panier_${userId}`, JSON.stringify(panier));
-            console.log("Produit ajouté au panier:", produit);
     
-            // Mise à jour du compteur
             mettreAJourCompteurPanier();
         }
     </script>
