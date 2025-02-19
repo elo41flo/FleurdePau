@@ -184,19 +184,11 @@ button.add-to-cart:hover {
 }
 
 </style>
-    
-    <!-- Ajouter le SDK Firebase -->
-    <script type="module" src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
 </head>
 <body>
     <header class="header">
         <div class="header-content">
-            <!-- Logo centré -->
             <h1 class="logo">Fleur De Pau</h1>
-    
-            <!-- Menu centré horizontalement -->
             <nav>
                 <ul>
                     <li><a href="index.html">Accueil</a></li>
@@ -205,68 +197,48 @@ button.add-to-cart:hover {
                 </ul>
             </nav>
         </div>
-    
-        <!-- Icônes alignées horizontalement à droite -->
         <section id="header-icons" class="header-icons">
             <a href="mon-compte.html"><i class="fas fa-user"></i></a>
-            <!-- Icône de déconnexion -->
-            <a href="login.html" id="logout-icon">
-                <i class="fas fa-sign-out-alt"></i>
-            </a>
-
+            <a href="login.html" id="logout-icon"><i class="fas fa-sign-out-alt"></i></a>
             <a href="panier.html"><i class="fas fa-shopping-cart"></i><span class="cart-count">0</span></a>
         </section>
     </header>
     
     <div id="produits" class="produits-grid"></div>
-
+    
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
-            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
-            projectId: "fleurdepau-1ce7d",
-            storageBucket: "fleurdepau-1ce7d.appspot.com",
-            messagingSenderId: "394738141831",
-            appId: "1:394738141831:web:a0cd5b9d0227267b248622",
-            measurementId: "G-D1J6X7BH9S"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+        authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+        projectId: "fleurdepau-1ce7d",
+        storageBucket: "fleurdepau-1ce7d.appspot.com",
+        messagingSenderId: "394738141831",
+        appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+        measurementId: "G-D1J6X7BH9S"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-        function mettreAJourCompteur() {
-            let compteurElement = document.querySelector(".cart-count");
-            if (!compteurElement) return;
+    function mettreAJourCompteur() {
+        let compteurElement = document.querySelector(".cart-count");
+        if (!compteurElement) return;
+        let panier = JSON.parse(localStorage.getItem("panier")) || [];
+        let totalArticles = panier.reduce((total, item) => total + item.quantite, 0);
+        compteurElement.innerText = totalArticles;
+    }
 
-            let panier = JSON.parse(localStorage.getItem("panier")) || [];
-            let totalArticles = panier.reduce((total, item) => total + item.quantite, 0);
-            compteurElement.innerText = totalArticles;
-        }
+    async function chargerProduits() {
+        const produitsContainer = document.getElementById("produits");
+        produitsContainer.innerHTML = "";
 
-        function ajouterAuPanier(id, nom, prix) {
-            let panier = JSON.parse(localStorage.getItem("panier")) || [];
-            let item = panier.find(item => item.id === id);
-
-            if (item) {
-                item.quantite += 1;
-            } else {
-                panier.push({ id, nom, prix, quantite: 1 });
-            }
-
-            localStorage.setItem("panier", JSON.stringify(panier));
-            mettreAJourCompteur();
-        }
-
-        async function chargerProduits() {
-            const produitsContainer = document.getElementById("produits");
-            produitsContainer.innerHTML = "";
+        try {
             const produitsSnapshot = await getDocs(collection(db, "produits"));
-
             produitsSnapshot.forEach((doc) => {
                 const produit = doc.data();
                 const produitCard = document.createElement("div");
@@ -276,45 +248,87 @@ button.add-to-cart:hover {
                     <h3>${produit.nom}</h3>
                     <p>${produit.description}</p>
                     <span class="prix">${produit.prix}€</span>
-                    <button class="add-to-cart" data-id="${doc.id}" data-nom="${produit.nom}" data-prix="${produit.prix}">Ajouter au panier</button>
+                    <button class="add-to-cart" data-nom="${produit.nom}">Ajouter au panier</button>
                 `;
                 produitsContainer.appendChild(produitCard);
             });
 
             document.querySelectorAll(".add-to-cart").forEach(button => {
                 button.addEventListener("click", function() {
-                    const id = this.getAttribute("data-id");
                     const nom = this.getAttribute("data-nom");
-                    const prix = parseFloat(this.getAttribute("data-prix"));
-                    ajouterAuPanier(id, nom, prix);
+                    ajouterAuPanier(nom);
                 });
             });
+        } catch (error) {
+            console.error("Erreur lors du chargement des produits :", error);
         }
+    }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            mettreAJourCompteur();
-            chargerProduits();
-        });
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const logoutButton = document.getElementById("logout-icon");
-            if (logoutButton) {
-                logoutButton.addEventListener("click", async () => {
-                    try {
-                        await signOut(auth);
-                        window.location.href = "login.html";  // Rediriger vers la page de connexion
-                    } catch (error) {
-                        console.error("Erreur lors de la déconnexion:", error);
-                    }
-                    // Effacer les données utilisateur dans le stockage local
-                    localStorage.removeItem("userId");
-                    localStorage.removeItem("panier");
-                });
+    async function ajouterAuPanier(nom) {
+        let panier = JSON.parse(localStorage.getItem("panier")) || [];
+        const produit = await getProduitParNom(nom);
+    
+        if (!produit) {
+            alert("Produit introuvable !");
+            return;
+        }
+    
+        let produitDansPanier = panier.find(item => item.nom === nom);
+        if (produitDansPanier) {
+            if (produitDansPanier.quantite < produit.stock) {
+                produitDansPanier.quantite += 1;
             } else {
-                console.warn("L'élément logout-icon est introuvable.");
+                alert("Stock insuffisant !");
+                return;
+            }
+        } else {
+            if (produit.stock > 0) {
+                panier.push({ nom, prix: produit.prix, quantite: 1 });
+            } else {
+                alert("Produit en rupture de stock !");
+                return;
+            }
+        }
+    
+        localStorage.setItem("panier", JSON.stringify(panier));
+        mettreAJourCompteur();
+    }
+    
+    async function getProduitParNom(nom) {
+        try {
+            const produitsSnapshot = await getDocs(collection(db, "produits"));
+            const produitDoc = produitsSnapshot.docs.find(doc => doc.data().nom === nom);
+            return produitDoc ? produitDoc.data() : null;
+        } catch (error) {
+            console.error("Erreur lors de la récupération du produit :", error);
+            return null;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        mettreAJourCompteur();
+        chargerProduits();
+
+        document.getElementById("logout-icon").addEventListener("click", async () => {
+            try {
+                await signOut(auth);
+                localStorage.removeItem("userId");
+                localStorage.removeItem("panier");
+                window.location.href = "login.html";
+            } catch (error) {
+                console.error("Erreur lors de la déconnexion:", error);
             }
         });
-        
-    </script>
+    });
+
+    if (!localStorage.getItem("produits")) {
+        localStorage.setItem("produits", JSON.stringify([
+            { nom: "Rose Rouge", prix: 10, stock: 10 },
+            { nom: "Tulipe Jaune", prix: 8, stock: 5 },
+            { nom: "Orchidée Blanche", prix: 15, stock: 7 }
+        ]));
+    }
+</script>
+
 </body>
 </html>
