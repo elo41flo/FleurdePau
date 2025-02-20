@@ -197,21 +197,75 @@
             font-weight: bold;
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+        
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+                padding: 10px 0;
+            }
+        
+            nav ul li {
+                margin: 5px 0;
+            }
+        
+            .header-icons {
+                position: static;
+                margin-top: 10px;
+            }
+        
             .contact-form {
+                width: 90%;
                 padding: 1.5rem;
             }
-
-            button {
-                font-size: 0.9rem;
+        
+            .social-links {
+                flex-wrap: wrap;
+            }
+        
+            .social-link {
+                font-size: 24px;
             }
         }
+        
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.5rem;
+            }
+        
+            .header-icons a, .header-icons i {
+                font-size: 20px;
+            }
+        
+            .contact-form {
+                padding: 1rem;
+            }
+        
+            input, textarea {
+                font-size: 0.9rem;
+            }
+        
+            button {
+                font-size: 0.9rem;
+                padding: 8px;
+            }
+        
+            .social-link {
+                font-size: 22px;
+            }
+        }
+        
     </style>
 </head>
 <body>
 
     <section class="contact-form">
-        <h2>Nous envoyer un message</h2>
+        <h2>M'envoyer un message</h2>
         <form id="contactForm">
             <label for="name">Nom :</label>
             <input type="text" id="name" name="name" required>
@@ -232,20 +286,11 @@
     <div class="contact-container">
         <h2>Venez me suivre sur les réseaux sociaux :</h2>
         <div class="social-links">
-            <a href="https://www.facebook.com" target="_blank" class="social-link facebook">
+            <a href="https://www.facebook.com/share/18ApHs8TSu/" target="_blank" class="social-link facebook">
                 <i class="fab fa-facebook-f"></i>
             </a>
-            <a href="https://www.twitter.com" target="_blank" class="social-link twitter">
-                <i class="fab fa-twitter"></i>
-            </a>
-            <a href="https://www.instagram.com" target="_blank" class="social-link instagram">
+            <a href="https://www.instagram.com/atelierfleurdepau?igsh=a2JpdHVmcjkzZ3Fy" target="_blank" class="social-link instagram">
                 <i class="fab fa-instagram"></i>
-            </a>
-            <a href="https://www.linkedin.com" target="_blank" class="social-link linkedin">
-                <i class="fab fa-linkedin-in"></i>
-            </a>
-            <a href="https://www.youtube.com" target="_blank" class="social-link youtube">
-                <i class="fab fa-youtube"></i>
             </a>
         </div>
     </div>
@@ -276,54 +321,58 @@
                 console.error("Erreur:", error);
             }
         });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            fetch("header.html")
-                .then(response => response.text())
-                .then(data => {
-                    document.body.insertAdjacentHTML("afterbegin", data);
-
-                    import("https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js")
-                        .then(({ initializeApp }) => {
-                            import("https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js")
-                                .then(({ getAuth, signOut }) => {
-                                    const firebaseConfig = {
-                                        apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
-                                        authDomain: "fleurdepau-1ce7d.firebaseapp.com",
-                                        projectId: "fleurdepau-1ce7d",
-                                        storageBucket: "fleurdepau-1ce7d.appspot.com",
-                                        messagingSenderId: "394738141831",
-                                        appId: "1:394738141831:web:a0cd5b9d0227267b248622",
-                                        measurementId: "G-D1J6X7BH9S"
-                                    };
-
-                                    const app = initializeApp(firebaseConfig);
-                                    const auth = getAuth(app);
-
-                                    const logoutIcon = document.getElementById("logout-icon");
-                                    if (logoutIcon) {
-                                        logoutIcon.addEventListener("click", async (event) => {
-                                            event.preventDefault();
-                                            try {
-                                                await signOut(auth);
-                                                alert("Vous êtes maintenant déconnecté.");
-                                                window.location.href = "index.html";
-                                            } catch (error) {
-                                                console.error("Erreur lors de la déconnexion:", error);
-                                            }
-                                        });
-                                    }
-                                });
-                        })
-                        .catch(error => console.error("Erreur de chargement de Firebase :", error));
-                })
-                .catch(error => console.error("Erreur lors du chargement du header :", error));
+    
+        document.addEventListener("DOMContentLoaded", async function() {
+            try {
+                const response = await fetch("header.html");
+                const data = await response.text();
+                document.body.insertAdjacentHTML("afterbegin", data);
+    
+                // Importation des modules Firebase en mode asynchrone
+                const { initializeApp } = await import("https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js");
+                const { getAuth, signOut } = await import("https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js");
+    
+                const firebaseConfig = {
+                    apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+                    authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+                    projectId: "fleurdepau-1ce7d",
+                    storageBucket: "fleurdepau-1ce7d.appspot.com",
+                    messagingSenderId: "394738141831",
+                    appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+                    measurementId: "G-D1J6X7BH9S"
+                };
+    
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+    
+                // Vérifier si l'élément logout-icon existe avant d'ajouter l'eventListener
+                const logoutIcon = document.getElementById("logout-icon");
+                if (logoutIcon) {
+                    logoutIcon.addEventListener("click", async (event) => {
+                        event.preventDefault(); // Empêcher la navigation immédiate
+                        try {
+                            await signOut(auth);
+                            localStorage.removeItem("userId");
+                            localStorage.removeItem("panier");
+    
+                            setTimeout(() => {
+                                window.location.href = "login.html";  
+                            }, 500);
+                        } catch (error) {
+                            console.error("Erreur lors de la déconnexion:", error);
+                        }
+                    });
+                } else {
+                    console.warn("⚠️ Le bouton de déconnexion n'a pas été trouvé dans le DOM.");
+                }
+            } catch (error) {
+                console.error("Erreur lors du chargement du header ou de Firebase :", error);
+            }
         });
-
+    
         document.addEventListener('DOMContentLoaded', () => {
             const socialLinks = document.querySelectorAll('.social-link');
-        
-            // Exemple d'ajout d'animation au survol
+    
             socialLinks.forEach(link => {
                 link.addEventListener('mouseover', () => {
                     link.style.transform = 'scale(1.2)';
@@ -334,6 +383,7 @@
             });
         });
     </script>
+    
 
 </body>
 </html>
