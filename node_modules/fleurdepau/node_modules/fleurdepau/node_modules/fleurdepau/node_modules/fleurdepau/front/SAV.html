@@ -134,34 +134,30 @@
     <h1>Formulaire de Support SAV</h1>
 
     <!-- Formulaire de contact SAV -->
-    <form action="/send-message" method="POST">
-      <div class="error" id="error-message"></div>
-
+    <form action="/send-sav-email" method="POST" enctype="multipart/form-data">
       <label for="name">Nom :</label>
       <input type="text" id="name" name="name" required>
-
+    
       <label for="email">Email :</label>
       <input type="email" id="email" name="email" required>
-
+    
+      <label for="subject">Sujet :</label>
+      <input type="text" id="subject" name="subject" required>
+    
       <label for="message">Message :</label>
       <textarea id="message" name="message" required></textarea>
-
+    
+      <!-- Champ pour télécharger une image -->
+      <label for="image">Ajouter une image :</label>
+      <input type="file" id="image" name="image" accept="image/*">
+    
       <button type="submit">Envoyer</button>
     </form>
+    
   </div>
 
   <script>
-    const logoutIcon = document.getElementById("logout-icon");
-
-logoutIcon.addEventListener("click", async () => {
-    try {
-        await signOut(auth);  // Déconnexion
-        window.location.href = "login.html";  // Redirection vers la page de connexion
-    } catch (error) {
-        console.error("Erreur lors de la déconnexion:", error);
-    }
-});
-
+    
   </script>
 </body>
 </html>
