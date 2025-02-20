@@ -6,12 +6,14 @@
     "start": "node back/api/server.js"
   },
   "dependencies": {
+    "axios": "^1.7.9",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "firebase-admin": "^11.0.0",
     "fleurdepau": "file:",
-    "node-mailjet": "^3.3.0"
+    "ldrs": "^1.0.2",
+    "node-mailjet": "^6.0.6"
   }
 }
