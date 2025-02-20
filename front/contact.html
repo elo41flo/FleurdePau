@@ -176,7 +176,7 @@
 
         button {
             width: 100%;
-            background-color: #333;
+            background-color: #5e380c;
             color: white;
             border: none;
             padding: 10px;
@@ -196,6 +196,28 @@
             margin-top: 15px;
             font-weight: bold;
         }
+
+        .sav-button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .sav-button {
+            background-color: #5e380c;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        .sav-button:hover {
+            background-color: #d85c5c;
+        }
+        
 
         @media (max-width: 768px) {
             header {
@@ -282,7 +304,13 @@
             <button type="submit">Envoyer</button>
         </form>
         <p id="statusMessage"></p>
+        <br>
     </section>
+    <div class="sav-button-container">
+        <a href="SAV.html" class="sav-button">Accéder au SAV</a>
+    </div>
+    
+    
     <div class="contact-container">
         <h2>Venez me suivre sur les réseaux sociaux :</h2>
         <div class="social-links">
