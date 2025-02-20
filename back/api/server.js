@@ -6,6 +6,9 @@ const mailjet = require("node-mailjet");
 const admin = require("firebase-admin");
 const path = require("path");
 const axios = require("axios");
+const multer = require("multer");
+const fs = require("fs");
+
 
 const app = express();
 
@@ -33,6 +36,70 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
+// Configuration du stockage des fichiers
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // Dossier où seront stockées les images téléchargées
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// Middleware Multer pour gérer l'upload des fichiers
+const upload = multer({ storage: storage });
+
+// 📩 Route pour envoyer un email via le formulaire de contact avec une image
+app.post("/send-sav-email", upload.single('image'), async (req, res) => {
+  const { name, email, subject, message } = req.body;
+  const image = req.file; // L'image téléchargée
+
+  if (!name || !email || !subject || !message) {
+      return res.status(400).json({ success: false, message: "Tous les champs sont requis." });
+  }
+
+  try {
+      // Créer la pièce jointe
+      let attachments = [];
+      if (image) {
+          attachments.push({
+              ContentType: image.mimetype,
+              Filename: image.originalname,
+              Base64Content: fs.readFileSync(image.path, 'base64')
+          });
+          console.log("Image téléchargée :", image.filename);
+      }
+
+      // Envoi de l'email via Mailjet avec l'image en pièce jointe
+      const result = await mailjetClient.post("send", { version: "v3.1" }).request({
+          Messages: [
+              {
+                  From: { Email: process.env.SENDER_EMAIL, Name: "Fleur De Pau" },
+                  To: [{ Email: process.env.RECEIVER_EMAIL, Name: "Admin" }],
+                  ReplyTo: { Email: email },
+                  Subject: subject,
+                  TextPart: `Nom: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+                  HTMLPart: `<h3>Nouveau message de ${name}</h3><p>Email: ${email}</p><p>${message}</p>`,
+                  Attachments: attachments // Attacher l'image
+              }
+          ]
+      });
+
+      console.log("Résultat Mailjet:", result.body);
+
+      if (result.body.Messages[0].Status === "success") {
+          res.json({ success: true, message: "Email envoyé avec succès !" });
+      } else {
+          res.status(500).json({ success: false, message: "Erreur d'envoi d'email." });
+      }
+  } catch (error) {
+      console.error("❌ Erreur lors de l'envoi d'email :", error.message);
+      res.status(500).json({ success: false, message: "Erreur serveur. Détails : " + error.message });
+  }
+});
+
+
 // ✉️ Initialisation Mailjet
 if (!process.env.MAILJET_API_KEY || !process.env.MAILJET_API_SECRET) {
   console.error("❌ Erreur : Clé API Mailjet manquante !");
@@ -52,38 +119,38 @@ console.log('MAILJET_API_KEY_PRIVATE:', process.env.MAILJET_API_KEY_PRIVATE);
 
 
 // 📩 Route pour envoyer un email via le formulaire de contact
-app.post("/send-email", async (req, res) => {
-    const { name, email, subject, message } = req.body;
+app.post("/send-contact-email", async (req, res) => {
+  const { name, email, subject, message } = req.body;
 
-    if (!name || !email || !subject || !message) {
-        return res.status(400).json({ success: false, message: "Tous les champs sont requis." });
-    }
+  if (!name || !email || !subject || !message) {
+      return res.status(400).json({ success: false, message: "Tous les champs sont requis." });
+  }
 
-    try {
-        const result = await mailjetClient.post("send", { version: "v3.1" }).request({
-            Messages: [
-                {
-                    From: { Email: process.env.SENDER_EMAIL, Name: "Fleur De Pau" },
-                    To: [{ Email: process.env.RECEIVER_EMAIL, Name: "Admin" }],
-                    ReplyTo: { Email: email }, // Permet à l'admin de répondre directement
-                    Subject: subject,
-                    TextPart: `Nom: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
-                    HTMLPart: `<h3>Nouveau message de ${name}</h3><p>Email: ${email}</p><p>${message}</p>`
-                }
-            ]
-        });
+  try {
+      const result = await mailjetClient.post("send", { version: "v3.1" }).request({
+          Messages: [
+              {
+                  From: { Email: process.env.SENDER_EMAIL, Name: "Fleur De Pau" },
+                  To: [{ Email: process.env.RECEIVER_EMAIL, Name: "Admin" }],
+                  ReplyTo: { Email: email },
+                  Subject: subject,
+                  TextPart: `Nom: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+                  HTMLPart: `<h3>Nouveau message de ${name}</h3><p>Email: ${email}</p><p>${message}</p>`
+              }
+          ]
+      });
 
-        console.log("Résultat Mailjet:", result.body);  // Ajout pour logs détaillés
+      console.log("Résultat Mailjet:", result.body);
 
-        if (result.body.Messages[0].Status === "success") {
-            res.json({ success: true, message: "Email envoyé avec succès !" });
-        } else {
-            res.status(500).json({ success: false, message: "Erreur d'envoi d'email." });
-        }
-    } catch (error) {
-        console.error("❌ Erreur lors de l'envoi d'email :", error.message);
-        res.status(500).json({ success: false, message: "Erreur serveur. Détails : " + error.message });
-    }
+      if (result.body.Messages[0].Status === "success") {
+          res.json({ success: true, message: "Email envoyé avec succès !" });
+      } else {
+          res.status(500).json({ success: false, message: "Erreur d'envoi d'email." });
+      }
+  } catch (error) {
+      console.error("❌ Erreur lors de l'envoi d'email :", error.message);
+      res.status(500).json({ success: false, message: "Erreur serveur. Détails : " + error.message });
+  }
 });
 
 // 📦 Route pour enregistrer une commande
