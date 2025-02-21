@@ -121,8 +121,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
-
+        import { getFirestore, collection, getDocs, updateDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+    
         const firebaseConfig = {
             apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
             authDomain: "fleurdepau-1ce7d.firebaseapp.com",
@@ -132,47 +132,100 @@
             appId: "1:394738141831:web:a0cd5b9d0227267b248622",
             measurementId: "G-D1J6X7BH9S"
         };
-
+    
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+    
+        // Mappage des couleurs pour les afficher correctement
+        const couleursMapping = {
+            "rouge": "Rouge",
+            "bleu": "Bleu",
+            "vert": "Vert",
+            "jaune": "Jaune",
+            "noir": "Noir",
+            "blanc": "Blanc",
+            // Ajoute d'autres couleurs si nécessaire
+        };
+    
+        // Fonction pour charger les produits
+        // Fonction pour charger les produits
+async function chargerProduits() {
+    const produitsContainer = document.getElementById("produits");
+    produitsContainer.innerHTML = "";
+    const produitsSnapshot = await getDocs(collection(db, "produits"));
+  
+    produitsSnapshot.forEach((docSnap) => {
+        const produit = docSnap.data();
+        const produitElement = document.createElement("div");
+        produitElement.classList.add("produit");
 
-        async function chargerProduits() {
-            const produitsContainer = document.getElementById("produits");
-            produitsContainer.innerHTML = "";
-            const produitsSnapshot = await getDocs(collection(db, "produits"));
-
-            produitsSnapshot.forEach((docSnap) => {
-                const produit = docSnap.data();
-                const produitElement = document.createElement("div");
-                produitElement.classList.add("produit");
-                produitElement.innerHTML = `
-                    <img src="${produit.image || 'https://i.imgur.com/jOTXXdh.jpeg'}" alt="${produit.nom}">
-                    <h3>${produit.nom}</h3>
-                    <p>${produit.description}</p>
-                    <strong>Stock: </strong>
-                    <input type="number" value="${produit.stock}" min="0" id="stock-${docSnap.id}">
-                    <button onclick="mettreAJourStock('${docSnap.id}')">Mettre à jour</button>
+        let stockHtml = "";
+        if (produit.couleurs && Array.isArray(produit.couleurs)) {  // Vérification si "couleurs" est bien un tableau
+            produit.couleurs.forEach((couleur, index) => {
+                stockHtml += `
+                    <div style="margin-top:10px;">
+                        <label><strong>${couleur} :</strong></label>
+                        <input type="number" value="0" min="0" id="stock-${docSnap.id}-${index}">
+                    </div>
                 `;
-                produitsContainer.appendChild(produitElement);
             });
+        } else {
+            stockHtml = "<p>Aucune couleur définie</p>";
         }
 
+        produitElement.innerHTML = `
+            <img src="${produit.image || 'https://i.imgur.com/jOTXXdh.jpeg'}" alt="${produit.nom}">
+            <h3>${produit.nom}</h3>
+            <p>${produit.description}</p>
+            <div>${stockHtml}</div>
+            <button onclick="mettreAJourStock('${docSnap.id}')">Mettre à jour</button>
+        `;
+
+        produitsContainer.appendChild(produitElement);
+    });
+}
+
+    
+        // Fonction pour mettre à jour le stock et la couleur du produit dans Firebase
         window.mettreAJourStock = async function (id) {
-            const nouveauStock = document.getElementById(`stock-${id}`).value;
-            if (nouveauStock < 0) {
-                alert("Le stock ne peut pas être négatif !");
+            const produitRef = doc(db, "produits", id);
+          
+            // Récupérer les données actuelles du produit
+            const produitDoc = await getDoc(produitRef);
+            if (!produitDoc.exists()) {
+                alert("Produit introuvable !");
                 return;
             }
-            const produitRef = doc(db, "produits", id);
+        
+            let updatedStocks = { ...produitDoc.data().couleurs }; // On copie les couleurs existantes
+          
+            // Récupérer les nouveaux stocks
+            const couleurInputs = produitDoc.data().couleurs;
+            couleurInputs.forEach((couleur, index) => {
+                const stockInput = document.getElementById(`stock-${id}-${index}`);
+              
+                if (stockInput) {
+                    const newStock = stockInput.value;
+                    updatedStocks[index] = parseInt(newStock) >= 0 ? parseInt(newStock) : 0;
+                } else {
+                    console.error(`L'élément pour ${couleur} avec l'ID stock-${id}-${index} n'a pas été trouvé.`);
+                }
+            });
+        
             try {
-                await updateDoc(produitRef, { stock: parseInt(nouveauStock) });
+                await updateDoc(produitRef, { couleurs: updatedStocks });
                 alert("Stock mis à jour avec succès !");
             } catch (error) {
-                alert("Erreur lors de la mise à jour du stock. Essayez à nouveau.");
+                alert("Erreur lors de la mise à jour du stock.");
+                console.error(error);
             }
         };
-
+        
+        
+    
         chargerProduits();
     </script>
+    
+    
 </body>
 </html>
