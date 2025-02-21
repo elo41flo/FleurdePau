@@ -6,188 +6,197 @@
     <title>Fleur de Pau</title>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Raleway:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<style>
-    /* Styles généraux */
-body {
-    font-family: 'Raleway', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
-}
+    <style>
+        /* Styles généraux */
+        body {
+            font-family: 'Raleway', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
 
-header {
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 1rem 2rem;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-.header-content {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    width: 100%;
-    align-items: center;
-}
+        .header-content {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+        }
 
-.logo {
-    font-family: 'Pacifico', cursive;
-    font-size: 1.8rem;
-    color: #444;
-    margin: 10px 0;
-}
+        .logo {
+            font-family: 'Pacifico', cursive;
+            font-size: 1.8rem;
+            color: #444;
+            margin: 10px 0;
+        }
 
-/* Menu */
-nav ul {
-    list-style: none;
-    display: flex;
-    justify-content: flex-end; /* Alignement du menu à droite */
-    padding: 0;
-    margin: 0;
-}
+        /* Menu */
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: flex-end;
+            padding: 0;
+            margin: 0;
+        }
 
-nav ul li {
-    margin: 0 1rem;
-}
+        nav ul li {
+            margin: 0 1rem;
+        }
 
-nav ul li a {
-    text-decoration: none;
-    color: #555;
-    font-weight: bold;
-    transition: color 0.3s;
-}
+        nav ul li a {
+            text-decoration: none;
+            color: #555;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
 
-nav ul li a:hover {
-    color: #d85c5c;
-}
+        nav ul li a:hover {
+            color: #d85c5c;
+        }
 
-/* Icônes alignées à l'horizontale sur la droite */
-.header-icons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 20px;
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    align-items: center;
-}
+        /* Icônes alignées à l'horizontale sur la droite */
+        .header-icons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 20px;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            align-items: center;
+        }
 
-.header-icons a, .header-icons i {
-    font-size: 24px;
-    color: #333;
-    cursor: pointer;
-}
+        .header-icons a, .header-icons i {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
 
-/* Styles du conteneur de produits */
-.produits-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    padding: 2rem;
-    justify-items: center;
-}
+        /* Styles du conteneur de produits */
+        .produits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 2rem;
+            justify-items: center;
+        }
 
-/* Carte produit */
-.produit {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 1rem;
-    text-align: center;
-    max-width: 300px;
-    width: 100%;
-}
+        /* Carte produit */
+        .produit {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            text-align: center;
+            max-width: 300px;
+            width: 100%;
+        }
 
-.produit img {
-    width: 100%;
-    border-radius: 10px;
-    max-height: 200px;
-    object-fit: cover;
-    margin-bottom: 1rem;
-}
+        .produit img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
 
-.produit h3 {
-    font-size: 1.2rem;
-    color: #444;
-    margin: 0.5rem 0;
-}
+        .produit h3 {
+            font-size: 1.2rem;
+            color: #444;
+            margin: 0.5rem 0;
+        }
 
-.produit p {
-    color: #777;
-    font-size: 0.9rem;
-    margin: 0.5rem 0;
-}
+        .produit p {
+            color: #777;
+            font-size: 0.9rem;
+            margin: 0.5rem 0;
+        }
 
-.produit .prix {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #d85c5c;
-    margin: 0.5rem 0;
-}
+        .produit .prix {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #d85c5c;
+            margin: 0.5rem 0;
+        }
 
-button.add-to-cart {
-    background-color: #5e380c; /* Couleur de fond pour le bouton */
-    color: #fff;
-    border: none;
-    padding: 0.8rem 1.5rem;
-    font-size: 1rem;
-    border-radius: 25px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-top: 1rem;
-}
+        button.add-to-cart {
+            background-color: #5e380c;
+            color: #fff;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 1rem;
+        }
 
-button.add-to-cart:hover {
-    background-color: #a44b4b; /* Couleur au survol */
-}
+        button.add-to-cart:hover {
+            background-color: #a44b4b;
+        }
 
-/* Styles Responsives */
-@media (max-width: 768px) {
-    header {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
+        /* Styles Responsives */
 
-    nav ul {
-        flex-direction: column;
-        align-items: center;
-    }
+        @media (max-width: 480px) {
+            .produit {
+                flex-basis: 100%; /* Sur les petits écrans, un produit par ligne */
+            }
+        }
 
-    nav ul li {
-        margin: 0.5rem 0;
-    }
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
 
-    .header-icons {
-        position: static;
-        margin-top: 10px;
-    }
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
 
-    .header-content {
-        flex-direction: column;
-        align-items: center;
-    }
-}
+            nav ul li {
+                margin: 0.5rem 0;
+            }
 
-@media (max-width: 1024px) {
-    .produits-grid {
-        grid-template-columns: 1fr 1fr 1fr;
-    }
-}
+            .header-icons {
+                position: static;
+                margin-top: 10px;
+            }
 
-@media (min-width: 1200px) {
-    .produits-grid {
-        grid-template-columns: 1fr 1fr 1fr 1fr;
-        gap: 2rem;
-    }
-}
+            .header-content {
+                flex-direction: column;
+                align-items: center;
+            }
 
-</style>
+            .produit {
+                flex-basis: 45%; /* Sur les écrans moyens, deux produits par ligne */
+            }
+        
+        }
+
+        @media (max-width: 1024px) {
+            .produits-grid {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .produits-grid {
+                grid-template-columns: 1fr 1fr 1fr 1fr;
+                gap: 2rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <header class="header">
@@ -207,132 +216,93 @@ button.add-to-cart:hover {
             <a href="panier.html"><i class="fas fa-shopping-cart"></i><span class="cart-count">0</span></a>
         </section>
     </header>
-    
+
     <div id="produits" class="produits-grid"></div>
-    
+
     <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
-    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
+        // Initialisation de Firebase et Firestore
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
-        authDomain: "fleurdepau-1ce7d.firebaseapp.com",
-        projectId: "fleurdepau-1ce7d",
-        storageBucket: "fleurdepau-1ce7d.appspot.com",
-        messagingSenderId: "394738141831",
-        appId: "1:394738141831:web:a0cd5b9d0227267b248622",
-        measurementId: "G-D1J6X7BH9S"
-    };
+const firebaseConfig = {
+    apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+    authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+    projectId: "fleurdepau-1ce7d",
+    storageBucket: "fleurdepau-1ce7d.appspot.com",
+    messagingSenderId: "394738141831",
+    appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+    measurementId: "G-D1J6X7BH9S"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    function mettreAJourCompteur() {
-        let compteurElement = document.querySelector(".cart-count");
-        if (!compteurElement) return;
-        let panier = JSON.parse(localStorage.getItem("panier")) || [];
-        let totalArticles = panier.reduce((total, item) => total + item.quantite, 0);
-        compteurElement.innerText = totalArticles;
-    }
+// Fonction pour charger les produits dans la boutique
+async function chargerProduitsBoutique() {
+    const produitsContainer = document.getElementById("produits");
+    produitsContainer.innerHTML = ""; // Vider la section des produits avant de charger les nouveaux produits
 
-    async function chargerProduits() {
-        const produitsContainer = document.getElementById("produits");
-        produitsContainer.innerHTML = "";
+    // Récupérer les produits depuis Firestore
+    const produitsSnapshot = await getDocs(collection(db, "produits"));
 
-        try {
-            const produitsSnapshot = await getDocs(collection(db, "produits"));
-            produitsSnapshot.forEach((doc) => {
-                const produit = doc.data();
-                const produitCard = document.createElement("div");
-                produitCard.classList.add("produit");
-                produitCard.innerHTML = ` 
-                    <img src="${produit.imageUrl}" alt="${produit.nom}">
-                    <h3>${produit.nom}</h3>
-                    <p>${produit.description}</p>
-                    <span class="prix">${produit.prix}€</span>
-                    <button class="add-to-cart" data-nom="${produit.nom}">Ajouter au panier</button>
-                `;
-                produitsContainer.appendChild(produitCard);
-            });
+    // Pour chaque produit dans la collection, créer un élément HTML pour l'afficher
+    produitsSnapshot.forEach((docSnap) => {
+        const produit = docSnap.data();
+        const produitElement = document.createElement("div");
+        produitElement.classList.add("produit");
 
-            document.querySelectorAll(".add-to-cart").forEach(button => {
-                button.addEventListener("click", function() {
-                    const nom = this.getAttribute("data-nom");
-                    ajouterAuPanier(nom);
-                });
-            });
-        } catch (error) {
-            console.error("Erreur lors du chargement des produits :", error);
-        }
-    }
-
-    async function ajouterAuPanier(nom) {
-        let panier = JSON.parse(localStorage.getItem("panier")) || [];
-        const produit = await getProduitParNom(nom);
-    
-        if (!produit) {
-            alert("Produit introuvable !");
-            return;
-        }
-    
-        let produitDansPanier = panier.find(item => item.nom === nom);
-        if (produitDansPanier) {
-            if (produitDansPanier.quantite < produit.stock) {
-                produitDansPanier.quantite += 1;
-            } else {
-                alert("Stock insuffisant !");
-                return;
-            }
+        // HTML pour afficher les couleurs et le sélecteur
+        let couleurHtml = "";
+        if (produit.couleurs && Array.isArray(produit.couleurs)) {  
+            couleurHtml = ` 
+                <label for="couleur-${docSnap.id}"><strong>Choisir une couleur :</strong></label>
+                <select id="couleur-${docSnap.id}">
+                    ${produit.couleurs.map((couleur) => 
+                        `<option value="${couleur}">${couleur}</option>`
+                    ).join("")}
+                </select>
+            `;
         } else {
-            if (produit.stock > 0) {
-                panier.push({ nom, prix: produit.prix, quantite: 1 });
-            } else {
-                alert("Produit en rupture de stock !");
-                return;
-            }
+            couleurHtml = "<p>Aucune couleur définie</p>";
         }
-    
-        localStorage.setItem("panier", JSON.stringify(panier));
-        mettreAJourCompteur();
-    }
-    
-    async function getProduitParNom(nom) {
-        try {
-            const produitsSnapshot = await getDocs(collection(db, "produits"));
-            const produitDoc = produitsSnapshot.docs.find(doc => doc.data().nom === nom);
-            return produitDoc ? produitDoc.data() : null;
-        } catch (error) {
-            console.error("Erreur lors de la récupération du produit :", error);
-            return null;
-        }
-    }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        mettreAJourCompteur();
-        chargerProduits();
+        // HTML du produit avec son image, description, prix et sélecteur de couleur
+        produitElement.innerHTML = `
+            <img src="${produit.image || 'https://i.imgur.com/jOTXXdh.jpeg'}" alt="${produit.nom}">
+            <h3>${produit.nom}</h3>
+            <p>${produit.description}</p>
+            <div>${couleurHtml}</div>
+            <p><strong>Prix :</strong> ${produit.prix}€</p>
+            <button onclick="ajouterAuPanier('${docSnap.id}')">Ajouter au panier</button>
+        `;
 
-        document.getElementById("logout-icon").addEventListener("click", async () => {
-            try {
-                await signOut(auth);
-                localStorage.removeItem("userId");
-                localStorage.removeItem("panier");
-                window.location.href = "login.html";
-            } catch (error) {
-                console.error("Erreur lors de la déconnexion:", error);
-            }
-        });
+        produitsContainer.appendChild(produitElement); // Ajouter le produit à la page
     });
+}
 
-    if (!localStorage.getItem("produits")) {
-        localStorage.setItem("produits", JSON.stringify([
-            { nom: "Rose Rouge", prix: 10, stock: 10 },
-            { nom: "Tulipe Jaune", prix: 8, stock: 5 },
-            { nom: "Orchidée Blanche", prix: 15, stock: 7 }
-        ]));
+// Fonction pour ajouter un produit au panier
+window.ajouterAuPanier = function (id) {
+    const couleurSelect = document.getElementById(`couleur-${id}`);
+    const couleurChoisie = couleurSelect ? couleurSelect.value : null;
+
+    if (!couleurChoisie) {
+        alert("Veuillez choisir une couleur !");
+        return;
     }
-</script>
 
+    console.log(`Produit ajouté au panier - ID: ${id}, Couleur: ${couleurChoisie}`);
+
+    let panier = JSON.parse(localStorage.getItem("panier")) || [];
+
+    panier.push({ idProduit: id, couleur: couleurChoisie });
+    localStorage.setItem("panier", JSON.stringify(panier));
+
+    alert(`Produit ajouté au panier avec la couleur ${couleurChoisie}`);
+};
+
+// Appeler la fonction pour charger les produits au démarrage
+chargerProduitsBoutique();
+
+    </script>
 </body>
 </html>

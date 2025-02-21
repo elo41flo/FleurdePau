@@ -415,6 +415,35 @@
                 });
             });
         });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            mettreAJourCompteur();
+    
+            // Écouteur pour mettre à jour le compteur si le panier change dans un autre onglet
+            window.addEventListener("storage", () => {
+                mettreAJourCompteur();
+            });
+        });
+    
+        function mettreAJourCompteur() {
+            let compteurElement = document.querySelector(".cart-count");
+            if (!compteurElement) return;
+    
+            let panier = JSON.parse(localStorage.getItem("panier")) || [];
+            let totalArticles = panier.reduce((total, item) => total + item.quantite, 0);
+            compteurElement.innerText = totalArticles;
+            compteurElement.style.display = totalArticles > 0 ? "inline-block" : "none";
+        }
+    
+        function ajouterAuPanier(produit) {
+            let userId = localStorage.getItem('userId') || 'guest';
+            let panier = JSON.parse(localStorage.getItem(`panier_${userId}`)) || [];
+    
+            panier.push(produit);
+            localStorage.setItem(`panier_${userId}`, JSON.stringify(panier));
+    
+            mettreAJourCompteurPanier();
+        }
     </script>
     
 
