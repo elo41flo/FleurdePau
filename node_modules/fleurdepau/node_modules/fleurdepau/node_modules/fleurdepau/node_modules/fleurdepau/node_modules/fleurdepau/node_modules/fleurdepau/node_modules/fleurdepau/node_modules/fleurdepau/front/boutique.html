@@ -8,194 +8,235 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Styles généraux */
-        body {
-            font-family: 'Raleway', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
+body {
+    font-family: 'Raleway', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
 
-        header {
-            background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            padding: 1rem 2rem;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+header {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-        .header-content {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            width: 100%;
-            align-items: center;
-        }
+.header-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+}
 
-        .logo {
-            font-family: 'Pacifico', cursive;
-            font-size: 1.8rem;
-            color: #444;
-            margin: 10px 0;
-        }
+.logo {
+    font-family: 'Pacifico', cursive;
+    font-size: 1.8rem;
+    color: #444;
+    margin: 10px 0;
+}
 
-        /* Menu */
-        nav ul {
-            list-style: none;
-            display: flex;
-            justify-content: flex-end;
-            padding: 0;
-            margin: 0;
-        }
+/* Menu */
+nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: flex-end;
+    padding: 0;
+    margin: 0;
+}
 
-        nav ul li {
-            margin: 0 1rem;
-        }
+nav ul li {
+    margin: 0 1rem;
+}
 
-        nav ul li a {
-            text-decoration: none;
-            color: #555;
-            font-weight: bold;
-            transition: color 0.3s;
-        }
+nav ul li a {
+    text-decoration: none;
+    color: #555;
+    font-weight: bold;
+    transition: color 0.3s;
+}
 
-        nav ul li a:hover {
-            color: #d85c5c;
-        }
+nav ul li a:hover {
+    color: #d85c5c;
+}
 
-        /* Icônes alignées à l'horizontale sur la droite */
-        .header-icons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 20px;
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            align-items: center;
-        }
+/* Icônes alignées à l'horizontale sur la droite */
+.header-icons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    align-items: center;
+}
 
-        .header-icons a, .header-icons i {
-            font-size: 24px;
-            color: #333;
-            cursor: pointer;
-        }
+.header-icons a, .header-icons i {
+    font-size: 24px;
+    color: #333;
+    cursor: pointer;
+}
 
-        /* Styles du conteneur de produits */
-        .produits-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 2rem;
-            justify-items: center;
-        }
+/* Styles du conteneur de produits */
+.produits-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Trois produits par ligne */
+    gap: 20px;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: auto;
+}
 
-        /* Carte produit */
-        .produit {
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 1rem;
-            text-align: center;
-            max-width: 300px;
-            width: 100%;
-        }
+/* Carte Produit */
+.produit {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    text-align: center;
+    max-width: 300px;
+    width: 100%;
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.3s, box-shadow 0.3s ease;
+}
 
-        .produit img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-        }
+.produit:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
 
-        .produit h3 {
-            font-size: 1.2rem;
-            color: #444;
-            margin: 0.5rem 0;
-        }
+/* Image du produit */
+.produit img {
+    max-width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
 
-        .produit p {
-            color: #777;
-            font-size: 0.9rem;
-            margin: 0.5rem 0;
-        }
+.produit img:hover {
+    transform: scale(1.05);
+}
 
-        .produit .prix {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #d85c5c;
-            margin: 0.5rem 0;
-        }
+.produit h3 {
+    font-size: 1.2rem;
+    color: #333;
+    margin: 0.5rem 0;
+}
 
-        button.add-to-cart {
-            background-color: #5e380c;
-            color: #fff;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            font-size: 1rem;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin-top: 1rem;
-        }
+.produit p {
+    color: #666;
+    font-size: 0.9rem;
+}
 
-        button.add-to-cart:hover {
-            background-color: #a44b4b;
-        }
+.produit .prix {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #d85c5c;
+}
 
-        /* Styles Responsives */
+/* Bouton Ajout Panier */
+button.add-to-cart {
+    background-color: #5e380c;
+    color: #fff;
+    border: none;
+    padding: 0.8rem 1.2rem; /* Augmentation de la taille du bouton */
+    font-size: 1.1rem; /* Augmenter légèrement la taille du texte */
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-        @media (max-width: 480px) {
-            .produit {
-                flex-basis: 100%; /* Sur les petits écrans, un produit par ligne */
-            }
-        }
+button.add-to-cart:hover {
+    background-color: #a44b4b;
+    transform: scale(1.05); /* Légère augmentation de la taille au survol */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Ombre supplémentaire au survol */
+}
 
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-            }
+button.add-to-cart:active {
+    transform: scale(1); /* Réduit la taille lors du clic pour un effet de pression */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Ombre plus petite quand cliqué */
+}
 
-            nav ul {
-                flex-direction: column;
-                align-items: center;
-            }
+/* Sélecteur de couleur */
+.produit select {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background: #f9f9f9;
+    font-size: 1rem;
+}
 
-            nav ul li {
-                margin: 0.5rem 0;
-            }
+/* Styles Responsives */
 
-            .header-icons {
-                position: static;
-                margin-top: 10px;
-            }
+@media (max-width: 480px) {
+    .produits-grid {
+        grid-template-columns: 1fr;
+    }
 
-            .header-content {
-                flex-direction: column;
-                align-items: center;
-            }
+    .produit {
+        max-width: 90%;
+    }
+}
 
-            .produit {
-                flex-basis: 45%; /* Sur les écrans moyens, deux produits par ligne */
-            }
-        
-        }
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
 
-        @media (max-width: 1024px) {
-            .produits-grid {
-                grid-template-columns: 1fr 1fr 1fr;
-            }
-        }
+    nav ul {
+        flex-direction: column;
+        align-items: center;
+    }
 
-        @media (min-width: 1200px) {
-            .produits-grid {
-                grid-template-columns: 1fr 1fr 1fr 1fr;
-                gap: 2rem;
-            }
-        }
+    nav ul li {
+        margin: 0.5rem 0;
+    }
+
+    .header-icons {
+        position: static;
+        margin-top: 10px;
+    }
+
+    .header-content {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .produits-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        padding: 1rem;
+    }
+
+    .produit {
+        max-width: 250px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .produits-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+}
+
+@media (min-width: 1200px) {
+    .produits-grid {
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 2rem;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -212,7 +253,7 @@
         </div>
         <section id="header-icons" class="header-icons">
             <a href="mon-compte.html"><i class="fas fa-user"></i></a>
-            <a href="login.html" id="logout-icon"><i class="fas fa-sign-out-alt"></i></a>
+            <a href="javascript:void(0);" id="logout-icon"><i class="fas fa-sign-out-alt"></i></a>
             <a href="panier.html"><i class="fas fa-shopping-cart"></i><span class="cart-count">0</span></a>
         </section>
     </header>
@@ -268,13 +309,14 @@ async function chargerProduitsBoutique() {
 
         // HTML du produit avec son image, description, prix et sélecteur de couleur
         produitElement.innerHTML = `
-            <img src="${produit.image || 'https://i.imgur.com/jOTXXdh.jpeg'}" alt="${produit.nom}">
-            <h3>${produit.nom}</h3>
-            <p>${produit.description}</p>
-            <div>${couleurHtml}</div>
-            <p><strong>Prix :</strong> ${produit.prix}€</p>
-            <button onclick="ajouterAuPanier('${docSnap.id}')">Ajouter au panier</button>
-        `;
+    <img src="${produit.image || 'https://i.imgur.com/jOTXXdh.jpeg'}" alt="${produit.nom}">
+    <h3>${produit.nom}</h3>
+    <p>${produit.description}</p>
+    <div>${couleurHtml}</div>
+    <p><strong>Prix :</strong> ${produit.prix}€</p>
+    <button class="add-to-cart" onclick="ajouterAuPanier('${docSnap.id}')">Ajouter au panier</button>
+`;
+
 
         produitsContainer.appendChild(produitElement); // Ajouter le produit à la page
     });
@@ -290,18 +332,82 @@ window.ajouterAuPanier = function (id) {
         return;
     }
 
-    console.log(`Produit ajouté au panier - ID: ${id}, Couleur: ${couleurChoisie}`);
-
     let panier = JSON.parse(localStorage.getItem("panier")) || [];
+
+    // Vérification que les données sont correctes
+    if (!id || !couleurChoisie) {
+        console.error("Erreur: Produit ou couleur manquant.", { id, couleurChoisie });
+        return;
+    }
 
     panier.push({ idProduit: id, couleur: couleurChoisie });
     localStorage.setItem("panier", JSON.stringify(panier));
 
     alert(`Produit ajouté au panier avec la couleur ${couleurChoisie}`);
+
+    // Mettre à jour l'affichage du nombre d'articles dans le panier
+    miseAJourPanier();
 };
 
+// Fonction pour mettre à jour l'affichage du nombre d'articles dans le panier
+function miseAJourPanier() {
+    const panier = JSON.parse(localStorage.getItem("panier")) || [];
+    const cartCount = document.querySelector(".cart-count");
+
+    // Compter le nombre d'articles dans le panier (en comptant les produits uniques par couleur)
+    const nombreArticles = panier.length;
+    cartCount.textContent = nombreArticles > 0 ? nombreArticles : '';
+}
+
+// Appeler la fonction de mise à jour au démarrage pour afficher le bon nombre d'articles dès le chargement
+miseAJourPanier();
+
+
+
 // Appeler la fonction pour charger les produits au démarrage
-chargerProduitsBoutique();
+// Appeler la fonction pour charger les produits et vérifier l'état de la connexion au démarrage
+window.onload = function() {
+    chargerProduitsBoutique(); // Charger les produits
+    afficherEtatConnexion();  // Vérifier l'état de connexion
+};
+
+
+// Fonction pour afficher l'état de connexion
+function afficherEtatConnexion() {
+    const utilisateurConnecte = localStorage.getItem("utilisateurConnecte");
+    const logoutIcon = document.getElementById("logout-icon");
+
+    if (utilisateurConnecte === "true") {
+        // Utilisateur connecté -> Icône de déconnexion visible
+        logoutIcon.style.display = "inline-block";
+        logoutIcon.addEventListener("click", deconnexion);
+    } else {
+        // Utilisateur non connecté -> Ne pas afficher l'icône de déconnexion
+        logoutIcon.style.display = "none";
+    }
+}
+
+// Fonction de déconnexion
+function deconnexion() {
+    // Supprimer les informations de connexion
+    localStorage.removeItem("utilisateurConnecte");
+    
+    // Mettre à jour l'interface utilisateur (retour à l'état non connecté)
+    afficherEtatConnexion();
+
+    // Rediriger l'utilisateur vers la page de connexion ou d'accueil
+    alert("Vous êtes déconnecté.");
+    window.location.href = "index.html"; // Par exemple, rediriger vers la page d'accueil
+}
+
+// Cette fonction peut être appelée à chaque fois qu'un utilisateur se connecte avec succès
+function connexion() {
+    // Enregistrer que l'utilisateur est connecté
+    localStorage.setItem("utilisateurConnecte", "true");
+    
+    // Mettre à jour l'interface utilisateur pour afficher l'icône de déconnexion
+    afficherEtatConnexion();
+}
 
     </script>
 </body>

@@ -59,25 +59,6 @@
             color: #d85c5c;
         }
 
-        .header-icons {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .header-icons i {
-            font-size: 24px;
-            color: #333;
-            cursor: pointer;
-        }
-
-        .header-icons i:hover {
-            color: #d85c5c;
-        }
-
         section#panier {
             padding: 100px 20px 30px;
             max-width: 900px;
@@ -138,7 +119,6 @@
 
         .cta-btn {
             display: block;
-            text-decoration: none;
             background-color: #742a08;
             color: white;
             padding: 12px 30px;
@@ -163,98 +143,73 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        #formulaire-commande label {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
+        /* Styles du panier */
+    #panier-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .panier-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .panier-item span {
+        flex: 1;
+        font-size: 1rem;
+    }
+
+    .quantite-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .quantite-input {
+        width: 50px;
+        padding: 5px;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .panier-item button {
+        background-color: #742a08;
+        color: white;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .panier-item button:hover {
+        background-color: #a44b4b;
+    }
+
+        /* Responsive */
+    @media (max-width: 600px) {
+        .panier-item {
+            flex-direction: column;
+            align-items: flex-start;
         }
 
-        #formulaire-commande input, #formulaire-commande textarea {
+        .quantite-container {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            justify-content: space-between;
         }
 
-        #formulaire-commande button {
-            background-color: #742a08;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+        .quantite-input {
+            width: 100%;
+            text-align: center;
         }
-
-        #formulaire-commande button:hover {
-            background-color: #a44b4b;
-        }
-
-        /* Media Queries for Responsiveness */
-        @media (max-width: 768px) {
-            .logo {
-                font-size: 1.5rem;
-            }
-
-            nav ul {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            nav ul li {
-                margin: 0;
-            }
-
-            section#panier {
-                padding: 60px 20px 20px;
-            }
-
-            .panier-item {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 20px;
-            }
-
-            .panier-item button {
-                margin-top: 10px;
-                width: 100%;
-            }
-
-            #total {
-                font-size: 1.3rem;
-            }
-
-            .cta-btn {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 480px) {
-            h2 {
-                font-size: 1.5rem;
-            }
-
-            .panier-item h3 {
-                font-size: 1rem;
-            }
-
-            .panier-item .prix {
-                font-size: 1rem;
-            }
-
-            .panier-item button {
-                font-size: 0.8rem;
-            }
-
-            #formulaire-commande input,
-            #formulaire-commande textarea {
-                font-size: 0.9rem;
-            }
-
-            #formulaire-commande button {
-                font-size: 0.9rem;
-            }
-        }
+    }
     </style>
 </head>
 <body>
@@ -276,32 +231,29 @@
         <div id="panier-list"></div>
         <div id="total">Total: €0.00</div>
         <button class="cta-btn" onclick="afficherFormulaireCommande()">Commander</button>
-
-        <div id="formulaire-commande">
-            <h2>Informations de Livraison</h2>
-            <form id="commandeForm">
-                <label for="nom">Nom complet :</label>
-                <input type="text" id="nom" name="nom" required>
-
-                <label for="email">Email :</label>
-                <input type="email" id="email" name="email" required>
-
-                <label for="telephone">Téléphone :</label>
-                <input type="text" id="telephone" name="telephone" required>
-
-                <label for="adresse">Adresse :</label>
-                <textarea id="adresse" name="adresse" required></textarea>
-
-                <button type="button" onclick="finaliserCommande()">Valider et Commander</button>
-            </form>
-        </div>
     </section>
-
-    <script>
-        let panier = JSON.parse(localStorage.getItem("panier")) || [];
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     
-        // Afficher le panier et les quantités modifiables
-        function afficherPanier() {
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+            projectId: "fleurdepau-1ce7d",
+            storageBucket: "fleurdepau-1ce7d.appspot.com",
+            messagingSenderId: "394738141831",
+            appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+            measurementId: "G-D1J6X7BH9S"
+        };
+    
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+    
+        let panier = JSON.parse(localStorage.getItem("panier")) || [];
+        console.log("Données du panier dans localStorage :", panier);
+    
+        // Fonction pour afficher le panier
+        async function afficherPanier() {
             let panierContainer = document.getElementById("panier-list");
             let totalElement = document.getElementById("total");
             panierContainer.innerHTML = "";
@@ -313,91 +265,78 @@
                 return;
             }
     
-            panier.forEach((item, index) => {
-                let panierItem = document.createElement("div");
-                panierItem.classList.add("panier-item");
-                panierItem.innerHTML = `
-                    <h3>${item.nom}</h3>
-                    <p class="prix">${item.prix}€</p>
-                    <input type="number" value="${item.quantite}" min="1" max="99" class="quantite-input" data-index="${index}">
-                    <button onclick="retirerDuPanier(${index})">Supprimer</button>
-                `;
-                panierContainer.appendChild(panierItem);
-                total += item.prix * item.quantite;
-            });
+            // Boucle pour afficher chaque élément du panier
+            for (let item of panier) {
+                const produitRef = doc(db, "produits", item.idProduit);
+                const produitSnap = await getDoc(produitRef);
+    
+                if (produitSnap.exists()) {
+                    let produitData = produitSnap.data();
+                    let nom = produitData.nom || "Produit inconnu";
+                    let prix = produitData.prix || 0;
+                    let quantite = item.quantite ? Math.max(1, parseInt(item.quantite)) : 1;
+    
+                    let panierItem = document.createElement("div");
+                    panierItem.classList.add("panier-item");
+                    panierItem.innerHTML = `
+                        <span>${nom} - ${prix}€ - Couleur: ${item.couleur}</span>
+                        <div class="quantite-container">
+                            <input type="number" class="quantite-input" data-id="${item.idProduit}" value="${quantite}" min="1">
+                        </div>
+                        <button class="supprimer-btn" data-id="${item.idProduit}">Supprimer</button>
+                    `;
+                    panierContainer.appendChild(panierItem);
+                    total += prix * quantite;
+                } else {
+                    console.error("Produit non trouvé :", item.idProduit);
+                }
+            }
     
             totalElement.textContent = `Total: €${total.toFixed(2)}`;
     
-            // Ajout d'un écouteur pour la modification des quantités
-            const quantityInputs = document.querySelectorAll(".quantite-input");
-            quantityInputs.forEach(input => {
+            // Gérer la mise à jour des quantités
+            document.querySelectorAll(".quantite-input").forEach(input => {
                 input.addEventListener("change", (event) => {
-                    let index = event.target.dataset.index;
+                    let id = event.target.dataset.id;
                     let newQuantity = parseInt(event.target.value);
                     if (newQuantity > 0) {
-                        panier[index].quantite = newQuantity;
+                        panier = panier.map(item => item.idProduit === id ? { ...item, quantite: newQuantity } : item);
                         localStorage.setItem("panier", JSON.stringify(panier));
-                        afficherPanier();
+                        afficherPanier();  // Mettre à jour l'affichage en temps réel
                     }
+                });
+            });
+    
+            // Ajouter des gestionnaires d'événements pour les boutons "Supprimer"
+            document.querySelectorAll(".supprimer-btn").forEach(button => {
+                button.addEventListener("click", (event) => {
+                    let idProduit = event.target.dataset.id;
+                    retirerDuPanier(idProduit, event.target.closest(".panier-item"));
                 });
             });
         }
     
-        // Ajouter un produit au panier
-        function ajouterAuPanier(nom, prix) {
-            let produitExistant = panier.find(item => item.nom === nom);
+        // Fonction pour supprimer un produit du panier
+        function retirerDuPanier(idProduit, itemElement) {
+            console.log("Suppression de l'article avec l'ID :", idProduit);
     
-            if (produitExistant) {
-                produitExistant.quantite += 1;
-            } else {
-                panier.push({ nom, prix, quantite: 1 });
-            }
+            // Filtrer le panier pour retirer l'élément avec l'idProduit correspondant
+            panier = panier.filter(item => item.idProduit !== idProduit);
     
+            // Sauvegarder à nouveau le panier dans le localStorage
             localStorage.setItem("panier", JSON.stringify(panier));
+    
+            // Retirer l'élément du DOM immédiatement
+            itemElement.remove();
+    
+            // Mettre à jour l'affichage du panier sans recharger la page
             afficherPanier();
         }
     
-        // Retirer un produit du panier
-        function retirerDuPanier(index) {
-            panier.splice(index, 1);
-            localStorage.setItem("panier", JSON.stringify(panier));
-            afficherPanier();
-        }
-    
-        // Afficher le formulaire de commande
-        function afficherFormulaireCommande() {
-            document.getElementById("formulaire-commande").style.display = "block";
-        }
-    
-        // Finaliser la commande
-        function finaliserCommande() {
-            const nom = document.getElementById("nom").value.trim();
-            const email = document.getElementById("email").value.trim();
-            const telephone = document.getElementById("telephone").value.trim();
-            const adresse = document.getElementById("adresse").value.trim();
-    
-            if (!nom || !email || !telephone || !adresse) {
-                alert("Veuillez remplir tous les champs.");
-                return;
-            }
-    
-            let totalCommande = panier.reduce((total, item) => total + item.prix * item.quantite, 0);
-    
-            const commande = {
-                client: { nom, email, telephone, adresse },
-                panier,
-                total: totalCommande
-            };
-    
-            console.log("Commande validée :", commande);
-            localStorage.removeItem("panier");
-            alert("Votre commande a été passée !");
-            location.reload();
-        }
-    
-        // Afficher le panier au chargement de la page
+        // Afficher le panier dès que le contenu est chargé
         document.addEventListener("DOMContentLoaded", afficherPanier);
-    </script>
     
-</body>
+    </script>
+</body>    
 </html>
+
