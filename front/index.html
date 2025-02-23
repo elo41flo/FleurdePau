@@ -215,7 +215,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
         // Configuration Firebase
         const firebaseConfig = {
@@ -232,22 +232,32 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        // Fonction pour gérer la déconnexion
         document.addEventListener("DOMContentLoaded", () => {
             const logoutButton = document.getElementById("logout-icon");
+
             if (logoutButton) {
-                logoutButton.addEventListener("click", async () => {
+                logoutButton.addEventListener("click", async (event) => {
+                    event.preventDefault();
                     try {
                         await signOut(auth);
-                        window.location.href = "login.html";  // Rediriger vers la page de connexion
+                        localStorage.clear(); 
+                        sessionStorage.clear(); 
+                        window.location.href = "login.html"; 
                     } catch (error) {
-                        console.error("Erreur lors de la déconnexion:", error);
+                        console.error("Erreur lors de la déconnexion :", error);
                     }
-                    // Effacer les données utilisateur dans le stockage local
-                    localStorage.removeItem("userId");
-                    localStorage.removeItem("panier");
                 });
             }
+
+            // Vérification de l'état de connexion
+            onAuthStateChanged(auth, (user) => {
+                if (!user) {
+                    localStorage.removeItem("utilisateurConnecte");
+                    window.location.href = "login.html";
+                } else {
+                    localStorage.setItem("utilisateurConnecte", "true");
+                }
+            });
         });
     </script>
 </head>
@@ -321,34 +331,51 @@
     </footer>
 
     <script>
+        // Met à jour le compteur du panier
         document.addEventListener("DOMContentLoaded", () => {
             mettreAJourCompteur();
-    
-            // Écouteur pour mettre à jour le compteur si le panier change dans un autre onglet
             window.addEventListener("storage", () => {
                 mettreAJourCompteur();
             });
         });
-    
+
         function mettreAJourCompteur() {
             let compteurElement = document.querySelector(".cart-count");
             if (!compteurElement) return;
-    
-            let panier = JSON.parse(localStorage.getItem("panier")) || [];
+        
+            let userId = localStorage.getItem('userId') || 'guest';
+            let panier = JSON.parse(localStorage.getItem(`panier_${userId}`)) || [];
+        
             let totalArticles = panier.reduce((total, item) => total + item.quantite, 0);
+        
+            // Mettre à jour l'affichage du compteur
             compteurElement.innerText = totalArticles;
             compteurElement.style.display = totalArticles > 0 ? "inline-block" : "none";
-        }
-    
+        }        
+
         function ajouterAuPanier(produit) {
             let userId = localStorage.getItem('userId') || 'guest';
             let panier = JSON.parse(localStorage.getItem(`panier_${userId}`)) || [];
-    
-            panier.push(produit);
+        
+            // Vérifier si le produit est déjà dans le panier
+            let indexProduit = panier.findIndex(item => item.id === produit.id);
+        
+            if (indexProduit !== -1) {
+                // Si le produit existe déjà, augmenter sa quantité
+                panier[indexProduit].quantite += produit.quantite;
+            } else {
+                // Si le produit n'existe pas, l'ajouter au panier
+                panier.push(produit);
+            }
+        
+            // Sauvegarder le panier mis à jour dans le localStorage
             localStorage.setItem(`panier_${userId}`, JSON.stringify(panier));
-    
-            mettreAJourCompteurPanier();
+        
+            // Mettre à jour le compteur
+            mettreAJourCompteur();
         }
+        
     </script>
+    
 </body>
 </html>

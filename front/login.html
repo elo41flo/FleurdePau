@@ -168,9 +168,11 @@
             }
         }
     </style>
+
 </head>
 <body>
-    <div class="container">
+    <div id="loading-screen" class="loading">Chargement...</div>
+    <div class="container" id="login-container" style="display:none;">
         <h2>Connexion</h2>
         <div class="error" id="error-message"></div>
         <form id="login-form">
@@ -190,54 +192,61 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
-            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
-            projectId: "fleurdepau-1ce7d",
-            storageBucket: "fleurdepau-1ce7d.appspot.com",
-            messagingSenderId: "394738141831",
-            appId: "1:394738141831:web:a0cd5b9d0227267b248622"
-        };
+const firebaseConfig = {
+    apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+    authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+    projectId: "fleurdepau-1ce7d",
+    storageBucket: "fleurdepau-1ce7d.appspot.com",
+    messagingSenderId: "394738141831",
+    appId: "1:394738141831:web:a0cd5b9d0227267b248622"
+};
 
-        // Initialisation de Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+// Initialisation de Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-        const EMAIL_GERANTE = "eloiser41@gmail.com";
-        const loginForm = document.getElementById('login-form');
-        const errorMessage = document.getElementById('error-message');
+const EMAIL_GERANTE = "eloiser41@gmail.com";
+const loginForm = document.getElementById('login-form');
+const errorMessage = document.getElementById('error-message');
+const loadingScreen = document.getElementById('loading-screen');
+const loginContainer = document.getElementById('login-container');
 
-        // Vérification de l'état de l'utilisateur authentifié
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                if (user.email === EMAIL_GERANTE) {
-                    window.location.href = 'admin.html'; // Si l'utilisateur est un administrateur
-                } else {
-                    window.location.href = 'index.html'; // Sinon, redirection vers la page principale
-                }
-            }
-        });
+// Vérification de l'état de l'utilisateur authentifié
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        if (user.email === EMAIL_GERANTE) {
+            window.location.href = 'admin.html'; // Si l'utilisateur est un administrateur
+        } else {
+            window.location.href = 'index.html'; // Sinon, redirection vers la page principale
+        }
+    } else {
+        // L'utilisateur n'est pas connecté, donc on affiche le formulaire de connexion
+        loadingScreen.style.display = 'none';  // Masquer l'écran de chargement
+        loginContainer.style.display = 'block';  // Afficher le formulaire de connexion
+    }
+});
 
-        // Traitement de la soumission du formulaire de connexion
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+// Traitement de la soumission du formulaire de connexion
+loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-            try {
-                // Connexion de l'utilisateur avec l'email et le mot de passe
-                await signInWithEmailAndPassword(auth, email, password);
-                if (email === EMAIL_GERANTE) {
-                    window.location.href = 'admin.html';
-                } else {
-                    window.location.href = 'index.html';
-                }
-            } catch (error) {
-                errorMessage.textContent = "Erreur : " + error.message; // Affichage de l'erreur
-            }
-        });
+    try {
+        // Connexion de l'utilisateur avec l'email et le mot de passe
+        await signInWithEmailAndPassword(auth, email, password);
+        if (email === EMAIL_GERANTE) {
+            window.location.href = 'admin.html';
+        } else {
+            window.location.href = 'index.html';
+        }
+    } catch (error) {
+        errorMessage.textContent = "Erreur : " + error.message; // Affichage de l'erreur
+    }
+});
+
     </script>
 </body>
 </html>
