@@ -61,7 +61,7 @@
         nav ul {
             list-style: none;
             display: flex;
-            justify-content: flex-end; /* Alignement du menu à droite */
+            justify-content: flex-end;
             padding: 0;
             margin: 0;
         }
@@ -96,8 +96,8 @@
             justify-content: center;
             
             /* AU LIEU DE position: absolute */
-            margin: 50px auto; /* Espace au-dessus et centré horizontalement */
-            position: relative; /* Permet d'éviter le chevauchement */
+            margin: 50px auto;
+            position: relative; 
             top: auto;
             left: auto;
             transform: none;
@@ -131,7 +131,7 @@
 
         /* Changement de couleur au survol */
         .social-link:hover {
-            color: #ff6347; /* couleur orange */
+            color: #ff6347;
             transform: scale(1.2);
         }
 
@@ -285,6 +285,7 @@
     </style>
 </head>
 <body>
+    
     <section class="contact-form">
         <h2>M'envoyer un message</h2>
         <form id="contactForm">
@@ -305,6 +306,7 @@
         <p id="statusMessage"></p>
         <br>
     </section>
+    
     <div class="sav-button-container">
         <a href="SAV.html" class="sav-button">Accéder au SAV</a>
     </div>
@@ -322,45 +324,58 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Charger le header dynamiquement
-            chargerHeader();
+        document.addEventListener("DOMContentLoaded", function () {
+            chargerHeader(); // Charger le header depuis "header.html"
+            
+            // Mettre à jour le compteur au chargement de la page
+            mettreAJourCompteur();
+            
+            // Ajouter l'événement pour le formulaire de contact si nécessaire
+            const contactForm = document.getElementById("contactForm");
+            if (contactForm) {
+                contactForm.addEventListener("submit", envoyerMessageContact);
+            }
+            
+            // Assurez-vous de nettoyer le panier si la valeur est incorrecte
+            nettoyerPanierSiAnormal();
         
-            // Écouteur d'événement pour le formulaire de contact
-            document.getElementById("contactForm").addEventListener("submit", envoyerMessageContact);
+            // Ajouter le produit au panier seulement si on n'est pas sur la page de contact
+            if (window.location.pathname !== "/contact.html") {
+                const article = {
+                    idProduit: 'dSmC18BXxA7BoGnVxluK', // ID unique de l'article
+                    nom: "Nom de l'article",
+                    prix: 19.99
+                };
         
-            // Mettre à jour le compteur de panier après chargement du header
-            setTimeout(mettreAJourCompteur, 200);
+                // Ajouter l'article au panier lorsque la page se charge (exemple)
+                ajouterAuPanier(article);
+        
+                // Quand tu cliques sur un bouton d'ajout au panier (exemple)
+                document.getElementById("addToCartButton")?.addEventListener("click", function() {
+                    ajouterAuPanier(article);
+                });
+            }
         });
         
+        // Fonction pour charger le header et mettre à jour le panier
         async function chargerHeader() {
             try {
                 const response = await fetch("header.html");
                 const data = await response.text();
                 document.body.insertAdjacentHTML("afterbegin", data);
         
-                // Ajouter l'événement de déconnexion après le chargement du header
-                const logoutIcon = document.querySelector(".logout-icon");
-                if (logoutIcon) {
-                    logoutIcon.addEventListener("click", deconnexion);
-                } else {
-                    console.log("Icône de déconnexion non trouvée.");
-                }
+                // Mettre à jour le compteur du panier après avoir inséré le header
+                setTimeout(() => {
+                    mettreAJourCompteur();
+                }, 0);
             } catch (error) {
                 console.error("Erreur lors du chargement du header:", error);
             }
         }
         
-        function deconnexion(e) {
-            e.preventDefault();
-            // Supprimer l'élément 'user' du localStorage
-            localStorage.removeItem("user");
-            window.location.href = "login.html"; // Rediriger vers la page de connexion
-        }
-        
-        
+        // Fonction pour envoyer le message de contact
         async function envoyerMessageContact(event) {
-            event.preventDefault();
+            event.preventDefault(); // Empêcher la soumission par défaut du formulaire
         
             const name = document.getElementById("name").value;
             const email = document.getElementById("email").value;
@@ -386,47 +401,83 @@
             }
         }
         
-        function ajouterAuPanier(produit) {
-            // Récupérer le panier depuis localStorage ou initialiser un tableau vide
-            let panier = JSON.parse(localStorage.getItem("panier")) || [];
+        // Fonction pour nettoyer ou corriger une valeur erronée dans le panier
+        function nettoyerPanierSiAnormal() {
+            let panier = JSON.parse(localStorage.getItem("panier") || "[]");
         
-            // Chercher si le produit existe déjà dans le panier
-            let produitExistant = panier.find(item => item.idProduit === produit.idProduit);
+            // Si un article a une quantité invalide, on la remet à 1
+            panier.forEach(article => {
+                if (!article.quantite || isNaN(article.quantite) || article.quantite <= 0) {
+                    article.quantite = 1;  // Remettre la quantité à 1 si elle est invalide
+                }
+            });
         
-            if (produitExistant) {
-                // Si le produit existe, augmenter la quantité
-                produitExistant.quantite += 1;
-            } else {
-                // Sinon, ajouter le produit avec une quantité de 1
-                panier.push({ ...produit, quantite: 1 });
-            }
-        
-            // Sauvegarder le panier mis à jour dans localStorage
+            // Sauvegarder les modifications dans le localStorage
             localStorage.setItem("panier", JSON.stringify(panier));
-        
-            // Mettre à jour le compteur de panier
-            mettreAJourCompteur();
         }
         
+        // Fonction de mise à jour du compteur du panier
         function mettreAJourCompteur() {
-            const compteurElement = document.querySelector(".cart-count");
+            // Récupérer les articles dans le panier depuis le localStorage
+            const panier = JSON.parse(localStorage.getItem("panier") || "[]");
         
-            // Récupérer le nombre d'articles dans le panier depuis localStorage
-            const compteur = localStorage.getItem("compteurPanier");
+            console.log("Panier récupéré:", panier); // Vérifier le contenu du panier
         
-            if (compteur && compteurElement) {
-                // Mettre à jour le texte du compteur
-                compteurElement.innerText = compteur;
-        
-                // Afficher ou cacher le compteur en fonction de sa valeur
-                if (parseInt(compteur) > 0) {
-                    compteurElement.style.display = "inline-block";
-                } else {
-                    compteurElement.style.display = "none";
-                }
-            } else {
-                console.log("Le compteur n'a pas été trouvé.");
+            if (!Array.isArray(panier)) {
+                console.error("Le panier n'est pas un tableau valide dans localStorage.");
+                return;
             }
+        
+            let panierQuantite = 0;
+        
+            // Parcourir chaque article du panier pour additionner les quantités
+            panier.forEach((article, index) => {
+                console.log(`Article ${index + 1}:`, article); // Vérifier les propriétés de chaque article
+        
+                // Vérifier que la propriété quantite existe et est un nombre
+                if (article.quantite && !isNaN(article.quantite)) {
+                    panierQuantite += article.quantite; // Ajouter la quantité
+                } else {
+                    console.warn(`Article ${index + 1} a une quantité invalide ou manquante.`);
+                }
+            });
+        
+            console.log("Quantité du panier:", panierQuantite); // Vérifier la quantité calculée
+        
+            const cartCountElement = document.querySelector(".cart-count");
+            if (cartCountElement) {
+                cartCountElement.textContent = panierQuantite;
+        
+                // Afficher ou cacher le compteur en fonction de la quantité
+                if (panierQuantite > 0) {
+                    cartCountElement.style.display = "inline-block"; // Afficher
+                } else {
+                    cartCountElement.style.display = "none"; // Cacher
+                }
+            }
+        }
+        
+        // Fonction pour ajouter un article au panier depuis la page boutique.html
+        function ajouterAuPanier(article) {
+            // Récupérer le panier existant depuis le localStorage
+            let panier = JSON.parse(localStorage.getItem("panier") || "[]");
+        
+            // Vérifier si l'article existe déjà dans le panier
+            const articleExistant = panier.find(item => item.idProduit === article.idProduit);
+        
+            if (articleExistant) {
+                // Si l'article existe déjà, on incrémente la quantité
+                articleExistant.quantite = (articleExistant.quantite || 0) + 1;
+            } else {
+                // Si l'article n'existe pas, on l'ajoute avec une quantité de 1
+                panier.push({ ...article, quantite: 1 });
+            }
+        
+            // Sauvegarder le panier mis à jour dans le localStorage
+            localStorage.setItem("panier", JSON.stringify(panier));
+        
+            // Mettre à jour le compteur
+            mettreAJourCompteur();
         }
         
     </script>
