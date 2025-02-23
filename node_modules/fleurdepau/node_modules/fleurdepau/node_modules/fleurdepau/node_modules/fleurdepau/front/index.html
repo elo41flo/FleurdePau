@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,11 +8,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Raleway:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Importation des polices */
+        /* Styles généraux */
         body {
             font-family: 'Raleway', sans-serif;
             margin: 0;
             padding: 0;
+            background-color: #f4f4f4;
         }
 
         header {
@@ -34,7 +36,6 @@
             align-items: center;
         }
 
-        /* Logo */
         .logo {
             font-family: 'Pacifico', cursive;
             font-size: 1.8rem;
@@ -42,27 +43,11 @@
             margin: 10px 0;
         }
 
-        /* Icônes */
-        .header-icons {
-            display: flex;
-            justify-content: flex-start;
-            gap: 20px;
-            position: absolute;
-            top: 10px;
-            right: 20px;
-        }
-
-        .header-icons a, .header-icons i {
-            font-size: 24px;
-            color: #333;
-            cursor: pointer;
-        }
-
         /* Menu */
         nav ul {
             list-style: none;
             display: flex;
-            justify-content: flex-end; /* Alignement du menu à droite */
+            justify-content: flex-end;
             padding: 0;
             margin: 0;
         }
@@ -80,6 +65,24 @@
 
         nav ul li a:hover {
             color: #d85c5c;
+        }
+
+        /* Icônes alignées à l'horizontale sur la droite */
+        .header-icons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 20px;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            align-items: center;
+        }
+
+        .header-icons a,
+        .header-icons i {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
         }
 
         /* Section hero */
@@ -120,8 +123,8 @@
             background-color: #a44b4b;
         }
 
-        /* Sections supplémentaires */
-        .about, .creations, .contact {
+        /* Section about */
+        .about {
             padding: 2rem 0;
             text-align: center;
         }
@@ -159,6 +162,12 @@
             margin: 1rem 0;
         }
 
+        /* Section contact */
+        .contact {
+            padding: 2rem 0;
+            text-align: center;
+        }
+
         footer {
             text-align: center;
             padding: 1rem;
@@ -166,7 +175,13 @@
             color: #fff;
         }
 
-        /* Styles Responsives */
+        /* Responsiveness */
+        @media (max-width: 480px) {
+            .produits-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 768px) {
             header {
                 flex-direction: column;
@@ -177,11 +192,10 @@
             nav ul {
                 flex-direction: column;
                 align-items: center;
-                padding: 10px 0;
             }
 
             nav ul li {
-                margin: 5px 0;
+                margin: 0.5rem 0;
             }
 
             .header-icons {
@@ -193,29 +207,30 @@
                 flex-direction: column;
                 align-items: center;
             }
-        }
 
-        @media (max-width: 1024px) {
             .grid {
-                display: grid;
                 grid-template-columns: 1fr 1fr 1fr;
                 gap: 1.5rem;
             }
         }
 
+        @media (max-width: 1024px) {
+            .grid {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
         @media (min-width: 1200px) {
             .grid {
-                display: grid;
                 grid-template-columns: 1fr 1fr 1fr 1fr;
                 gap: 2rem;
             }
         }
     </style>
-
-    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
         // Configuration Firebase
         const firebaseConfig = {
@@ -228,46 +243,86 @@
             measurementId: "G-D1J6X7BH9S"
         };
 
-        // Initialisation de Firebase
+        // Initialiser Firebase
         const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
         const auth = getAuth(app);
 
+        // Déconnexion
         document.addEventListener("DOMContentLoaded", () => {
             const logoutButton = document.getElementById("logout-icon");
-
             if (logoutButton) {
-                logoutButton.addEventListener("click", async (event) => {
-                    event.preventDefault();
+                logoutButton.addEventListener("click", async () => {
                     try {
                         await signOut(auth);
-                        localStorage.clear(); 
-                        sessionStorage.clear(); 
-                        window.location.href = "login.html"; 
+                        localStorage.removeItem("utilisateurConnecte");
+                        window.location.href = "login.html"; // Rediriger après déconnexion
                     } catch (error) {
-                        console.error("Erreur lors de la déconnexion :", error);
+                        console.error("Erreur lors de la déconnexion:", error);
                     }
                 });
             }
-
-            // Vérification de l'état de connexion
-            onAuthStateChanged(auth, (user) => {
-                if (!user) {
-                    localStorage.removeItem("utilisateurConnecte");
-                    window.location.href = "login.html";
-                } else {
-                    localStorage.setItem("utilisateurConnecte", "true");
-                }
-            });
         });
+
+        // Chargement des produits
+        async function chargerProduitsBoutique() {
+            const produitsContainer = document.getElementById("produits");
+            produitsContainer.innerHTML = "";
+
+            const produitsSnapshot = await getDocs(collection(db, "produits"));
+            if (produitsSnapshot.empty) {
+                produitsContainer.innerHTML = "<p>Aucun produit trouvé.</p>";
+                return;
+            }
+
+            produitsSnapshot.forEach((docSnap) => {
+                const produit = docSnap.data();
+                const produitElement = document.createElement("div");
+                produitElement.classList.add("produit");
+
+                produitElement.innerHTML = `
+                    <img src="${produit.image || 'https://i.imgur.com/jOTXXdh.jpeg'}" alt="${produit.nom}">
+                    <h3>${produit.nom}</h3>
+                    <p>${produit.description}</p>
+                    <p class="prix">${produit.prix}€</p>
+                    <button class="add-to-cart" data-id="${docSnap.id}">Ajouter au panier</button>
+                `;
+
+                produitsContainer.appendChild(produitElement);
+            });
+
+            document.querySelectorAll(".add-to-cart").forEach(button => {
+                button.addEventListener("click", function () {
+                    ajouterAuPanier(this.getAttribute("data-id"));
+                });
+            });
+        }
+
+        function ajouterAuPanier(id) {
+            let panier = JSON.parse(localStorage.getItem("panier")) || [];
+            panier.push({ idProduit: id });
+            localStorage.setItem("panier", JSON.stringify(panier));
+
+            alert("Produit ajouté au panier !");
+            miseAJourPanier();
+        }
+
+        function miseAJourPanier() {
+            const panier = JSON.parse(localStorage.getItem("panier")) || [];
+            document.querySelector(".cart-count").textContent = panier.length > 0 ? panier.length : "0";
+        }
+
+        window.onload = function () {
+            chargerProduitsBoutique();
+            miseAJourPanier();
+        };
     </script>
 </head>
+
 <body>
     <header class="header">
         <div class="header-content">
-            <!-- Logo -->
             <h1 class="logo">Fleur De Pau</h1>
-
-            <!-- Menu -->
             <nav>
                 <ul>
                     <li><a href="index.html">Accueil</a></li>
@@ -275,28 +330,14 @@
                     <li><a href="contact.html">Contact</a></li>
                 </ul>
             </nav>
+            <div class="header-icons">
+                <a href="mon-compte.html"><i class="fas fa-user"></i></a>
+                <a href="login.html" id="logout-icon"><i class="fas fa-sign-out-alt"></i></a>
+                <a href="panier.html"><i class="fas fa-shopping-cart"></i><span class="cart-count">0</span></a>
+            </div>
         </div>
-
-        <!-- Icônes -->
-        <section id="header-icons" class="header-icons">
-            <!-- Icône Mon Compte -->
-            <a href="mon-compte.html">
-                <i class="fas fa-user"></i>
-            </a>
-
-            <!-- Icône de déconnexion -->
-            <a href="login.html" id="logout-icon">
-                <i class="fas fa-sign-out-alt"></i>
-            </a>
-
-            <!-- Icône du panier -->
-            <a href="panier.html">
-                <i class="fas fa-shopping-cart"></i>
-                <span class="cart-count">0</span>
-            </a>
-        </section>
     </header>
-
+    
     <main>
         <section class="hero">
             <h2 class="hero-title">L'art d'être soi-même</h2>
@@ -310,10 +351,9 @@
                 <p>Bienvenue dans l'univers Fleur de Pau, je suis artiste tatoueuse et passionnée de crochet ! Chaque pièce est réalisée avec soin et amour pour apporter une touche de douceur et d'originalité.</p>
             </div>
         </section>
-
         <section class="image-section">
             <div class="container">
-                <center><img src="images/2.jpg" alt="Création artisanale" style="width: 50%; max-width: 1200px; border-radius: 10px;"></center>
+                <center><img src="images\2.jpg" alt="Création artisanale" style="width: 50%; max-width: 1200px; border-radius: 10px;"></center>
             </div>
         </section>
 
@@ -330,52 +370,7 @@
         <p>© 2025 Fleur de Pau - Tous droits réservés</p>
     </footer>
 
-    <script>
-        // Met à jour le compteur du panier
-        document.addEventListener("DOMContentLoaded", () => {
-            mettreAJourCompteur();
-            window.addEventListener("storage", () => {
-                mettreAJourCompteur();
-            });
-        });
-
-        function mettreAJourCompteur() {
-            let compteurElement = document.querySelector(".cart-count");
-            if (!compteurElement) return;
-        
-            let userId = localStorage.getItem('userId') || 'guest';
-            let panier = JSON.parse(localStorage.getItem(`panier_${userId}`)) || [];
-        
-            let totalArticles = panier.reduce((total, item) => total + item.quantite, 0);
-        
-            // Mettre à jour l'affichage du compteur
-            compteurElement.innerText = totalArticles;
-            compteurElement.style.display = totalArticles > 0 ? "inline-block" : "none";
-        }        
-
-        function ajouterAuPanier(produit) {
-            let userId = localStorage.getItem('userId') || 'guest';
-            let panier = JSON.parse(localStorage.getItem(`panier_${userId}`)) || [];
-        
-            // Vérifier si le produit est déjà dans le panier
-            let indexProduit = panier.findIndex(item => item.id === produit.id);
-        
-            if (indexProduit !== -1) {
-                // Si le produit existe déjà, augmenter sa quantité
-                panier[indexProduit].quantite += produit.quantite;
-            } else {
-                // Si le produit n'existe pas, l'ajouter au panier
-                panier.push(produit);
-            }
-        
-            // Sauvegarder le panier mis à jour dans le localStorage
-            localStorage.setItem(`panier_${userId}`, JSON.stringify(panier));
-        
-            // Mettre à jour le compteur
-            mettreAJourCompteur();
-        }
-        
-    </script>
     
 </body>
+
 </html>

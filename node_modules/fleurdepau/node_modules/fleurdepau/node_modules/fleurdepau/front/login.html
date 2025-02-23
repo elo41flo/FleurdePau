@@ -191,6 +191,7 @@
     </div>
 
     <script type="module">
+        import { signOut } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
 
@@ -216,15 +217,21 @@ const loginContainer = document.getElementById('login-container');
 // Vérification de l'état de l'utilisateur authentifié
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        if (user.email === EMAIL_GERANTE) {
-            window.location.href = 'admin.html'; // Si l'utilisateur est un administrateur
-        } else {
-            window.location.href = 'index.html'; // Sinon, redirection vers la page principale
-        }
+        // Si l'utilisateur est connecté, déconnecte-le immédiatement
+        signOut(auth).then(() => {
+            // Une fois déconnecté, affiche le formulaire de connexion
+            loadingScreen.style.display = 'none';
+            loginContainer.style.display = 'block';
+        }).catch((error) => {
+            // En cas d'erreur lors de la déconnexion, affiche l'erreur
+            console.error('Erreur de déconnexion :', error);
+            loadingScreen.style.display = 'none';
+            loginContainer.style.display = 'block';
+        });
     } else {
-        // L'utilisateur n'est pas connecté, donc on affiche le formulaire de connexion
-        loadingScreen.style.display = 'none';  // Masquer l'écran de chargement
-        loginContainer.style.display = 'block';  // Afficher le formulaire de connexion
+        // L'utilisateur n'est pas connecté, donc affiche le formulaire de connexion
+        loadingScreen.style.display = 'none';
+        loginContainer.style.display = 'block';
     }
 });
 
@@ -246,6 +253,7 @@ loginForm.addEventListener('submit', async (e) => {
         errorMessage.textContent = "Erreur : " + error.message; // Affichage de l'erreur
     }
 });
+
 
     </script>
 </body>
