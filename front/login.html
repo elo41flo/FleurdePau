@@ -6,171 +6,217 @@
     <title>Connexion - FleurDePau</title>
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;600&family=Pacifico&display=swap" rel="stylesheet">
     <style>
-        body {
-            margin: 0;
-            font-family: 'Raleway', sans-serif;
-            background-color: #f8f8f8;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            width: 100%;
-            padding: 2rem;
-            text-align: center;
-        }
-
-        h2 {
-            font-family: 'Pacifico', cursive;
-            font-size: 1.8rem;
-            color: #5e380c;
-            margin-bottom: 1.5rem;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        label {
-            font-weight: 600;
-            text-align: left;
-            margin-left: 5px;
-            color: #444;
-        }
-
-        input {
-            padding: 0.8rem;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease-in-out;
-        }
-
-        input:focus {
-            border-color: #5e380c;
-            outline: none;
-        }
-
-        button {
-            padding: 0.8rem;
-            background-color: #5e380c;
-            color: #fff;
-            border: none;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #a44b4b;
-        }
-
+            body {
+                margin: 0;
+                font-family: 'Raleway', sans-serif;
+                background-color: #f8f8f8;
+                color: #333;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+            }
+    
+            .container {
+                background-color: #fff;
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                max-width: 400px;
+                width: 100%;
+                padding: 2rem;
+                text-align: center;
+            }
+    
         .error {
-            color: #d85c5c;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-        }
-
-        .toggle {
-            font-size: 0.9rem;
-            margin-top: 1rem;
-            color: #555;
-        }
-
-        .toggle a {
-            color: #5e380c;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .toggle a:hover {
-            text-decoration: underline;
-            color: #a44b4b;
-        }
-
-        .google-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.8rem;
-            background-color: #4285F4;
-            color: #fff;
-            border: none;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 1rem;
-            transition: background-color 0.3s ease;
-        }
-
-        .google-btn:hover {
-            background-color: #357ae8;
-        }
-
-        .google-btn i {
-            margin-right: 10px;
-        }
-
-        /* Responsive Styles */
-        @media (max-width: 600px) {
-            .container {
-                padding: 1.5rem;
-            }
-
-            h2 {
-                font-size: 1.5rem;
-            }
-
-            input {
-                padding: 1rem;
+                color: #d85c5c;
                 font-size: 0.9rem;
+                margin-bottom: 1rem;
             }
-
-            button {
-                padding: 1rem;
-                font-size: 1.1rem;
+    
+            /* Bannière de cookies */
+            .cookie-banner {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 15px;
+                text-align: center;
+                display: none;
             }
-
-            .toggle a {
-                font-size: 0.9rem;
+    
+            .cookie-banner button {
+                margin: 5px;
+                padding: 10px;
+                border: none;
+                cursor: pointer;
+                font-weight: bold;
             }
-        }
-
-        @media (max-width: 400px) {
-            .container {
-                padding: 1rem;
+    
+            .accept-btn {
+                background-color: #5e380c;
+                color: white;
             }
-
+    
+            .decline-btn {
+                background-color: #a44b4b;
+                color: white;
+            }
+    
             h2 {
-                font-size: 1.2rem;
+                font-family: 'Pacifico', cursive;
+                font-size: 1.8rem;
+                color: #5e380c;
+                margin-bottom: 1.5rem;
             }
-
+    
+            form {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+    
+            label {
+                font-weight: 600;
+                text-align: left;
+                margin-left: 5px;
+                color: #444;
+            }
+    
             input {
                 padding: 0.8rem;
-                font-size: 0.8rem;
-            }
-
-            button {
-                padding: 1rem;
+                border: 1px solid #ddd;
+                border-radius: 5px;
                 font-size: 1rem;
+                transition: border-color 0.3s ease-in-out;
             }
-        }
-    </style>
-
+    
+            input:focus {
+                border-color: #5e380c;
+                outline: none;
+            }
+    
+            button {
+                padding: 0.8rem;
+                background-color: #5e380c;
+                color: #fff;
+                border: none;
+                border-radius: 25px;
+                font-size: 1rem;
+                font-weight: bold;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+    
+            button:hover {
+                background-color: #a44b4b;
+            }
+    
+            .error {
+                color: #d85c5c;
+                font-size: 0.9rem;
+                margin-bottom: 1rem;
+            }
+    
+            .toggle {
+                font-size: 0.9rem;
+                margin-top: 1rem;
+                color: #555;
+            }
+    
+            .toggle a {
+                color: #5e380c;
+                text-decoration: none;
+                font-weight: bold;
+            }
+    
+            .toggle a:hover {
+                text-decoration: underline;
+                color: #a44b4b;
+            }
+    
+            .google-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0.8rem;
+                background-color: #4285F4;
+                color: #fff;
+                border: none;
+                border-radius: 25px;
+                font-size: 1rem;
+                font-weight: bold;
+                cursor: pointer;
+                margin-top: 1rem;
+                transition: background-color 0.3s ease;
+            }
+    
+            .google-btn:hover {
+                background-color: #357ae8;
+            }
+    
+            .google-btn i {
+                margin-right: 10px;
+            }
+    
+            /* Responsive Styles */
+            @media (max-width: 600px) {
+                .container {
+                    padding: 1.5rem;
+                }
+    
+                h2 {
+                    font-size: 1.5rem;
+                }
+    
+                input {
+                    padding: 1rem;
+                    font-size: 0.9rem;
+                }
+    
+                button {
+                    padding: 1rem;
+                    font-size: 1.1rem;
+                }
+    
+                .toggle a {
+                    font-size: 0.9rem;
+                }
+            }
+    
+            @media (max-width: 400px) {
+                .container {
+                    padding: 1rem;
+                }
+    
+                h2 {
+                    font-size: 1.2rem;
+                }
+    
+                input {
+                    padding: 0.8rem;
+                    font-size: 0.8rem;
+                }
+    
+                button {
+                    padding: 1rem;
+                    font-size: 1rem;
+                }
+            }
+        </style>
 </head>
 <body>
+    <!-- Bannière de cookies -->
+    <div id="cookieBanner" class="cookie-banner">
+        Nous utilisons des cookies pour assurer le bon fonctionnement du site.
+        <br>
+        <a href="politique-confidentialite.html" style="color: #fff; text-decoration: underline;">En savoir plus</a>
+        <br>
+        <button class="accept-btn" id="acceptCookies">Accepter</button>
+        <button class="decline-btn" id="declineCookies">Refuser</button>
+    </div>
+    
+
     <div id="loading-screen" class="loading">Chargement...</div>
     <div class="container" id="login-container" style="display:none;">
         <h2>Connexion</h2>
@@ -190,71 +236,100 @@
         </div>
     </div>
 
+    <footer style="text-align: center; padding: 10px; font-size: 0.9rem;">
+        <a href="mentions-legales.html" style="color: #5e380c; text-decoration: none;">Mentions légales</a> |
+        <a href="politique-confidentialite.html" style="color: #5e380c; text-decoration: none;">Politique de confidentialité</a>
+    </footer>
+    
+    
     <script type="module">
         import { signOut } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
-    authDomain: "fleurdepau-1ce7d.firebaseapp.com",
-    projectId: "fleurdepau-1ce7d",
-    storageBucket: "fleurdepau-1ce7d.appspot.com",
-    messagingSenderId: "394738141831",
-    appId: "1:394738141831:web:a0cd5b9d0227267b248622"
-};
+        const EMAIL_GERANTE = "eloiser41@gmail.com";
+        const loginForm = document.getElementById('login-form');
+        const errorMessage = document.getElementById('error-message');
+        const loadingScreen = document.getElementById('loading-screen');
+        const loginContainer = document.getElementById('login-container');
+        const cookieBanner = document.getElementById("cookieBanner");
+        const acceptCookiesBtn = document.getElementById("acceptCookies");
+        const declineCookiesBtn = document.getElementById("declineCookies");
 
-// Initialisation de Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+        // Vérification du consentement aux cookies
+        const consentement = localStorage.getItem("cookiesConsent");
 
-const EMAIL_GERANTE = "eloiser41@gmail.com";
-const loginForm = document.getElementById('login-form');
-const errorMessage = document.getElementById('error-message');
-const loadingScreen = document.getElementById('loading-screen');
-const loginContainer = document.getElementById('login-container');
-
-// Vérification de l'état de l'utilisateur authentifié
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        // Si l'utilisateur est connecté, déconnecte-le immédiatement
-        signOut(auth).then(() => {
-            // Une fois déconnecté, affiche le formulaire de connexion
-            loadingScreen.style.display = 'none';
-            loginContainer.style.display = 'block';
-        }).catch((error) => {
-            // En cas d'erreur lors de la déconnexion, affiche l'erreur
-            console.error('Erreur de déconnexion :', error);
-            loadingScreen.style.display = 'none';
-            loginContainer.style.display = 'block';
-        });
-    } else {
-        // L'utilisateur n'est pas connecté, donc affiche le formulaire de connexion
-        loadingScreen.style.display = 'none';
-        loginContainer.style.display = 'block';
-    }
-});
-
-// Traitement de la soumission du formulaire de connexion
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    try {
-        // Connexion de l'utilisateur avec l'email et le mot de passe
-        await signInWithEmailAndPassword(auth, email, password);
-        if (email === EMAIL_GERANTE) {
-            window.location.href = 'admin.html';
+        if (!consentement) {
+            cookieBanner.style.display = "block";
+        } else if (consentement === "refusé") {
+            alert("Vous devez accepter les cookies essentiels pour utiliser ce site.");
+            window.location.href = "/page-de-consentement.html"; // Redirection
         } else {
-            window.location.href = 'index.html';
+            initialiserFirebase();
         }
-    } catch (error) {
-        errorMessage.textContent = "Erreur : " + error.message; // Affichage de l'erreur
-    }
-});
 
+        // Gestion du consentement
+        acceptCookiesBtn.addEventListener("click", function () {
+            localStorage.setItem("cookiesConsent", "accepté");
+            cookieBanner.style.display = "none";
+            initialiserFirebase();
+        });
 
+        declineCookiesBtn.addEventListener("click", function () {
+            localStorage.setItem("cookiesConsent", "refusé");
+            alert("Vous ne pouvez pas utiliser ce site sans accepter les cookies essentiels.");
+            window.location.href = "/page-de-consentement.html";
+        });
+
+        // Fonction pour initialiser Firebase
+        function initialiserFirebase() {
+            const firebaseConfig = {
+                apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+                authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+                projectId: "fleurdepau-1ce7d",
+                storageBucket: "fleurdepau-1ce7d.appspot.com",
+                messagingSenderId: "394738141831",
+                appId: "1:394738141831:web:a0cd5b9d0227267b248622"
+            };
+
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+
+            // Vérification de l'état de connexion
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    signOut(auth).then(() => {
+                        loadingScreen.style.display = 'none';
+                        loginContainer.style.display = 'block';
+                    }).catch((error) => {
+                        console.error('Erreur de déconnexion :', error);
+                        loadingScreen.style.display = 'none';
+                        loginContainer.style.display = 'block';
+                    });
+                } else {
+                    loadingScreen.style.display = 'none';
+                    loginContainer.style.display = 'block';
+                }
+            });
+
+            // Connexion utilisateur
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    if (email === EMAIL_GERANTE) {
+                        window.location.href = 'admin.html';
+                    } else {
+                        window.location.href = 'index.html';
+                    }
+                } catch (error) {
+                    errorMessage.textContent = "Erreur : " + error.message;
+                }
+            });
+        }
     </script>
 </body>
 </html>
