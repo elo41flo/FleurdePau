@@ -150,6 +150,31 @@
         gap: 15px;
     }
 
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+        background-color: white;
+        margin: 10% auto;
+        padding: 20px;
+        border-radius: 10px;
+        width: 50%;
+        text-align: center;
+    }
+    .close {
+        float: right;
+        font-size: 28px;
+        cursor: pointer;
+    }
+
     .panier-item {
         display: flex;
         align-items: center;
@@ -230,8 +255,21 @@
         <h2>Votre Panier</h2>
         <div id="panier-list"></div>
         <div id="total">Total: €0.00</div>
-        <button class="cta-btn" onclick="afficherFormulaireCommande()">Commander</button>
+        <button id="select-point-relais" class="cta-btn">Choisir un point relais</button>
+<p id="selected-relay" style="text-align: center; font-weight: bold; margin-top: 10px;">Aucun point relais sélectionné</p>
+
     </section>
+
+    <div id="relay-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Choisissez un point relais</h3>
+            <input type="text" id="postal-code" placeholder="Entrez votre code postal">
+            <input type="text" id="city" placeholder="Entrez votre ville">
+            <button id="fetch-relays">Rechercher</button>
+            <div id="relay-list"></div>
+        </div>
+    </div>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
@@ -311,32 +349,71 @@
             document.querySelectorAll(".supprimer-btn").forEach(button => {
                 button.addEventListener("click", (event) => {
                     let idProduit = event.target.dataset.id;
-                    retirerDuPanier(idProduit, event.target.closest(".panier-item"));
+                    retirerDuPanier(idProduit);
+                    afficherPanier();
                 });
             });
         }
     
-        // Fonction pour supprimer un produit du panier
-        function retirerDuPanier(idProduit, itemElement) {
-            console.log("Suppression de l'article avec l'ID :", idProduit);
-    
-            // Filtrer le panier pour retirer l'élément avec l'idProduit correspondant
+        // Fonction pour retirer un produit du panier
+        function retirerDuPanier(idProduit) {
             panier = panier.filter(item => item.idProduit !== idProduit);
-    
-            // Sauvegarder à nouveau le panier dans le localStorage
             localStorage.setItem("panier", JSON.stringify(panier));
-    
-            // Retirer l'élément du DOM immédiatement
-            itemElement.remove();
-    
-            // Mettre à jour l'affichage du panier sans recharger la page
-            afficherPanier();
         }
     
-        // Afficher le panier dès que le contenu est chargé
-        document.addEventListener("DOMContentLoaded", afficherPanier);
+        // Initialiser l'affichage du panier
+        afficherPanier();
     
+        // Modal de sélection du point relais
+        let modal = document.getElementById("relay-modal");
+        let btn = document.getElementById("select-point-relais");
+        let span = document.getElementsByClassName("close")[0];
+    
+        btn.onclick = function() {
+            modal.style.display = "block";
+        };
+    
+        span.onclick = function() {
+            modal.style.display = "none";
+        };
+    
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+    
+        // Recherche des points relais
+        document.getElementById("fetch-relays").addEventListener("click", () => {
+            let postalCode = document.getElementById("postal-code").value;
+            let city = document.getElementById("city").value;
+    
+            if (postalCode === "" || city === "") {
+                alert("Veuillez entrer à la fois un code postal et une ville.");
+                return;
+            }
+    
+            fetch(`https://api.laposte.fr/points-relais/v1/points?postal_code=${postalCode}&city=${city}`, {
+                headers: {
+                    'Authorization': 'Bearer YOUR_API_KEY'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                let relayList = document.getElementById("relay-list");
+                relayList.innerHTML = "";
+                data.points.forEach(point => {
+                    let relayOption = document.createElement("div");
+                    relayOption.textContent = `${point.name} - ${point.address}`;
+                    relayOption.onclick = function() {
+                        document.getElementById("selected-relay").textContent = `Point relais sélectionné: ${point.name}`;
+                        modal.style.display = "none";
+                    };
+                    relayList.appendChild(relayOption);
+                });
+            })
+            .catch(error => console.error("Erreur lors de la recherche des points relais:", error));
+        });
     </script>
-</body>    
+</body>
 </html>
-
