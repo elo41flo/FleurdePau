@@ -71,19 +71,26 @@ app.post("/api/mondial-relay/points-relais", async (req, res) => {
           cle: process.env.MONDIAL_RELAY_PRIVATE_KEY,
           ville: ville,
           cp: codePostal,
-          option: "points_relais"  // Paramètre exemple, à ajuster selon l'API de Mondial Relay
+          option: "points_relais"
       }).toString(), {
           headers: {
               'Content-Type': 'application/x-www-form-urlencoded',
           },
       });
 
-      res.json(response.data);
+      console.log("Réponse de Mondial Relay:", response.data); // Log la réponse
+
+      if (response.data.points && response.data.points.length > 0) {
+          res.json(response.data);
+      } else {
+          res.status(404).json({ success: false, message: "Aucun point relais trouvé" });
+      }
   } catch (error) {
       console.error("❌ Erreur API Mondial Relay:", error);
       res.status(500).json({ success: false, message: "Erreur serveur Mondial Relay" });
   }
 });
+
 
 // 📦 Route pour créer une expédition Mondial Relay
 app.post("/api/mondial-relay/expedition", async (req, res) => {
