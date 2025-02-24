@@ -1,28 +1,36 @@
-// 📌 API Proxy pour Mondial Relay sur Vercel
-import axios from "axios";
+import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
-    if (req.method !== "POST") {
-        return res.status(405).json({ success: false, message: "Méthode non autorisée" });
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Méthode non autorisée' });
     }
 
     const { ville, codePostal } = req.body;
-
     if (!ville || !codePostal) {
-        return res.status(400).json({ success: false, message: "Ville et code postal requis" });
+        return res.status(400).json({ error: 'Ville et code postal requis' });
     }
 
     try {
-        const response = await axios.post(process.env.MONDIAL_RELAY_API_URL, {
-            Enseigne: process.env.MONDIAL_RELAY_ENS_CODE,
-            Clé: process.env.MONDIAL_RELAY_PRIVATE_KEY,
-            Ville: ville,
-            CP: codePostal,
+        const response = await fetch('https://api.mondialrelay.com/webservice/point-relais', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.MONDRIAL_RELAY_API_KEY}`
+            },
+            body: JSON.stringify({
+                postal_code: codePostal,
+                city: ville
+            })
         });
 
-        res.status(200).json(response.data);
+        if (!response.ok) {
+            throw new Error(`Erreur API Mondial Relay: ${response.status}`);
+        }
+
+        const data = await response.json();
+        res.status(200).json({ success: true, points: data.points });
     } catch (error) {
-        console.error("❌ Erreur API Mondial Relay :", error);
-        res.status(500).json({ success: false, message: "Erreur serveur Mondial Relay" });
+        console.error('Erreur Mondial Relay:', error);
+        res.status(500).json({ error: 'Erreur interne du serveur' });
     }
 }
