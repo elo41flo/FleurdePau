@@ -58,7 +58,6 @@ const mailjetClient = mailjet.apiConnect(
 );
 
 // 📥 Route pour récupérer les points relais Mondial Relay
-// 📥 Route pour récupérer les points relais Mondial Relay
 app.post("/api/mondial-relay/points-relais", async (req, res) => {
   const { ville, codePostal } = req.body;
   
@@ -114,7 +113,6 @@ app.post("/api/mondial-relay/expedition", async (req, res) => {
       res.status(500).json({ success: false, message: "Erreur serveur Mondial Relay (expédition)" });
   }
 });
-
 
 // ✅ Démarrage du serveur
 const PORT = process.env.PORT || 3000;
