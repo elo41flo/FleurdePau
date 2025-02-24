@@ -393,9 +393,10 @@
                 return;
             }
     
-            fetch(`https://api.laposte.fr/points-relais/v1/points?postal_code=${postalCode}&city=${city}`, {
+            fetch('https://cors-anywhere.herokuapp.com/https://api.mondialrelay.com/webservice/point-relais?postal_code=45190&city=Beaugency', {
+                method: 'GET',
                 headers: {
-                    'Authorization': 'Bearer YOUR_API_KEY'
+                    'Authorization': 'Bearer YOUR_API_KEY', // Remplacez par votre clé API Mondial Relay
                 }
             })
             .then(response => response.json())

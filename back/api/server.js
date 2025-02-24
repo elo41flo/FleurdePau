@@ -58,51 +58,63 @@ const mailjetClient = mailjet.apiConnect(
 );
 
 // 📥 Route pour récupérer les points relais Mondial Relay
+// 📥 Route pour récupérer les points relais Mondial Relay
 app.post("/api/mondial-relay/points-relais", async (req, res) => {
-    const { ville, codePostal } = req.body;
-    
-    if (!ville || !codePostal) {
-        return res.status(400).json({ success: false, message: "Ville et code postal requis" });
-    }
+  const { ville, codePostal } = req.body;
+  
+  if (!ville || !codePostal) {
+      return res.status(400).json({ success: false, message: "Ville et code postal requis" });
+  }
 
-    try {
-        const response = await axios.post(process.env.MONDIAL_RELAY_API_URL, {
-            Enseigne: process.env.MONDIAL_RELAY_ENS_CODE,
-            Clé: process.env.MONDIAL_RELAY_PRIVATE_KEY,
-            Ville: ville,
-            CP: codePostal
-        });
-        
-        res.json(response.data);
-    } catch (error) {
-        console.error("\u274c Erreur API Mondial Relay:", error);
-        res.status(500).json({ success: false, message: "Erreur serveur Mondial Relay" });
-    }
+  try {
+      const response = await axios.post(process.env.MONDIAL_RELAY_API_URL, new URLSearchParams({
+          enseigne: process.env.MONDIAL_RELAY_ENS_CODE,
+          cle: process.env.MONDIAL_RELAY_PRIVATE_KEY,
+          ville: ville,
+          cp: codePostal,
+          option: "points_relais"  // Paramètre exemple, à ajuster selon l'API de Mondial Relay
+      }).toString(), {
+          headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+          },
+      });
+
+      res.json(response.data);
+  } catch (error) {
+      console.error("❌ Erreur API Mondial Relay:", error);
+      res.status(500).json({ success: false, message: "Erreur serveur Mondial Relay" });
+  }
 });
 
 // 📦 Route pour créer une expédition Mondial Relay
 app.post("/api/mondial-relay/expedition", async (req, res) => {
-    const { expediteur, destinataire, poids } = req.body;
-    
-    if (!expediteur || !destinataire || !poids) {
-        return res.status(400).json({ success: false, message: "Tous les champs sont requis" });
-    }
+  const { expediteur, destinataire, poids } = req.body;
+  
+  if (!expediteur || !destinataire || !poids) {
+      return res.status(400).json({ success: false, message: "Tous les champs sont requis" });
+  }
 
-    try {
-        const response = await axios.post(process.env.MONDIAL_RELAY_EXPEDITION_URL, {
-            Enseigne: process.env.MONDIAL_RELAY_ENS_CODE,
-            Clé: process.env.MONDIAL_RELAY_PRIVATE_KEY,
-            Expéditeur: expediteur,
-            Destinataire: destinataire,
-            Poids: poids
-        });
-        
-        res.json(response.data);
-    } catch (error) {
-        console.error("\u274c Erreur API Mondial Relay (expédition):", error);
-        res.status(500).json({ success: false, message: "Erreur serveur Mondial Relay (expédition)" });
-    }
+  try {
+      const response = await axios.post(process.env.MONDIAL_RELAY_API_URL, new URLSearchParams({
+          enseigne: process.env.MONDIAL_RELAY_ENS_CODE,
+          cle: process.env.MONDIAL_RELAY_PRIVATE_KEY,
+          expediteur: expediteur,
+          destinataire: destinataire,
+          poids: poids,
+          option: "expedition"  // Paramètre exemple, à ajuster selon l'API de Mondial Relay
+      }).toString(), {
+          headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+          },
+      });
+
+      res.json(response.data);
+  } catch (error) {
+      console.error("❌ Erreur API Mondial Relay (expédition):", error);
+      res.status(500).json({ success: false, message: "Erreur serveur Mondial Relay (expédition)" });
+  }
 });
+
 
 // ✅ Démarrage du serveur
 const PORT = process.env.PORT || 3000;
