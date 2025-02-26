@@ -384,49 +384,12 @@
             }
         };
     
-        // Recherche des points relais
+        // Recherche des points relais - Redirection vers la page des points relais
         document.getElementById("fetch-relays").addEventListener("click", () => {
-            let postalCode = document.getElementById("postal-code").value;
-            let city = document.getElementById("city").value;
-    
-            if (postalCode === "" || city === "") {
-                alert("Veuillez entrer à la fois un code postal et une ville.");
-                return;
-            }
-    
-            fetch("/api/mondial-relay/points-relais", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ ville: city, codePostal: postalCode })
-            })
-            .then(response => response.json())
-            .then(data => {
-                let relayList = document.getElementById("relay-list");
-                relayList.innerHTML = "";
-    
-                if (!data.points || data.points.length === 0) {
-                    relayList.innerHTML = "<p>Aucun point relais trouvé.</p>";
-                } else {
-                    data.points.forEach(point => {
-                        let relayOption = document.createElement("div");
-                        relayOption.classList.add("relay-option");
-                        relayOption.textContent = `${point.nom} - ${point.adresse}`;
-                        relayOption.onclick = function() {
-                            document.getElementById("selected-relay").textContent = `Point relais sélectionné: ${point.nom}`;
-                            modal.style.display = "none";
-                        };
-                        relayList.appendChild(relayOption);
-                    });
-                }
-            })
-            .catch(error => {
-                console.error("Erreur lors de la recherche des points relais:", error);
-                alert("Une erreur est survenue. Vérifiez votre connexion ou réessayez plus tard.");
-            });
+            window.location.href = "points-relais.html"; // Redirige directement vers la page des points relais
         });
     </script>
+    
     
 </body>
 </html>
