@@ -19,14 +19,38 @@
     <style>
         /* Style pour la carte */
         #Zone_Widget {
-            width: 100%;
-            height: 500px;
+            width: 100%;  /* Prendre 100% de la largeur de son conteneur */
+            height: 100vh;  /* Prendre toute la hauteur de l'écran (viewport height) */
+            box-sizing: border-box; /* Inclure la bordure et le padding dans la largeur et hauteur */
         }
 
         /* Input pour afficher le point relais sélectionné (caché en production) */
         #Target_Widget {
             display: none;
         }
+
+        /* Media query pour les écrans plus petits */
+        @media (max-width: 768px) {
+            #Zone_Widget {
+                height: 100vh;  /* La carte prend toute la hauteur de l'écran */
+            }
+
+            #Target_Widget {
+                font-size: 14px; /* Réduire la taille de la police du champ input */
+            }
+        }
+
+        /* Ajustement pour les écrans très petits (mobiles) */
+        @media (max-width: 480px) {
+            #Zone_Widget {
+                height: 100vh;  /* La carte prend toute la hauteur de l'écran */
+            }
+
+            #Target_Widget {
+                font-size: 12px; /* Réduire encore la taille du texte sur les très petits écrans */
+            }
+        }
+
     </style>
 </head>
 
