@@ -255,8 +255,9 @@
         <h2>Votre Panier</h2>
         <div id="panier-list"></div>
         <div id="total">Total: €0.00</div>
-        <a href="points-relais.html" id="select-point-relais" class="cta-btn">Choisir un point relais</a>
-        <p id="selected-relay" style="text-align: center; font-weight: bold; margin-top: 10px;">Aucun point relais sélectionné</p>
+        <button id="select-point-relais" class="cta-btn">Choisir un point relais</button>
+<p id="selected-relay" style="text-align: center; font-weight: bold; margin-top: 10px;">Aucun point relais sélectionné</p>
+
     </section>
 
     <div id="relay-modal" class="modal">
@@ -360,7 +361,71 @@
             localStorage.setItem("panier", JSON.stringify(panier));
         }
     
-        afficherPanier();  // Appel pour afficher le panier au chargement de la page
+        // Initialiser l'affichage du panier
+        afficherPanier();
+    
+        // Modal de sélection du point relais
+        let modal = document.getElementById("relay-modal");
+        let btn = document.getElementById("select-point-relais");
+        let span = document.getElementsByClassName("close")[0];
+    
+        btn.onclick = function() {
+            modal.style.display = "block";
+        };
+    
+        span.onclick = function() {
+            modal.style.display = "none";
+        };
+    
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+    
+        // Recherche des points relais
+        document.getElementById("fetch-relays").addEventListener("click", () => {
+            let postalCode = document.getElementById("postal-code").value;
+            let city = document.getElementById("city").value;
+        
+            if (postalCode === "" || city === "") {
+                alert("Veuillez entrer à la fois un code postal et une ville.");
+                return;
+            }
+        
+            fetch("/api/mondial-relay/points-relais", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ ville: city, codePostal: postalCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                let relayList = document.getElementById("relay-list");
+                relayList.innerHTML = "";
+        
+                if (!data.points || data.points.length === 0) {
+                    relayList.innerHTML = "<p>Aucun point relais trouvé.</p>";
+                } else {
+                    data.points.forEach(point => {
+                        let relayOption = document.createElement("div");
+                        relayOption.classList.add("relay-option");
+                        relayOption.textContent = `${point.nom} - ${point.adresse}`;
+                        relayOption.onclick = function() {
+                            document.getElementById("selected-relay").textContent = `Point relais sélectionné: ${point.nom}`;
+                            modal.style.display = "none";
+                        };
+                        relayList.appendChild(relayOption);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error("Erreur lors de la recherche des points relais:", error);
+                alert("Une erreur est survenue. Vérifiez votre connexion ou réessayez plus tard.");
+            });
+        });
+        
     </script>
 </body>
 </html>
