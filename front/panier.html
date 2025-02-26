@@ -369,8 +369,9 @@
         let btn = document.getElementById("select-point-relais");
         let span = document.getElementsByClassName("close")[0];
     
+        // Rediriger vers la page des points relais
         btn.onclick = function() {
-            modal.style.display = "block";
+            window.location.href = "points-relais.html"; // Redirige vers la page des points relais
         };
     
         span.onclick = function() {
@@ -387,12 +388,12 @@
         document.getElementById("fetch-relays").addEventListener("click", () => {
             let postalCode = document.getElementById("postal-code").value;
             let city = document.getElementById("city").value;
-        
+    
             if (postalCode === "" || city === "") {
                 alert("Veuillez entrer à la fois un code postal et une ville.");
                 return;
             }
-        
+    
             fetch("/api/mondial-relay/points-relais", {
                 method: "POST",
                 headers: {
@@ -404,7 +405,7 @@
             .then(data => {
                 let relayList = document.getElementById("relay-list");
                 relayList.innerHTML = "";
-        
+    
                 if (!data.points || data.points.length === 0) {
                     relayList.innerHTML = "<p>Aucun point relais trouvé.</p>";
                 } else {
@@ -425,7 +426,7 @@
                 alert("Une erreur est survenue. Vérifiez votre connexion ou réessayez plus tard.");
             });
         });
-        
     </script>
+    
 </body>
 </html>
