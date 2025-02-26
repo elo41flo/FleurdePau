@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "back/api/server.js",
   "scripts": {
-    "start": "node back/api/server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "axios": "^1.7.9",
@@ -11,11 +11,8 @@
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
-    "firebase-admin": "^11.0.0",
     "fleurdepau": "file:",
-    "ldrs": "^1.0.2",
     "multer": "^1.4.5-lts.1",
     "node-mailjet": "^6.0.6"
-  },
-  "proxy": "http://localhost:3000"
+  }
 }
