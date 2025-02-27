@@ -185,7 +185,7 @@
         <nav>
             <ul>
                 <li><a href="index.html">Accueil</a></li>
-                <li><a href="produits.html">Produits</a></li>
+                <li><a href="boutique.html">Produits</a></li>
                 <li><a href="contact.html">Contact</a></li>
             </ul>
         </nav>
@@ -243,6 +243,15 @@ logoutIcon.addEventListener("click", async () => {
         console.error("Erreur lors de la déconnexion:", error);
     }
 });
+let boutonPaiement = document.getElementById("id-du-bouton");
+if (boutonPaiement) {
+    boutonPaiement.addEventListener("click", function() {
+        console.log("Bouton cliqué !");
+    });
+} else {
+    console.error("Le bouton de paiement n'a pas été trouvé !");
+}
+
 
     </script>
 </body>
