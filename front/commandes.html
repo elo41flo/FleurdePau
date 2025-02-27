@@ -75,92 +75,28 @@
             color: white;
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            nav a {
-                padding: 12px 16px;
-                font-size: 14px;
-            }
-
-            .commandes {
-                padding: 0 10px;
-            }
-
-            .commande-card {
-                padding: 0.8rem;
-            }
-
-            .btn {
-                padding: 0.8rem 1.2rem;
-                font-size: 14px;
-                margin-right: 5px;
-            }
-
-            header h1 {
-                font-size: 1.5rem;
-            }
-        }
-
-        /* Pour les petits écrans (smartphones) */
-        @media (max-width: 480px) {
-            nav {
-                text-align: center;
-            }
-
-            nav a {
-                display: block;
-                padding: 10px 0;
-            }
-
-            .commandes {
-                margin: 1rem auto;
-                padding: 0 10px;
-            }
-
-            .commande-card {
-                padding: 0.8rem;
-                margin-bottom: 1rem;
-            }
-
-            .btn {
-                width: 100%;
-                font-size: 16px;
-                padding: 12px 0;
-                margin: 5px 0;
-            }
-
-            header h1 {
-                font-size: 1.2rem;
-            }
-        }
-
     </style>
 </head>
 <body>
     <nav>
         <a href="admin.html">Accueil Admin</a>
-        <a href="commandes.html">Commandes</a> <!-- Page actuelle -->
-        <a href="produits.html">Produits</a>  <!-- Lien vers la page des produits (exemple) -->
+        <a href="commandes.html">Commandes</a>
+        <a href="produits.html">Produits</a>
     </nav>
     <header>
         <h1>Gestion des Commandes</h1>
     </header>
     <main>
-        <div class="commandes" id="commandes-container">
-            <!-- Commandes s'afficheront ici -->
-        </div>
+        <div class="commandes" id="commandes-container"></div>
     </main>
     <footer>
         <p>© 2025 Fleur de Pau - Tous droits réservés</p>
     </footer>
 
-    <!-- Import Firebase depuis le CDN -->
     <script type="module">
-        // Importer Firebase depuis le CDN
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
     
-        // Configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
             authDomain: "fleurdepau-1ce7d.firebaseapp.com",
@@ -171,29 +107,34 @@
             measurementId: "G-D1J6X7BH9S"
         };
     
-        // Initialiser Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
     
-        // Fonction pour charger les commandes payées
         const chargerCommandesPayees = async () => {
             const commandesContainer = document.getElementById('commandes-container');
             commandesContainer.innerHTML = '';
     
             try {
-                // Filtrer les commandes payées et non archivées
                 const commandesQuery = query(collection(db, 'commandes'), where('payée', '==', true), where('archive', '==', false));
                 const commandesSnapshot = await getDocs(commandesQuery);
                 commandesSnapshot.forEach((docSnapshot) => {
                     const data = docSnapshot.data();
                     const commandeCard = document.createElement('div');
                     commandeCard.classList.add('commande-card');
+                    
+                    let savedRelay = localStorage.getItem("point_relais");
+                    let relayAddress = savedRelay ? JSON.parse(savedRelay) : null;
+                    let relayHTML = relayAddress 
+                        ? `<p><strong>Point Relais :</strong> ${relayAddress.Nom}<br>${relayAddress.Adresse1}, ${relayAddress.CP} ${relayAddress.Ville}</p>`
+                        : `<p><strong>Point Relais :</strong> Non sélectionné</p>`;
+                    
                     commandeCard.innerHTML = `
                         <h3>Commande #${docSnapshot.id}</h3>
                         <p><strong>Client :</strong> ${data.nom}</p>
                         <p><strong>Produit :</strong> ${data.produit}</p>
                         <p><strong>Statut :</strong> ${data.statut}</p>
                         <p><strong>Payée :</strong> ${data.payée ? 'Oui' : 'Non'}</p>
+                        ${relayHTML}
                         <button class="btn" data-id="${docSnapshot.id}" data-statut="${data.statut}">
                             Marquer comme ${data.statut === 'En attente' ? 'Envoyé' : 'En attente'}
                         </button>
@@ -202,47 +143,12 @@
                         </button>
                     `;
                     commandesContainer.appendChild(commandeCard);
-    
-                    // Ajouter un écouteur pour chaque bouton de mise à jour du statut
-                    commandeCard.querySelector('.btn[data-action="archive"]').addEventListener('click', async (e) => {
-                        const id = e.target.dataset.id;
-                        const commandeRef = doc(db, 'commandes', id);
-                        try {
-                            await updateDoc(commandeRef, { archive: true });
-                            console.log(`Commande #${id} archivée`);
-                            chargerCommandesPayees(); // Recharger les commandes
-                        } catch (error) {
-                            console.error("Erreur lors de l'archivage de la commande:", error);
-                        }
-                    });
-    
-                    // Ajouter un écouteur pour chaque bouton de changement de statut
-                    commandeCard.querySelector('.btn[data-statut]').addEventListener('click', async (e) => {
-                        const id = e.target.dataset.id;
-                        const statutActuel = e.target.dataset.statut;
-                        const nouveauStatut = statutActuel === 'En attente' ? 'Envoyé' : 'En attente';
-    
-                        console.log(`Changement de statut pour la commande #${id}:`);
-                        console.log(`Statut actuel: ${statutActuel}`);
-                        console.log(`Nouveau statut: ${nouveauStatut}`);
-    
-                        // Mettre à jour le statut dans Firestore
-                        const commandeRef = doc(db, 'commandes', id);
-                        try {
-                            await updateDoc(commandeRef, { statut: nouveauStatut });
-                            console.log(`Statut mis à jour dans Firestore`);
-                            chargerCommandesPayees(); // Recharger les commandes
-                        } catch (error) {
-                            console.error("Erreur lors de la mise à jour du statut:", error);
-                        }
-                    });
                 });
             } catch (error) {
                 console.error("Erreur lors du chargement des commandes payées :", error);
             }
         };
     
-        // Charger les commandes payées au démarrage
         window.onload = chargerCommandesPayees;
     </script>
 </body>

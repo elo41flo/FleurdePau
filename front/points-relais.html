@@ -66,39 +66,46 @@
         // Initialisation du widget après le chargement complet de la page
         $(window).on('load', function () {
             try {
-                // Vérification de la présence des éléments DOM
                 if ($('#Zone_Widget').length && $('#Target_Widget').length) {
-                    // Initialisation du widget Mondial Relay dans la div #Zone_Widget avec les paramètres spécifiés
                     $("#Zone_Widget").MR_ParcelShopPicker({
-                        // Paramètres pour afficher les résultats dans l'input cible
                         Target: "#Target_Widget",
-
-                        // Paramètres pour l'accès aux données des points relais
-                        Brand: "CC23FE9J",  // Code Mondial Relay ici
-                        Country: "FR",  // Pays par défaut (ici la France)
-                        PostCode: "59000",  // Code postal par défaut
-                        ColLivMod: "24R",  // Mode de livraison par défaut (Standard)
-                        NbResults: "7",  // Nombre de résultats à afficher (max 20)
-
-                        // Paramètres d'affichage
-                        Responsive: true,  // Rendre le widget responsive
-                        ShowResultsOnMap: true  // Afficher les résultats sur une carte avec OpenStreetMap
-                    });
-
-                    // Ajouter un délai pour réinitialiser le widget si l'erreur persiste
-                    setTimeout(function() {
-                        if (typeof $.fn.MR_ParcelShopPicker !== 'undefined') {
-                            $("#Zone_Widget").MR_ParcelShopPicker("refresh");
+                        Brand: "CC23FE9J",
+                        Country: "FR",
+                        PostCode: "59000",
+                        ColLivMod: "24R",
+                        NbResults: "7",
+                        Responsive: true,
+                        ShowResultsOnMap: true,
+    
+                        // Détecter la sélection d'un point relais
+                        OnParcelShopSelected: function (data) {
+                            console.log("Point relais sélectionné :", data);
+                            
+                            // Sauvegarde dans le LocalStorage
+                            localStorage.setItem("point_relais", JSON.stringify(data));
+    
+                            // Afficher une alerte avant la redirection
+                            alert("✅ Votre point de livraison a bien été enregistré !");
+                            
+                            // Redirection vers la page de paiement après confirmation
+                            window.location.href = "paiement.html";
                         }
-                    }, 2000);  // Attente de 2 secondes avant de rafraîchir
-                } else {
-                    console.error('Les éléments DOM nécessaires ne sont pas présents.');
+                    });
+    
+                    // Optionnel : Pré-remplir si un choix existe déjà
+                    let savedRelay = localStorage.getItem("point_relais");
+                    if (savedRelay) {
+                        savedRelay = JSON.parse(savedRelay);
+                        $("#Target_Widget").val(savedRelay.Num);
+                    }
                 }
             } catch (e) {
                 console.error("Erreur d'initialisation du widget Mondial Relay : ", e);
             }
         });
     </script>
+    
+    
 
 </body>
 
