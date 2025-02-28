@@ -6,8 +6,6 @@ const mailjet = require("node-mailjet");
 const admin = require("firebase-admin");
 const path = require("path");
 const axios = require("axios");
-const multer = require("multer");
-const fs = require("fs");
 const xml2js = require("xml2js");
 const crypto = require('crypto');
 
@@ -16,7 +14,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: '*', 
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -36,7 +34,7 @@ const requiredEnvVars = [
 
 requiredEnvVars.forEach((envVar) => {
     if (!process.env[envVar]) {
-        console.error(`\u274c Erreur : ${envVar} manquante !`);
+        console.error(`\u274c Error: Missing environment variable: ${envVar}`);
         process.exit(1);
     }
 });
@@ -63,7 +61,13 @@ if (admin.apps.length === 0) {
     console.log("Firebase déjà initialisé.");
 }
 
-const db = admin.firestore();  // Firestore disponible après initialisation
+// Active la persistance pour Firestore
+const db = admin.firestore();
+db.settings({ ignoreUndefinedProperties: true });  // Ajout pour éviter certains problèmes
+
+// Collection Firestore
+const pointsRelaisCollection = db.collection('nom_de_la_collection');
+
 
 // Fonction pour générer la clé de sécurité
 const generateSecurityKey = (enseigne, pays, ville, cp, poids, action, delai, privateKey) => {
@@ -91,7 +95,7 @@ app.post("/api/mondial-relay/points-relais", async (req, res) => {
         process.env.MONDIAL_RELAY_PRIVATE_KEY
     );
 
-    const pointsRef = db.collection('point mr').doc(`${ville}_${codePostal}`);
+    const pointsRef = db.doc(`${ville}_${codePostal}`);
     const doc = await pointsRef.get();
 
     if (doc.exists) {
@@ -127,10 +131,12 @@ app.post("/api/mondial-relay/points-relais", async (req, res) => {
             headers: { 'Content-Type': 'text/xml; charset=utf-8' }
         });
 
+        console.log("Réponse Mondial Relay :", response.data);  // Log de la réponse brute
+
         xml2js.parseString(response.data, { explicitArray: false }, async (err, result) => {
             if (err) {
                 console.error("Erreur XML:", err);
-                return res.status(500).json({ success: false, message: "Erreur XML" });
+                return res.status(500).json({ success: false, message: "Erreur XML", error: err });
             }
 
             try {
@@ -143,13 +149,13 @@ app.post("/api/mondial-relay/points-relais", async (req, res) => {
                 }
             } catch (e) {
                 console.error("Erreur traitement Mondial Relay:", e);
-                return res.status(500).json({ success: false, message: "Erreur interne" });
+                return res.status(500).json({ success: false, message: "Erreur interne", error: e });
             }
         });
 
     } catch (error) {
-        console.error("Erreur API Mondial Relay:", error);
-        return res.status(500).json({ success: false, message: "Erreur serveur Mondial Relay" });
+        console.error("Erreur API Mondial Relay:", error.response ? error.response.data : error.message);
+        return res.status(500).json({ success: false, message: "Erreur serveur Mondial Relay", error: error.message });
     }
 });
 

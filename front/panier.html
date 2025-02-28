@@ -134,107 +134,70 @@
             background-color: #a44b4b;
         }
 
-        #formulaire-commande {
+        /* Modal Styles */
+        .modal {
             display: none;
-            margin-top: 20px;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
         }
 
-        /* Styles du panier */
-    #panier-list {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 50%;
+            text-align: center;
+        }
 
+        .close {
+            float: right;
+            font-size: 28px;
+            cursor: pointer;
+        }
 
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.5);
-    }
-    .modal-content {
-        background-color: white;
-        margin: 10% auto;
-        padding: 20px;
-        border-radius: 10px;
-        width: 50%;
-        text-align: center;
-    }
-    .close {
-        float: right;
-        font-size: 28px;
-        cursor: pointer;
-    }
-
-    .panier-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 15px;
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .panier-item span {
-        flex: 1;
-        font-size: 1rem;
-    }
-
-    .quantite-container {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .quantite-input {
-        width: 50px;
-        padding: 5px;
-        text-align: center;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-    }
-
-    .panier-item button {
-        background-color: #742a08;
-        color: white;
-        padding: 8px 12px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-
-    .panier-item button:hover {
-        background-color: #a44b4b;
-    }
-
-        /* Responsive */
-    @media (max-width: 600px) {
-        .panier-item {
-            flex-direction: column;
-            align-items: flex-start;
+        /* Styles spécifiques du panier */
+        .panier-item span {
+            flex: 1;
+            font-size: 1rem;
         }
 
         .quantite-container {
-            width: 100%;
-            justify-content: space-between;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .quantite-input {
-            width: 100%;
+            width: 50px;
+            padding: 5px;
             text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
-    }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .panier-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .quantite-container {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .quantite-input {
+                width: 100%;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -255,9 +218,8 @@
         <h2>Votre Panier</h2>
         <div id="panier-list"></div>
         <div id="total">Total: €0.00</div>
-        <button id="select-point-relais" class="cta-btn">Choisir un point relais</button>
-<p id="selected-relay" style="text-align: center; font-weight: bold; margin-top: 10px;">Aucun point relais sélectionné</p>
-
+        <button id="select-point-relais" class="cta-btn" onclick="window.location.href='points-relais.html'">Choisir un point relais</button>
+        <p id="selected-relay" style="text-align: center; font-weight: bold; margin-top: 10px;">Aucun point relais sélectionné</p>
     </section>
 
     <div id="relay-modal" class="modal">
@@ -270,9 +232,10 @@
             <div id="relay-list"></div>
         </div>
     </div>
+
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { initializeFirestore, memoryLocalCache, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     
         const firebaseConfig = {
             apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
@@ -285,16 +248,51 @@
         };
     
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        
+        // Activation correcte du cache Firestore (solution alternative)
+        const db = initializeFirestore(app, {
+            localCache: memoryLocalCache() // Utilisation du cache en mémoire
+        });
     
+        console.log("Firebase initialisé avec succès !");
+        
+        // Récupérer le panier depuis localStorage
         let panier = JSON.parse(localStorage.getItem("panier")) || [];
         console.log("Données du panier dans localStorage :", panier);
+    
+        // Fonction pour récupérer un produit avec retries
+        async function fetchProduitAvecRetry(produitRef, retries = 3, delay = 5000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    console.log(`Tentative de récupération du produit ID: ${produitRef.id} (essai ${i + 1})`);
+    
+                    const produitSnap = await Promise.race([
+                        getDoc(produitRef),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 15000))
+                    ]);
+    
+                    if (produitSnap.exists()) {
+                        return produitSnap.data();
+                    } else {
+                        throw new Error("Produit non trouvé");
+                    }
+                } catch (error) {
+                    console.error(`Erreur lors de la récupération du produit (tentative ${i + 1}):`, error);
+                    if (i < retries - 1) {
+                        console.log(`Nouvelle tentative dans ${delay / 1000} secondes...`);
+                        await new Promise(res => setTimeout(res, delay));
+                    } else {
+                        throw error;
+                    }
+                }
+            }
+        }
     
         // Fonction pour afficher le panier
         async function afficherPanier() {
             let panierContainer = document.getElementById("panier-list");
             let totalElement = document.getElementById("total");
-            panierContainer.innerHTML = "";
+            panierContainer.innerHTML = ""; // Réinitialiser le panier
             let total = 0;
     
             if (panier.length === 0) {
@@ -303,13 +301,18 @@
                 return;
             }
     
-            // Boucle pour afficher chaque élément du panier
             for (let item of panier) {
-                const produitRef = doc(db, "produits", item.idProduit);
-                const produitSnap = await getDoc(produitRef);
+                if (!item.idProduit) {
+                    console.error("ID produit manquant pour un produit dans le panier.");
+                    continue;
+                }
     
-                if (produitSnap.exists()) {
-                    let produitData = produitSnap.data();
+                const produitRef = doc(db, "produits", item.idProduit);
+    
+                try {
+                    const produitData = await fetchProduitAvecRetry(produitRef);
+    
+                    console.log("Produit trouvé:", produitData);
                     let nom = produitData.nom || "Produit inconnu";
                     let prix = produitData.prix || 0;
                     let quantite = item.quantite ? Math.max(1, parseInt(item.quantite)) : 1;
@@ -319,75 +322,61 @@
                     panierItem.innerHTML = `
                         <span>${nom} - ${prix}€ - Couleur: ${item.couleur}</span>
                         <div class="quantite-container">
-                            <input type="number" class="quantite-input" data-id="${item.idProduit}" value="${quantite}" min="1">
-                        </div>
-                        <button class="supprimer-btn" data-id="${item.idProduit}">Supprimer</button>
-                    `;
-                    panierContainer.appendChild(panierItem);
+                            <input type="number" class="quantite-input" value="${quantite}" min="1" data-id="${item.idProduit}" />
+                            <button class="remove-item" data-id="${item.idProduit}"><i class="fas fa-trash-alt"></i></button>
+                        </div>`;
+    
                     total += prix * quantite;
-                } else {
-                    console.error("Produit non trouvé :", item.idProduit);
+                    panierContainer.appendChild(panierItem);
+                } catch (error) {
+                    console.error("Erreur lors de la récupération du produit:", error);
+    
+                    let errorMessage;
+                    if (error.message.includes('client is offline')) {
+                        errorMessage = "Vous êtes hors ligne. Impossible de charger ce produit.";
+                    } else if (error.message.includes('Timeout')) {
+                        errorMessage = "Le chargement a pris trop de temps. Vérifiez votre connexion.";
+                    } else {
+                        errorMessage = "Erreur de récupération des données.";
+                    }
+    
+                    let panierItem = document.createElement("div");
+                    panierItem.classList.add("panier-item", "error");
+                    panierItem.innerHTML = `<span>${errorMessage} (ID: ${item.idProduit})</span>`;
+                    panierContainer.appendChild(panierItem);
                 }
             }
     
             totalElement.textContent = `Total: €${total.toFixed(2)}`;
-    
-            // Gérer la mise à jour des quantités
-            document.querySelectorAll(".quantite-input").forEach(input => {
-                input.addEventListener("change", (event) => {
-                    let id = event.target.dataset.id;
-                    let newQuantity = parseInt(event.target.value);
-                    if (newQuantity > 0) {
-                        panier = panier.map(item => item.idProduit === id ? { ...item, quantite: newQuantity } : item);
-                        localStorage.setItem("panier", JSON.stringify(panier));
-                        afficherPanier();  // Mettre à jour l'affichage en temps réel
-                    }
-                });
-            });
-    
-            // Ajouter des gestionnaires d'événements pour les boutons "Supprimer"
-            document.querySelectorAll(".supprimer-btn").forEach(button => {
-                button.addEventListener("click", (event) => {
-                    let idProduit = event.target.dataset.id;
-                    retirerDuPanier(idProduit);
-                    afficherPanier();
-                });
-            });
         }
     
-        // Fonction pour retirer un produit du panier
-        function retirerDuPanier(idProduit) {
-            panier = panier.filter(item => item.idProduit !== idProduit);
-            localStorage.setItem("panier", JSON.stringify(panier));
-        }
+        // Ajouter un écouteur sur les champs de quantités pour mettre à jour le panier
+        document.getElementById("panier-list").addEventListener("input", (e) => {
+            if (e.target.classList.contains("quantite-input")) {
+                const idProduit = e.target.dataset.id;
+                const nouvelleQuantite = e.target.value;
+    
+                let produit = panier.find(item => item.idProduit === idProduit);
+                if (produit) {
+                    produit.quantite = nouvelleQuantite;
+                    localStorage.setItem("panier", JSON.stringify(panier));
+                    afficherPanier(); // Réafficher le panier après la mise à jour
+                }
+            }
+        });
+    
+        // Fonction pour supprimer un produit du panier
+        document.getElementById("panier-list").addEventListener("click", (e) => {
+            if (e.target.classList.contains("remove-item")) {
+                const idProduit = e.target.dataset.id;
+                panier = panier.filter(item => item.idProduit !== idProduit);
+                localStorage.setItem("panier", JSON.stringify(panier));
+                afficherPanier(); // Réafficher le panier après suppression
+            }
+        });
     
         // Initialiser l'affichage du panier
         afficherPanier();
-    
-        // Modal de sélection du point relais
-        let modal = document.getElementById("relay-modal");
-        let btn = document.getElementById("select-point-relais");
-        let span = document.getElementsByClassName("close")[0];
-    
-        // Rediriger vers la page des points relais
-        btn.onclick = function() {
-            window.location.href = "points-relais.html"; // Redirige vers la page des points relais
-        };
-    
-        span.onclick = function() {
-            modal.style.display = "none";
-        };
-    
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        };
-    
-        // Recherche des points relais - Redirection vers la page des points relais
-        document.getElementById("fetch-relays").addEventListener("click", () => {
-            window.location.href = "points-relais.html"; // Redirige directement vers la page des points relais
-        });
     </script>
     
     

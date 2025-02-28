@@ -185,7 +185,7 @@
         <nav>
             <ul>
                 <li><a href="index.html">Accueil</a></li>
-                <li><a href="boutique.html">Produits</a></li>
+                <li><a href="boutique.html">Boutique</a></li>
                 <li><a href="contact.html">Contact</a></li>
             </ul>
         </nav>
@@ -199,9 +199,44 @@
     </main>
 
     <script>
-        // Récupérer le montant total depuis localStorage
-        const total = localStorage.getItem("total") || 0;
-        document.getElementById("total-price").textContent = parseFloat(total).toFixed(2);
+        // Fonction pour calculer et mettre à jour le total du panier
+        function calculerTotal() {
+            let panier = JSON.parse(localStorage.getItem("panier")) || [];  // Récupérer le panier depuis localStorage
+            let total = 0;
+
+            // Vérifier si le panier contient des éléments
+            if (panier.length === 0) {
+                console.error("Le panier est vide.");
+                return 0;
+            }
+
+            // Calcul du total basé sur le panier
+            panier.forEach(item => {
+                let prix = parseFloat(item.prix);
+                let quantite = parseInt(item.quantite);
+
+                // Vérifier que prix et quantite sont des nombres valides
+                if (!isNaN(prix) && !isNaN(quantite)) {
+                    total += prix * quantite;
+                } else {
+                    console.error("Produit invalide:", item);
+                }
+            });
+
+            // Mettre à jour le total dans localStorage
+            localStorage.setItem("total", total.toFixed(2));  // Sauvegarde du total avec 2 décimales
+            return total;
+        }
+
+        // Appeler cette fonction chaque fois que tu ajoutes ou modifies des produits dans le panier
+        const total = calculerTotal();  // Exécute cette fonction pour mettre à jour le total dans localStorage
+
+        // Vérifier si le total est valide et l'afficher
+        if (isNaN(total)) {
+            document.getElementById("total-price").textContent = "0.00";  // Afficher 0 si le total est invalide
+        } else {
+            document.getElementById("total-price").textContent = total.toFixed(2);
+        }
 
         // Intégrer le bouton PayPal
         paypal.Buttons({
@@ -209,7 +244,7 @@
                 return actions.order.create({
                     purchase_units: [{
                         amount: {
-                            value: total // Montant dynamique basé sur le panier
+                            value: total.toFixed(2) // Montant dynamique basé sur le panier
                         },
                         description: "Paiement de votre commande chez Ma Boutique Crochet"
                     }]
@@ -232,27 +267,6 @@
                 alert("Une erreur est survenue pendant le paiement.");
             }
         }).render('#paypal-button-container');
-
-        const logoutIcon = document.getElementById("logout-icon");
-
-logoutIcon.addEventListener("click", async () => {
-    try {
-        await signOut(auth);  // Déconnexion
-        window.location.href = "login.html";  // Redirection vers la page de connexion
-    } catch (error) {
-        console.error("Erreur lors de la déconnexion:", error);
-    }
-});
-let boutonPaiement = document.getElementById("id-du-bouton");
-if (boutonPaiement) {
-    boutonPaiement.addEventListener("click", function() {
-        console.log("Bouton cliqué !");
-    });
-} else {
-    console.error("Le bouton de paiement n'a pas été trouvé !");
-}
-
-
     </script>
 </body>
 </html>

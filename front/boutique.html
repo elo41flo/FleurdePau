@@ -240,9 +240,9 @@
         }
     </style>
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // Configuration Firebase
         const firebaseConfig = {
@@ -279,62 +279,46 @@
         // Chargement des produits
         async function chargerProduitsBoutique() {
             const produitsContainer = document.getElementById("produits");
-            produitsContainer.innerHTML = "";
+            const produitsRef = collection(db, "produits");
 
-            const produitsSnapshot = await getDocs(collection(db, "produits"));
-            if (produitsSnapshot.empty) {
-                produitsContainer.innerHTML = "<p>Aucun produit trouvé.</p>";
-                return;
-            }
+            // Utiliser onSnapshot pour écouter les modifications en temps réel
+            onSnapshot(produitsRef, (snapshot) => {
+                produitsContainer.innerHTML = ""; // Réinitialise le contenu avant chaque mise à jour
 
-            produitsSnapshot.forEach((docSnap) => {
-                const produit = docSnap.data();
-                const produitElement = document.createElement("div");
-                produitElement.classList.add("produit");
+                snapshot.forEach((doc) => {
+                    const produit = doc.data();
+                    const produitElement = document.createElement("div");
+                    produitElement.classList.add("produit");
 
-                produitElement.innerHTML = `
-                    <img src="${produit.image || 'https://i.imgur.com/jOTXXdh.jpeg'}" alt="${produit.nom}">
-                    <h3>${produit.nom}</h3>
-                    <p>${produit.description}</p>
-                    <p class="prix">${produit.prix}€</p>
-                    <button class="add-to-cart" data-id="${docSnap.id}">Ajouter au panier</button>
-                `;
+                    produitElement.innerHTML = `
+                        <img src="${produit.image || 'https://i.imgur.com/jOTXXdh.jpeg'}" alt="${produit.nom}">
+                        <h3>${produit.nom}</h3>
+                        <p>${produit.description}</p>
+                        <p class="prix">${produit.prix}€</p>
+                        <select>
+                            <option value="couleur1">Couleur 1</option>
+                            <option value="couleur2">Couleur 2</option>
+                        </select>
+                        <button class="add-to-cart">Ajouter au panier</button>
+                    `;
 
-                produitsContainer.appendChild(produitElement);
-            });
-
-            document.querySelectorAll(".add-to-cart").forEach(button => {
-                button.addEventListener("click", function () {
-                    ajouterAuPanier(this.getAttribute("data-id"));
+                    produitsContainer.appendChild(produitElement);
                 });
             });
         }
 
-        function ajouterAuPanier(id) {
-            let panier = JSON.parse(localStorage.getItem("panier")) || [];
-            panier.push({ idProduit: id });
-            localStorage.setItem("panier", JSON.stringify(panier));
-
-            alert("Produit ajouté au panier !");
-            miseAJourPanier();
-        }
-
-        function miseAJourPanier() {
-            const panier = JSON.parse(localStorage.getItem("panier")) || [];
-            document.querySelector(".cart-count").textContent = panier.length > 0 ? panier.length : "0";
-        }
-
-        window.onload = function () {
+        // Charger les produits au chargement de la page
+        window.onload = () => {
             chargerProduitsBoutique();
-            miseAJourPanier();
         };
     </script>
 </head>
 
 <body>
-    <header class="header">
+    <!-- En-tête -->
+    <header>
         <div class="header-content">
-            <h1 class="logo">Fleur De Pau</h1>
+            <div class="logo">Fleur de Pau</div>
             <nav>
                 <ul>
                     <li><a href="index.html">Accueil</a></li>
@@ -343,21 +327,16 @@
                 </ul>
             </nav>
         </div>
-        <section id="header-icons" class="header-icons">
-            <a href="mon-compte.html">
-                <i class="fas fa-user"></i>
-            </a>
-            <a href="login.html" id="logout-icon">
-                <i class="fas fa-sign-out-alt"></i>
-            </a>
-            <a href="panier.html">
-                <i class="fas fa-shopping-cart"></i>
-                <span class="cart-count">0</span>
-            </a>
-        </section>
+        <div class="header-icons">
+            <i class="fas fa-user" id="logout-icon"></i>
+            <i class="fas fa-shopping-cart"></i>
+        </div>
     </header>
 
-    <div id="produits" class="produits-grid"></div>
+    <!-- Produits -->
+    <div class="produits-grid" id="produits">
+        <!-- Les produits seront chargés ici dynamiquement -->
+    </div>
 </body>
 
 </html>
