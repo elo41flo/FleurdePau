@@ -181,8 +181,12 @@
     </style>
 </head>
 <script type="module">
+    import { 
+        getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc, enableIndexedDbPersistence, disableNetwork
+    } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+    import { setLogLevel } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+    setLogLevel('debug');
 
     // 🔥 Configuration Firebase
     const firebaseConfig = {
@@ -194,145 +198,169 @@
         appId: "1:394738141831:web:a0cd5b9d0227267b248622",
         measurementId: "G-D1J6X7BH9S"
     };
-
-    // 🔥 Initialisation Firebase
+    
+    // 🔥 Initialisation de Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    console.log("🔥 Firestore initialisé :", db);
 
-    // Activer la persistance hors ligne
-    enableIndexedDbPersistence(db)
-        .catch((err) => {
-            if (err.code === 'failed-precondition') {
-                console.error("La persistance hors ligne est déjà activée pour cet appareil.");
-            } else if (err.code === 'unimplemented') {
-                console.error("Le navigateur ne supporte pas la persistance hors ligne.");
-            }
+    // 📌 Désactiver la persistance hors ligne pour tester en mode online uniquement
+    disableNetwork(db)
+        .then(() => {
+            console.log("🔥 Réseau activé.");
+        })
+        .catch((error) => {
+            console.error("❌ Erreur lors de la réactivation du réseau :", error);
         });
 
-    // 📌 Fonction pour charger les produits (panier)
-    async function chargerProduits() {
+    // ✅ Fonction pour afficher les produits
+    async function ecouterProduits() {
         const produitsContainer = document.getElementById('produits-container');
-        produitsContainer.innerHTML = '';  // Réinitialiser le container
+        const produitsRef = collection(db, 'produits');
+    
+        onSnapshot(produitsRef, (snapshot) => {
+            console.log("⚡ Snapshot reçu :", snapshot); // Afficher la snapshot
 
-        try {
-            const produitsSnapshot = await getDocs(collection(db, 'produits'));
-
-            if (produitsSnapshot.empty) {
+            produitsContainer.innerHTML = ''; // Vider avant mise à jour
+    
+            if (snapshot.empty) {
                 produitsContainer.innerHTML = "<p>Aucun produit trouvé.</p>";
                 return;
             }
-
-            produitsSnapshot.forEach((docSnapshot) => {
+    
+            snapshot.forEach((docSnapshot) => {
                 const produit = docSnapshot.data();
-                const produitCard = document.createElement('div');
-                produitCard.classList.add('produit-card');
-                produitCard.innerHTML = `
-                    <h3>${produit.nom}</h3>
-                    <p><strong>Description:</strong> ${produit.description}</p>
-                    <p><strong>Prix:</strong> ${produit.prix}€</p>
-                    <img src="${produit.imageUrl}" alt="${produit.nom}" width="100">
-                    <button class="btn btn-modifier" data-id="${docSnapshot.id}">Modifier</button>
-                    <button class="btn btn-supprimer" data-id="${docSnapshot.id}">Supprimer</button>
+                const couleursHTML = produit.couleurs ? produit.couleurs.join(', ') : 'Aucune';
+    
+                produitsContainer.innerHTML += ` 
+                    <div class="produit-card">
+                        <h3>${produit.nom}</h3>
+                        <p><strong>ID:</strong> ${docSnapshot.id}</p>
+                        <p><strong>Description:</strong> ${produit.description}</p>
+                        <p><strong>Prix:</strong> ${produit.prix}€</p>
+                        <p><strong>Couleurs:</strong> ${couleursHTML}</p>
+                        <img src="${produit.imageUrl}" alt="${produit.nom}" width="100">
+                        <button class="btn-modifier" data-id="${docSnapshot.id}">Modifier</button>
+                        <button class="btn-supprimer" data-id="${docSnapshot.id}">Supprimer</button>
+                    </div>
                 `;
-                produitsContainer.appendChild(produitCard);
             });
-
-            ajouterEvenementsModifierProduit();
-            ajouterEvenementsSupprimerProduit();
-        } catch (error) {
-            console.error("Erreur lors de la récupération des produits:", error);
-            produitsContainer.innerHTML = "<p>Erreur lors du chargement des produits. Vérifiez votre connexion ou réessayez plus tard.</p>";
-        }
+    
+            ajouterEvenements();
+        }, (error) => {
+            console.error("❌ Erreur lors de la récupération des produits : ", error);
+        });
     }
 
-    // 📌 Fonction pour ajouter un produit
-    async function ajouterProduit(nom, description, prix, imageUrl, couleurs) {
+    // 📌 Ajouter ou modifier un produit
+    async function sauvegarderProduit(event) {
+        event.preventDefault();
+        const produitId = document.getElementById('btn-sauvegarde').getAttribute('data-id');
+        
+        console.log("🛠️ ID du produit à mettre à jour :", produitId);
+
+        const couleursArray = document.getElementById('couleurs-produit').value
+            .split(',')
+            .map(c => c.trim())
+            .filter(c => c !== '');
+
+        let produitData = {
+            nom: document.getElementById('nom-produit').value.trim(),
+            description: document.getElementById('description-produit').value.trim(),
+            prix: parseFloat(document.getElementById('prix-produit').value),
+            imageUrl: document.getElementById('image-url').value.trim(),
+            couleurs: couleursArray
+        };
+
+        console.log("📡 Données envoyées :", produitData);
+
+        if (isNaN(produitData.prix) || produitData.prix <= 0) {
+            alert("Veuillez entrer un prix valide.");
+            return;
+        }
+
         try {
-            const produitsRef = collection(db, 'produits');
-            await addDoc(produitsRef, {
-                nom: nom,
-                description: description,
-                prix: prix,
-                imageUrl: imageUrl,
-                couleurs: couleurs.split(',').map(couleur => couleur.trim()) // Convertir les couleurs en tableau
-            });
-            alert("Produit ajouté !");
-            chargerProduits(); // Recharger la liste des produits
+            if (produitId) {
+                await updateDoc(doc(db, 'produits', produitId), produitData);
+                console.log("✅ Produit mis à jour avec succès !");
+            } else {
+                await addDoc(collection(db, 'produits'), produitData);
+                console.log("✅ Produit ajouté avec succès !");
+            }
+
+            alert("Produit sauvegardé !");
+            await new Promise(resolve => setTimeout(resolve, 500)); // Attendre un peu avant de rafraîchir les produits
+            ecouterProduits(); // Recharger les produits après modification
         } catch (error) {
-            console.error("Erreur lors de l'ajout du produit:", error);
+            console.error("❌ Erreur sauvegarde produit :", error);
         }
+
+        document.getElementById('btn-sauvegarde').removeAttribute('data-id');
+        document.getElementById('form-produit').reset();
     }
 
-    // 📌 Fonction pour modifier un produit
-    async function modifierProduit(id, nom, description, prix, imageUrl, couleurs) {
+    // 📌 Modifier un produit
+    async function modifierProduit(id) {
+        console.log("✏️ Modification demandée pour ID :", id);
+
         try {
             const produitRef = doc(db, 'produits', id);
-            await updateDoc(produitRef, {
-                nom: nom,
-                description: description,
-                prix: prix,
-                imageUrl: imageUrl,
-                couleurs: couleurs.split(',').map(couleur => couleur.trim())
-            });
-            alert("Produit modifié !");
-            chargerProduits(); // Recharger la liste des produits
+            const produitSnap = await getDoc(produitRef);
+
+            if (produitSnap.exists()) {
+                const produit = produitSnap.data();
+
+                document.getElementById('nom-produit').value = produit.nom;
+                document.getElementById('description-produit').value = produit.description;
+                document.getElementById('prix-produit').value = produit.prix;
+                document.getElementById('image-url').value = produit.imageUrl;
+                document.getElementById('couleurs-produit').value = produit.couleurs ? produit.couleurs.join(', ') : '';
+
+                document.getElementById('btn-sauvegarde').setAttribute("data-id", id);
+                console.log("✅ Formulaire rempli avec les données !");
+            } else {
+                console.log("❌ Produit non trouvé !");
+            }
         } catch (error) {
-            console.error("Erreur lors de la modification du produit:", error);
+            console.error("❌ Erreur modification :", error);
         }
     }
 
-    // 📌 Fonction pour supprimer un produit
+    // 📌 Supprimer un produit
     async function supprimerProduit(id) {
-        try {
-            await deleteDoc(doc(db, 'produits', id));
-            alert("Produit supprimé !");
-            chargerProduits(); // Recharger la liste des produits
-        } catch (error) {
-            console.error("Erreur lors de la suppression du produit:", error);
+        if (confirm("🗑️ Supprimer ce produit ?")) {
+            try {
+                await deleteDoc(doc(db, 'produits', id));
+                alert("✅ Produit supprimé !");
+                ecouterProduits(); // Rafraîchir la liste après suppression
+            } catch (error) {
+                console.error("❌ Erreur suppression produit :", error);
+            }
         }
     }
 
-    // 📌 Ajouter les événements "Modifier Produit"
-    function ajouterEvenementsModifierProduit() {
-        document.querySelectorAll('.btn-modifier').forEach((button) => {
+    // 📌 Ajouter événements aux boutons
+    function ajouterEvenements() {
+        document.querySelectorAll('.btn-modifier').forEach(button => {
             button.addEventListener('click', (e) => {
-                const id = e.target.dataset.id;
-                // Charger les détails du produit dans le formulaire pour modification
-                const produitRef = doc(db, 'produits', id);
-                const produitSnapshot = getDoc(produitRef);
-                produitSnapshot.then((docSnapshot) => {
-                    if (docSnapshot.exists()) {
-                        const produit = docSnapshot.data();
-                        document.getElementById('nom-produit').value = produit.nom;
-                        document.getElementById('description-produit').value = produit.description;
-                        document.getElementById('prix-produit').value = produit.prix;
-                        document.getElementById('image-url').value = produit.imageUrl;
-                        document.getElementById('couleurs-produit').value = produit.couleurs.join(',');
-                        document.getElementById('form-produit').onsubmit = function(event) {
-                            event.preventDefault();
-                            modifierProduit(id, produit.nom, produit.description, produit.prix, produit.imageUrl, produit.couleurs.join(','));
-                        };
-                    }
-                });
+                modifierProduit(e.target.dataset.id);
+            });
+        });
+
+        document.querySelectorAll('.btn-supprimer').forEach(button => {
+            button.addEventListener('click', (e) => {
+                supprimerProduit(e.target.dataset.id);
             });
         });
     }
 
-    // 📌 Ajouter les événements "Supprimer Produit"
-    function ajouterEvenementsSupprimerProduit() {
-        document.querySelectorAll('.btn-supprimer').forEach((button) => {
-            button.addEventListener('click', async (e) => {
-                const id = e.target.dataset.id;
-                if (confirm("Êtes-vous sûr de vouloir supprimer ce produit ?")) {
-                    await supprimerProduit(id);
-                }
-            });
-        });
-    }
-
-    // Charger la liste des produits au démarrage
-    chargerProduits();
+    // 📌 Charger les produits au démarrage
+    document.addEventListener("DOMContentLoaded", () => {
+        ecouterProduits();
+        document.getElementById('form-produit').addEventListener('submit', sauvegarderProduit);
+    });
 </script>
+
 <body>
     <nav>
         <a href="admin.html">Accueil Admin</a>
@@ -361,9 +389,12 @@
                 <label for="couleurs-produit">Couleurs (séparées par des virgules) :</label>
                 <input type="text" id="couleurs-produit">
             
+                <!-- Bouton d'ajout (par défaut) -->
                 <button type="submit">Enregistrer</button>
-            </form>
             
+                <!-- Bouton de sauvegarde pour la modification (caché par défaut) -->
+                <button type="button" id="btn-sauvegarde" style="display:none;">Sauvegarder</button>
+            </form>
         </div>
         <div class="produits" id="produits-container">
             <!-- Les produits seront affichés ici -->

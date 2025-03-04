@@ -68,7 +68,6 @@ db.settings({ ignoreUndefinedProperties: true });  // Ajout pour éviter certain
 // Collection Firestore
 const pointsRelaisCollection = db.collection('nom_de_la_collection');
 
-
 // Fonction pour générer la clé de sécurité
 const generateSecurityKey = (enseigne, pays, ville, cp, poids, action, delai, privateKey) => {
     const securityString = `${enseigne}${pays}${ville}${cp}${poids}${action}${delai}${privateKey}`;
@@ -159,8 +158,77 @@ app.post("/api/mondial-relay/points-relais", async (req, res) => {
     }
 });
 
+// Route pour tester la connexion à Firestore
+app.get("/api/test-firestore", async (req, res) => {
+    try {
+        const snapshot = await db.collection("produits").limit(1).get();
+        if (snapshot.empty) {
+            return res.json({ success: true, message: "Connexion Firestore OK, mais aucun produit trouvé." });
+        }
+        return res.json({ success: true, message: "Connexion Firestore OK", data: snapshot.docs[0].data() });
+    } catch (error) {
+        console.error("Erreur de connexion à Firestore :", error);
+        return res.status(500).json({ success: false, message: "Erreur de connexion à Firestore", error: error.message });
+    }
+});
+
+// Route pour récupérer tous les produits
+app.get("/api/produits", async (req, res) => {
+    try {
+        const snapshot = await db.collection("produits").get();
+        const produits = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        res.json({ success: true, data: produits });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Erreur lors de la récupération des produits", error: error.message });
+    }
+});
+
+// Route pour ajouter un produit
+app.post("/api/produits", async (req, res) => {
+    try {
+        const { nom, description, prix, imageUrl, couleurs } = req.body;
+        if (!nom || !prix) {
+            return res.status(400).json({ success: false, message: "Nom et prix sont obligatoires." });
+        }
+
+        const produitRef = await db.collection("produits").add({
+            nom, description, prix, imageUrl, couleurs,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        res.json({ success: true, message: "Produit ajouté avec succès", id: produitRef.id });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Erreur lors de l'ajout du produit", error: error.message });
+    }
+});
+
+// Route pour modifier un produit
+app.put("/api/produits/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updateData = req.body;
+
+        await db.collection("produits").doc(id).update(updateData);
+        res.json({ success: true, message: "Produit mis à jour avec succès" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Erreur lors de la mise à jour du produit", error: error.message });
+    }
+});
+
+// Route pour supprimer un produit
+app.delete("/api/produits/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.collection("produits").doc(id).delete();
+        res.json({ success: true, message: "Produit supprimé avec succès" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Erreur lors de la suppression du produit", error: error.message });
+    }
+});
+
 // Lancement du serveur
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`));
 
 module.exports = app;
+

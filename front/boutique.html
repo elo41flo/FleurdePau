@@ -240,78 +240,121 @@
         }
     </style>
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    // Importer Firebase SDK
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // Configuration Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
-            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
-            projectId: "fleurdepau-1ce7d",
-            storageBucket: "fleurdepau-1ce7d.appspot.com",
-            messagingSenderId: "394738141831",
-            appId: "1:394738141831:web:a0cd5b9d0227267b248622",
-            measurementId: "G-D1J6X7BH9S"
-        };
+// 🔥 Configuration Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+    authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+    projectId: "fleurdepau-1ce7d",
+    storageBucket: "fleurdepau-1ce7d.appspot.com",
+    messagingSenderId: "394738141831",
+    appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+    measurementId: "G-D1J6X7BH9S"
+};
 
-        // Initialiser Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+// 🔥 Initialisation Firebase et Firestore
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-        // Déconnexion
-        document.addEventListener("DOMContentLoaded", () => {
-            const logoutButton = document.getElementById("logout-icon");
-            if (logoutButton) {
-                logoutButton.addEventListener("click", async () => {
-                    try {
-                        await signOut(auth);
-                        localStorage.removeItem("utilisateurConnecte");
-                        window.location.href = "login.html"; // Rediriger après déconnexion
-                    } catch (error) {
-                        console.error("Erreur lors de la déconnexion:", error);
-                    }
-                });
+// 📌 Gestion de la déconnexion
+document.addEventListener("DOMContentLoaded", () => {
+    const logoutButton = document.getElementById("logout-icon");
+    if (logoutButton) {
+        logoutButton.addEventListener("click", async () => {
+            try {
+                await signOut(auth);
+                localStorage.removeItem("utilisateurConnecte");
+                window.location.href = "login.html"; // Rediriger après déconnexion
+            } catch (error) {
+                console.error("Erreur lors de la déconnexion:", error);
             }
         });
+    }
+});
 
-        // Chargement des produits
-        async function chargerProduitsBoutique() {
-            const produitsContainer = document.getElementById("produits");
-            const produitsRef = collection(db, "produits");
+// 📌 Gestion du panier
+let panier = JSON.parse(localStorage.getItem("panier")) || [];
+const panierCount = document.createElement("span");
 
-            // Utiliser onSnapshot pour écouter les modifications en temps réel
-            onSnapshot(produitsRef, (snapshot) => {
-                produitsContainer.innerHTML = ""; // Réinitialise le contenu avant chaque mise à jour
+// Sélecteur de l'icône du panier et ajout du compteur
+const panierIcon = document.querySelector(".fa-shopping-cart");
+panierIcon.style.position = "relative";
+panierIcon.appendChild(panierCount);
 
-                snapshot.forEach((doc) => {
-                    const produit = doc.data();
-                    const produitElement = document.createElement("div");
-                    produitElement.classList.add("produit");
+// Fonction pour mettre à jour le panier
+function mettreAJourPanier() {
+    panierCount.innerText = panier.length;
+    localStorage.setItem("panier", JSON.stringify(panier));
+}
 
-                    produitElement.innerHTML = `
-                        <img src="${produit.image || 'https://i.imgur.com/jOTXXdh.jpeg'}" alt="${produit.nom}">
-                        <h3>${produit.nom}</h3>
-                        <p>${produit.description}</p>
-                        <p class="prix">${produit.prix}€</p>
-                        <select>
-                            <option value="couleur1">Couleur 1</option>
-                            <option value="couleur2">Couleur 2</option>
-                        </select>
-                        <button class="add-to-cart">Ajouter au panier</button>
-                    `;
+// 📌 Chargement des produits avec écoute en temps réel
+function chargerProduitsBoutique() {
+    const produitsContainer = document.getElementById("produits");
+    const produitsRef = collection(db, "produits");
 
-                    produitsContainer.appendChild(produitElement);
-                });
+    // Écouter Firestore pour afficher les produits en temps réel
+    onSnapshot(produitsRef, (snapshot) => {
+        produitsContainer.innerHTML = ""; // Vider avant de recharger
+
+        snapshot.forEach((doc) => {
+            const produit = doc.data();
+            const produitId = doc.id;
+
+            const produitElement = document.createElement("div");
+            produitElement.classList.add("produit");
+
+            // 📌 Vérifie si l'image est définie, sinon utilise une image par défaut
+            const imageUrl = produit.imageUrl || "https://i.imgur.com/jOTXXdh.jpeg";
+
+            // 📌 Génération dynamique des couleurs
+            const couleursOptions = produit.couleurs
+                ? produit.couleurs.map(couleur => `<option value="${couleur}">${couleur}</option>`).join("")
+                : "<option value='default'>Aucune couleur</option>";
+
+            // 📌 Structure HTML du produit
+            produitElement.innerHTML = `
+                <img src="${imageUrl}" alt="${produit.nom}">
+                <h3>${produit.nom}</h3>
+                <p>${produit.description}</p>
+                <p class="prix">${produit.prix}€</p>
+                <select class="select-couleur">${couleursOptions}</select>
+                <button class="add-to-cart">Ajouter au panier</button>
+            `;
+
+            // 📌 Ajout au panier avec gestion des couleurs
+            const addToCartButton = produitElement.querySelector(".add-to-cart");
+            addToCartButton.addEventListener("click", () => {
+                const couleurSelectionnee = produitElement.querySelector(".select-couleur").value;
+
+                // 📌 On ajoute uniquement les infos essentielles du produit dans le panier
+                const produitAjoute = {
+                    id: produitId,
+                    nom: produit.nom,
+                    prix: produit.prix,
+                    imageUrl: imageUrl,
+                    couleur: couleurSelectionnee
+                };
+
+                panier.push(produitAjoute);
+                mettreAJourPanier();
             });
-        }
 
-        // Charger les produits au chargement de la page
-        window.onload = () => {
-            chargerProduitsBoutique();
-        };
-    </script>
+            produitsContainer.appendChild(produitElement);
+        });
+    });
+}
+
+// 📌 Charger les produits et mettre à jour le panier au chargement de la page
+window.onload = () => {
+    chargerProduitsBoutique();
+    mettreAJourPanier();
+};
+</script>
 </head>
 
 <body>
@@ -328,8 +371,9 @@
             </nav>
         </div>
         <div class="header-icons">
-            <i class="fas fa-user" id="logout-icon"></i>
-            <i class="fas fa-shopping-cart"></i>
+            <a href="mon-compte.html"><i class="fas fa-user"></i></a>
+            <a href="login.html" id="logout-icon"><i class="fas fa-sign-out-alt"></i></a>
+            <a href="panier.html"><i class="fas fa-shopping-cart"></i><span class="cart-count"></span></a>
         </div>
     </header>
 

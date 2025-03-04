@@ -237,6 +237,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { initializeFirestore, memoryLocalCache, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     
+        // 🔥 Configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
             authDomain: "fleurdepau-1ce7d.firebaseapp.com",
@@ -247,39 +248,49 @@
             measurementId: "G-D1J6X7BH9S"
         };
     
+        // 🚀 Initialisation Firebase & Firestore
         const app = initializeApp(firebaseConfig);
-        
-        // Activation correcte du cache Firestore (solution alternative)
-        const db = initializeFirestore(app, {
-            localCache: memoryLocalCache() // Utilisation du cache en mémoire
-        });
+        const db = initializeFirestore(app, { localCache: memoryLocalCache() });
     
-        console.log("Firebase initialisé avec succès !");
-        
-        // Récupérer le panier depuis localStorage
-        let panier = JSON.parse(localStorage.getItem("panier")) || [];
-        console.log("Données du panier dans localStorage :", panier);
+        console.log("✅ Firebase initialisé avec succès !");
     
-        // Fonction pour récupérer un produit avec retries
+        // 🎯 Fonction pour nettoyer le panier avant de l'utiliser
+        function nettoyerPanier() {
+            let panier = JSON.parse(localStorage.getItem("panier")) || [];
+    
+            // ⚠ Suppression des produits SANS idProduit ou avec un ID temporaire (temp-0, temp-1, etc.)
+            panier = panier.filter(item => {
+                if (!item.idProduit || item.idProduit.startsWith("temp-")) {
+                    console.warn(`⚠ Produit avec ID invalide détecté (${item.idProduit}) et supprimé du panier.`);
+                    return false; // Supprime l'élément
+                }
+                return true; // Conserve l'élément
+            });
+    
+            // 📝 Mise à jour du localStorage après le nettoyage
+            localStorage.setItem("panier", JSON.stringify(panier));
+    
+            console.log("📦 Panier nettoyé :", panier);
+            return panier;
+        }
+    
+        // 📥 Fonction pour récupérer un produit avec retries et timeout
         async function fetchProduitAvecRetry(produitRef, retries = 3, delay = 5000) {
             for (let i = 0; i < retries; i++) {
                 try {
-                    console.log(`Tentative de récupération du produit ID: ${produitRef.id} (essai ${i + 1})`);
+                    console.log(`🔍 Récupération du produit ID: ${produitRef.id} (tentative ${i + 1})`);
     
                     const produitSnap = await Promise.race([
                         getDoc(produitRef),
                         new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 15000))
                     ]);
     
-                    if (produitSnap.exists()) {
-                        return produitSnap.data();
-                    } else {
-                        throw new Error("Produit non trouvé");
-                    }
+                    if (produitSnap.exists()) return produitSnap.data();
+                    throw new Error("Produit non trouvé");
                 } catch (error) {
-                    console.error(`Erreur lors de la récupération du produit (tentative ${i + 1}):`, error);
+                    console.error(`⛔ Erreur lors de la récupération (tentative ${i + 1}):`, error);
                     if (i < retries - 1) {
-                        console.log(`Nouvelle tentative dans ${delay / 1000} secondes...`);
+                        console.log(`⏳ Nouvelle tentative dans ${delay / 1000} secondes...`);
                         await new Promise(res => setTimeout(res, delay));
                     } else {
                         throw error;
@@ -288,97 +299,68 @@
             }
         }
     
-        // Fonction pour afficher le panier
+        // 🛒 Fonction pour afficher le panier
         async function afficherPanier() {
             let panierContainer = document.getElementById("panier-list");
             let totalElement = document.getElementById("total");
-            panierContainer.innerHTML = ""; // Réinitialiser le panier
-            let total = 0;
-    
+            panierContainer.innerHTML = "";
+        
+            // 🔥 Nettoyer le panier AVANT de l'afficher
+            let panier = nettoyerPanier();
+        
+            // ❌ 🚨 Si le panier est vide après nettoyage, on stoppe tout !
             if (panier.length === 0) {
+                console.log("🛑 Panier vide après nettoyage. Aucun produit à afficher.");
                 panierContainer.innerHTML = "<p>Votre panier est vide.</p>";
                 totalElement.textContent = "Total: €0.00";
-                return;
+                return; // 👉 STOP, on ne continue pas !
             }
-    
+        
+            let total = 0;
+        
             for (let item of panier) {
-                if (!item.idProduit) {
-                    console.error("ID produit manquant pour un produit dans le panier.");
-                    continue;
-                }
-    
                 const produitRef = doc(db, "produits", item.idProduit);
-    
+        
                 try {
                     const produitData = await fetchProduitAvecRetry(produitRef);
-    
-                    console.log("Produit trouvé:", produitData);
+        
                     let nom = produitData.nom || "Produit inconnu";
                     let prix = produitData.prix || 0;
                     let quantite = item.quantite ? Math.max(1, parseInt(item.quantite)) : 1;
-    
+                    let couleur = item.couleur || "Non spécifiée";
+                    let description = produitData.description || "Pas de description";
+                    let imageUrl = produitData.imageUrl || "https://via.placeholder.com/150";
+        
                     let panierItem = document.createElement("div");
                     panierItem.classList.add("panier-item");
                     panierItem.innerHTML = `
-                        <span>${nom} - ${prix}€ - Couleur: ${item.couleur}</span>
+                        <img src="${imageUrl}" alt="${nom}" class="product-image" />
+                        <span>${nom} - ${prix}€ - Couleur: ${couleur}</span>
+                        <p>${description}</p>
                         <div class="quantite-container">
                             <input type="number" class="quantite-input" value="${quantite}" min="1" data-id="${item.idProduit}" />
                             <button class="remove-item" data-id="${item.idProduit}"><i class="fas fa-trash-alt"></i></button>
                         </div>`;
-    
+        
                     total += prix * quantite;
                     panierContainer.appendChild(panierItem);
                 } catch (error) {
-                    console.error("Erreur lors de la récupération du produit:", error);
-    
-                    let errorMessage;
-                    if (error.message.includes('client is offline')) {
-                        errorMessage = "Vous êtes hors ligne. Impossible de charger ce produit.";
-                    } else if (error.message.includes('Timeout')) {
-                        errorMessage = "Le chargement a pris trop de temps. Vérifiez votre connexion.";
-                    } else {
-                        errorMessage = "Erreur de récupération des données.";
-                    }
-    
+                    console.error("❌ Erreur lors de la récupération du produit:", error);
+                    let errorMessage = "Erreur de récupération des données.";
                     let panierItem = document.createElement("div");
                     panierItem.classList.add("panier-item", "error");
                     panierItem.innerHTML = `<span>${errorMessage} (ID: ${item.idProduit})</span>`;
                     panierContainer.appendChild(panierItem);
                 }
             }
-    
+        
             totalElement.textContent = `Total: €${total.toFixed(2)}`;
         }
+        
     
-        // Ajouter un écouteur sur les champs de quantités pour mettre à jour le panier
-        document.getElementById("panier-list").addEventListener("input", (e) => {
-            if (e.target.classList.contains("quantite-input")) {
-                const idProduit = e.target.dataset.id;
-                const nouvelleQuantite = e.target.value;
-    
-                let produit = panier.find(item => item.idProduit === idProduit);
-                if (produit) {
-                    produit.quantite = nouvelleQuantite;
-                    localStorage.setItem("panier", JSON.stringify(panier));
-                    afficherPanier(); // Réafficher le panier après la mise à jour
-                }
-            }
-        });
-    
-        // Fonction pour supprimer un produit du panier
-        document.getElementById("panier-list").addEventListener("click", (e) => {
-            if (e.target.classList.contains("remove-item")) {
-                const idProduit = e.target.dataset.id;
-                panier = panier.filter(item => item.idProduit !== idProduit);
-                localStorage.setItem("panier", JSON.stringify(panier));
-                afficherPanier(); // Réafficher le panier après suppression
-            }
-        });
-    
-        // Initialiser l'affichage du panier
+        // 🛒 Initialisation du panier au chargement de la page
         afficherPanier();
     </script>
-    
     
 </body>
 </html>
