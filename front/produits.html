@@ -182,11 +182,10 @@
 </head>
 <script type="module">
     import { 
-        getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc, enableIndexedDbPersistence, disableNetwork
+        getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc 
     } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
-    import { setLogLevel } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
-    setLogLevel('debug');
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
 
     // 🔥 Configuration Firebase
     const firebaseConfig = {
@@ -202,36 +201,37 @@
     // 🔥 Initialisation de Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
+
     console.log("🔥 Firestore initialisé :", db);
 
-    // 📌 Désactiver la persistance hors ligne pour tester en mode online uniquement
-    disableNetwork(db)
-        .then(() => {
-            console.log("🔥 Réseau activé.");
-        })
-        .catch((error) => {
-            console.error("❌ Erreur lors de la réactivation du réseau :", error);
-        });
+    // Connexion anonyme à Firebase Auth
+    signInAnonymously(auth)
+      .then(() => {
+          console.log("✅ Utilisateur connecté anonymement !");
+      })
+      .catch((error) => {
+          console.error("❌ Erreur de connexion Firebase Auth :", error);
+      });
 
-    // ✅ Fonction pour afficher les produits
-    async function ecouterProduits() {
+    // 📌 Fonction pour afficher les produits
+    async function obtenirProduits() {
         const produitsContainer = document.getElementById('produits-container');
         const produitsRef = collection(db, 'produits');
-    
-        onSnapshot(produitsRef, (snapshot) => {
-            console.log("⚡ Snapshot reçu :", snapshot); // Afficher la snapshot
 
+        try {
+            const querySnapshot = await getDocs(produitsRef);
             produitsContainer.innerHTML = ''; // Vider avant mise à jour
-    
-            if (snapshot.empty) {
+
+            if (querySnapshot.empty) {
                 produitsContainer.innerHTML = "<p>Aucun produit trouvé.</p>";
                 return;
             }
-    
-            snapshot.forEach((docSnapshot) => {
+
+            querySnapshot.forEach((docSnapshot) => {
                 const produit = docSnapshot.data();
                 const couleursHTML = produit.couleurs ? produit.couleurs.join(', ') : 'Aucune';
-    
+
                 produitsContainer.innerHTML += ` 
                     <div class="produit-card">
                         <h3>${produit.nom}</h3>
@@ -245,11 +245,11 @@
                     </div>
                 `;
             });
-    
+
             ajouterEvenements();
-        }, (error) => {
-            console.error("❌ Erreur lors de la récupération des produits : ", error);
-        });
+        } catch (error) {
+            console.error("❌ Erreur lors de la récupération des produits :", error);
+        }
     }
 
     // 📌 Ajouter ou modifier un produit
@@ -289,8 +289,8 @@
             }
 
             alert("Produit sauvegardé !");
-            await new Promise(resolve => setTimeout(resolve, 500)); // Attendre un peu avant de rafraîchir les produits
-            ecouterProduits(); // Recharger les produits après modification
+            await new Promise(resolve => setTimeout(resolve, 500));
+            obtenirProduits();
         } catch (error) {
             console.error("❌ Erreur sauvegarde produit :", error);
         }
@@ -332,7 +332,7 @@
             try {
                 await deleteDoc(doc(db, 'produits', id));
                 alert("✅ Produit supprimé !");
-                ecouterProduits(); // Rafraîchir la liste après suppression
+                obtenirProduits();
             } catch (error) {
                 console.error("❌ Erreur suppression produit :", error);
             }
@@ -356,7 +356,7 @@
 
     // 📌 Charger les produits au démarrage
     document.addEventListener("DOMContentLoaded", () => {
-        ecouterProduits();
+        obtenirProduits();
         document.getElementById('form-produit').addEventListener('submit', sauvegarderProduit);
     });
 </script>
