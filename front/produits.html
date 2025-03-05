@@ -182,11 +182,11 @@
 </head>
 <script type="module">
     import { 
-        getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc 
+        getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, enableNetwork 
     } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
-
+    
     // 🔥 Configuration Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
@@ -202,37 +202,34 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-
+    window.db = db;
+    window.auth = auth;
+    
     console.log("🔥 Firestore initialisé :", db);
-
+    
+    // Vérifier la connexion Firestore
+    enableNetwork(db).catch((err) => console.error("⚠️ Firestore hors ligne :", err));
+    
     // Connexion anonyme à Firebase Auth
     signInAnonymously(auth)
-      .then(() => {
-          console.log("✅ Utilisateur connecté anonymement !");
-      })
-      .catch((error) => {
-          console.error("❌ Erreur de connexion Firebase Auth :", error);
-      });
-
+        .then(() => console.log("✅ Utilisateur connecté anonymement !"))
+        .catch(error => console.error("❌ Erreur de connexion Firebase Auth :", error));
+    
     // 📌 Fonction pour afficher les produits
     async function obtenirProduits() {
         const produitsContainer = document.getElementById('produits-container');
         const produitsRef = collection(db, 'produits');
-
+        console.log("🔄 Tentative de récupération des produits...");
+    
         try {
             const querySnapshot = await getDocs(produitsRef);
-            produitsContainer.innerHTML = ''; // Vider avant mise à jour
-
-            if (querySnapshot.empty) {
-                produitsContainer.innerHTML = "<p>Aucun produit trouvé.</p>";
-                return;
-            }
-
-            querySnapshot.forEach((docSnapshot) => {
+            produitsContainer.innerHTML = querySnapshot.empty ? "<p>Aucun produit trouvé.</p>" : "";
+        
+            querySnapshot.forEach(docSnapshot => {
                 const produit = docSnapshot.data();
                 const couleursHTML = produit.couleurs ? produit.couleurs.join(', ') : 'Aucune';
-
-                produitsContainer.innerHTML += ` 
+        
+                produitsContainer.innerHTML += `
                     <div class="produit-card">
                         <h3>${produit.nom}</h3>
                         <p><strong>ID:</strong> ${docSnapshot.id}</p>
@@ -245,87 +242,62 @@
                     </div>
                 `;
             });
-
+    
             ajouterEvenements();
+            console.log("✅ Produits récupérés avec succès !");
         } catch (error) {
             console.error("❌ Erreur lors de la récupération des produits :", error);
         }
     }
-
-    // 📌 Ajouter ou modifier un produit
+    
+    // 📌 Sauvegarde des produits
     async function sauvegarderProduit(event) {
         event.preventDefault();
-        const produitId = document.getElementById('btn-sauvegarde').getAttribute('data-id');
-        
-        console.log("🛠️ ID du produit à mettre à jour :", produitId);
-
-        const couleursArray = document.getElementById('couleurs-produit').value
-            .split(',')
-            .map(c => c.trim())
-            .filter(c => c !== '');
-
-        let produitData = {
-            nom: document.getElementById('nom-produit').value.trim(),
-            description: document.getElementById('description-produit').value.trim(),
-            prix: parseFloat(document.getElementById('prix-produit').value),
-            imageUrl: document.getElementById('image-url').value.trim(),
-            couleurs: couleursArray
-        };
-
-        console.log("📡 Données envoyées :", produitData);
-
-        if (isNaN(produitData.prix) || produitData.prix <= 0) {
-            alert("Veuillez entrer un prix valide.");
+        const btnSauvegarde = document.getElementById('btn-sauvegarde');
+        const produitId = btnSauvegarde.getAttribute('data-id');
+    
+        const nom = document.getElementById('nom-produit').value.trim();
+        const description = document.getElementById('description-produit').value.trim();
+        const prix = parseFloat(document.getElementById('prix-produit').value);
+        const imageUrl = document.getElementById('image-url').value.trim();
+        const couleurs = document.getElementById('couleurs-produit').value.split(',').map(c => c.trim()).filter(c => c);
+    
+        if (!nom || !description || isNaN(prix) || prix <= 0 || !imageUrl) {
+            alert("Veuillez remplir tous les champs correctement.");
             return;
         }
-
+    
+        const produitData = { nom, description, prix, imageUrl, couleurs };
+    
         try {
-            if (produitId) {
-                await updateDoc(doc(db, 'produits', produitId), produitData);
-                console.log("✅ Produit mis à jour avec succès !");
-            } else {
-                await addDoc(collection(db, 'produits'), produitData);
-                console.log("✅ Produit ajouté avec succès !");
-            }
-
-            alert("Produit sauvegardé !");
-            await new Promise(resolve => setTimeout(resolve, 500));
+            produitId ? await updateDoc(doc(db, 'produits', produitId), produitData) : await addDoc(collection(db, 'produits'), produitData);
+            alert("✅ Produit sauvegardé !");
+            btnSauvegarde.removeAttribute('data-id');
+            document.getElementById('form-produit').reset();
             obtenirProduits();
         } catch (error) {
             console.error("❌ Erreur sauvegarde produit :", error);
         }
-
-        document.getElementById('btn-sauvegarde').removeAttribute('data-id');
-        document.getElementById('form-produit').reset();
     }
-
+    
     // 📌 Modifier un produit
     async function modifierProduit(id) {
-        console.log("✏️ Modification demandée pour ID :", id);
-
         try {
-            const produitRef = doc(db, 'produits', id);
-            const produitSnap = await getDoc(produitRef);
-
-            if (produitSnap.exists()) {
-                const produit = produitSnap.data();
-
-                document.getElementById('nom-produit').value = produit.nom;
-                document.getElementById('description-produit').value = produit.description;
-                document.getElementById('prix-produit').value = produit.prix;
-                document.getElementById('image-url').value = produit.imageUrl;
-                document.getElementById('couleurs-produit').value = produit.couleurs ? produit.couleurs.join(', ') : '';
-
-                document.getElementById('btn-sauvegarde').setAttribute("data-id", id);
-                console.log("✅ Formulaire rempli avec les données !");
-            } else {
-                console.log("❌ Produit non trouvé !");
-            }
+            const produitSnap = await getDoc(doc(db, 'produits', id));
+            if (!produitSnap.exists()) throw new Error("Produit introuvable");
+    
+            const produit = produitSnap.data();
+            document.getElementById('nom-produit').value = produit.nom;
+            document.getElementById('description-produit').value = produit.description;
+            document.getElementById('prix-produit').value = produit.prix;
+            document.getElementById('image-url').value = produit.imageUrl;
+            document.getElementById('couleurs-produit').value = produit.couleurs.join(', ');
+            document.getElementById('btn-sauvegarde').setAttribute("data-id", id);
         } catch (error) {
             console.error("❌ Erreur modification :", error);
         }
     }
-
+    
     // 📌 Supprimer un produit
     async function supprimerProduit(id) {
         if (confirm("🗑️ Supprimer ce produit ?")) {
@@ -338,22 +310,13 @@
             }
         }
     }
-
+    
     // 📌 Ajouter événements aux boutons
     function ajouterEvenements() {
-        document.querySelectorAll('.btn-modifier').forEach(button => {
-            button.addEventListener('click', (e) => {
-                modifierProduit(e.target.dataset.id);
-            });
-        });
-
-        document.querySelectorAll('.btn-supprimer').forEach(button => {
-            button.addEventListener('click', (e) => {
-                supprimerProduit(e.target.dataset.id);
-            });
-        });
+        document.querySelectorAll('.btn-modifier').forEach(button => button.addEventListener('click', e => modifierProduit(e.target.dataset.id)));
+        document.querySelectorAll('.btn-supprimer').forEach(button => button.addEventListener('click', e => supprimerProduit(e.target.dataset.id)));
     }
-
+    
     // 📌 Charger les produits au démarrage
     document.addEventListener("DOMContentLoaded", () => {
         obtenirProduits();
