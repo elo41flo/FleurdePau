@@ -240,121 +240,134 @@
         }
     </style>
     <script type="module">
-    // Importer Firebase SDK
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-// 🔥 Configuration Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
-    authDomain: "fleurdepau-1ce7d.firebaseapp.com",
-    projectId: "fleurdepau-1ce7d",
-    storageBucket: "fleurdepau-1ce7d.appspot.com",
-    messagingSenderId: "394738141831",
-    appId: "1:394738141831:web:a0cd5b9d0227267b248622",
-    measurementId: "G-D1J6X7BH9S"
-};
-
-// 🔥 Initialisation Firebase et Firestore
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-// 📌 Gestion de la déconnexion
-document.addEventListener("DOMContentLoaded", () => {
-    const logoutButton = document.getElementById("logout-icon");
-    if (logoutButton) {
-        logoutButton.addEventListener("click", async () => {
-            try {
-                await signOut(auth);
-                localStorage.removeItem("utilisateurConnecte");
-                window.location.href = "login.html"; // Rediriger après déconnexion
-            } catch (error) {
-                console.error("Erreur lors de la déconnexion:", error);
+        // Importer Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    
+        // 🔥 Configuration Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+            projectId: "fleurdepau-1ce7d",
+            storageBucket: "fleurdepau-1ce7d.appspot.com",
+            messagingSenderId: "394738141831",
+            appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+            measurementId: "G-D1J6X7BH9S"
+        };
+    
+        // 🔥 Initialisation Firebase et Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+    
+        // 📌 Gestion de la déconnexion
+        document.addEventListener("DOMContentLoaded", () => {
+            const logoutButton = document.getElementById("logout-icon");
+            if (logoutButton) {
+                logoutButton.addEventListener("click", async () => {
+                    try {
+                        await signOut(auth);
+                        localStorage.removeItem("utilisateurConnecte");
+                        window.location.href = "login.html"; // Rediriger après déconnexion
+                    } catch (error) {
+                        console.error("Erreur lors de la déconnexion:", error);
+                    }
+                });
             }
         });
-    }
-});
-
-// 📌 Gestion du panier
-let panier = JSON.parse(localStorage.getItem("panier")) || [];
-const panierCount = document.createElement("span");
-
-// Sélecteur de l'icône du panier et ajout du compteur
-const panierIcon = document.querySelector(".fa-shopping-cart");
-panierIcon.style.position = "relative";
-panierIcon.appendChild(panierCount);
-
-// Fonction pour mettre à jour le panier
-function mettreAJourPanier() {
-    panierCount.innerText = panier.length;
-    localStorage.setItem("panier", JSON.stringify(panier));
-}
-
-// 📌 Chargement des produits avec écoute en temps réel
-function chargerProduitsBoutique() {
-    const produitsContainer = document.getElementById("produits");
-    const produitsRef = collection(db, "produits");
-
-    // Écouter Firestore pour afficher les produits en temps réel
-    onSnapshot(produitsRef, (snapshot) => {
-        produitsContainer.innerHTML = ""; // Vider avant de recharger
-
-        snapshot.forEach((doc) => {
-            const produit = doc.data();
-            const produitId = doc.id;
-
-            const produitElement = document.createElement("div");
-            produitElement.classList.add("produit");
-
-            // 📌 Vérifie si l'image est définie, sinon utilise une image par défaut
-            const imageUrl = produit.imageUrl || "https://i.imgur.com/jOTXXdh.jpeg";
-
-            // 📌 Génération dynamique des couleurs
-            const couleursOptions = produit.couleurs
-                ? produit.couleurs.map(couleur => `<option value="${couleur}">${couleur}</option>`).join("")
-                : "<option value='default'>Aucune couleur</option>";
-
-            // 📌 Structure HTML du produit
-            produitElement.innerHTML = `
-                <img src="${imageUrl}" alt="${produit.nom}">
-                <h3>${produit.nom}</h3>
-                <p>${produit.description}</p>
-                <p class="prix">${produit.prix}€</p>
-                <select class="select-couleur">${couleursOptions}</select>
-                <button class="add-to-cart">Ajouter au panier</button>
-            `;
-
-            // 📌 Ajout au panier avec gestion des couleurs
-            const addToCartButton = produitElement.querySelector(".add-to-cart");
-            addToCartButton.addEventListener("click", () => {
-                const couleurSelectionnee = produitElement.querySelector(".select-couleur").value;
-
-                // 📌 On ajoute uniquement les infos essentielles du produit dans le panier
-                const produitAjoute = {
-                    id: produitId,
-                    nom: produit.nom,
-                    prix: produit.prix,
-                    imageUrl: imageUrl,
-                    couleur: couleurSelectionnee
-                };
-
-                panier.push(produitAjoute);
-                mettreAJourPanier();
+    
+        // 📌 Gestion du panier
+        let panier = JSON.parse(localStorage.getItem("panier")) || [];
+        const panierCount = document.createElement("span");
+    
+        // Sélecteur de l'icône du panier et ajout du compteur
+        const panierIcon = document.querySelector(".fa-shopping-cart");
+        panierIcon.style.position = "relative";
+        panierIcon.appendChild(panierCount);
+    
+        // Fonction pour mettre à jour le panier
+        function mettreAJourPanier() {
+            panierCount.innerText = panier.length;
+            localStorage.setItem("panier", JSON.stringify(panier));
+        }
+    
+        // 📌 Chargement des produits avec écoute en temps réel
+        function chargerProduitsBoutique() {
+            const produitsContainer = document.getElementById("produits");
+            const produitsRef = collection(db, "produits");
+    
+            // Écouter Firestore pour afficher les produits en temps réel
+            onSnapshot(produitsRef, (snapshot) => {
+                produitsContainer.innerHTML = ""; // Vider avant de recharger
+    
+                snapshot.forEach((doc) => {
+                    const produit = doc.data();
+                    const produitId = doc.id;
+    
+                    const produitElement = document.createElement("div");
+                    produitElement.classList.add("produit");
+    
+                    // 📌 Vérifie si l'image est définie, sinon utilise une image par défaut
+                    const imageUrl = produit.imageUrl || "https://i.imgur.com/jOTXXdh.jpeg";
+    
+                    // 📌 Génération dynamique des couleurs
+                    const couleursOptions = produit.couleurs
+                        ? produit.couleurs.map(couleur => `<option value="${couleur}">${couleur}</option>`).join("")
+                        : "<option value='default'>Aucune couleur</option>";
+    
+                    // 📌 Structure HTML du produit
+                    produitElement.innerHTML = `
+                        <img src="${imageUrl}" alt="${produit.nom}">
+                        <h3>${produit.nom}</h3>
+                        <p>${produit.description}</p>
+                        <p class="prix">${produit.prix}€</p>
+                        <select class="select-couleur">${couleursOptions}</select>
+                        <button class="add-to-cart">Ajouter au panier</button>
+                    `;
+    
+                    // 📌 Ajout au panier avec gestion des couleurs
+                    const addToCartButton = produitElement.querySelector(".add-to-cart");
+                    addToCartButton.addEventListener("click", () => {
+                        const couleurSelectionnee = produitElement.querySelector(".select-couleur").value;
+                    
+                        // Vérification si l'ID du produit, son nom et son prix sont valides avant l'ajout au panier
+                        if (produitId && produit.nom && produit.prix) {
+                            const produitAjoute = {
+                                id: produitId,
+                                nom: produit.nom,
+                                prix: produit.prix,
+                                imageUrl: imageUrl,
+                                couleur: couleurSelectionnee
+                            };
+                    
+                            // Vérification pour éviter les doublons dans le panier
+                            const isProduitDejaDansPanier = panier.some(item => item.id === produitId && item.couleur === couleurSelectionnee);
+                            if (!isProduitDejaDansPanier) {
+                                panier.push(produitAjoute);
+                                mettreAJourPanier(); // Mettre à jour le panier
+                            } else {
+                                console.log("Ce produit est déjà dans le panier !");
+                            }
+                        } else {
+                            // Log erreur si l'ID du produit est invalide ou manquant
+                            console.error("Produit incomplet, impossible d'ajouter au panier. ID:", produitId);
+                        }
+                    });                    
+    
+                    produitsContainer.appendChild(produitElement);
+                });
             });
-
-            produitsContainer.appendChild(produitElement);
-        });
-    });
-}
-
-// 📌 Charger les produits et mettre à jour le panier au chargement de la page
-window.onload = () => {
-    chargerProduitsBoutique();
-    mettreAJourPanier();
-};
-</script>
+        }
+    
+        // 📌 Charger les produits et mettre à jour le panier au chargement de la page
+        window.onload = () => {
+            chargerProduitsBoutique();
+            mettreAJourPanier();
+        };
+    </script>
+    
+    
 </head>
 
 <body>
