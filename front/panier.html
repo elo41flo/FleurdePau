@@ -162,6 +162,51 @@ h2 {
     color: #742a08;
 }
 
+/* Style du bouton pour vider le panier */
+#vider-panier {
+    background-color: #742a08; /* Rouge vif */
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Effet de survol du bouton */
+#vider-panier:hover {
+    background-color: #742a08; /* Rouge plus foncé */
+    transform: scale(1.05); /* Légère agrandissement au survol */
+}
+
+/* Effet au clic du bouton */
+#vider-panier:active {
+    background-color: #742a08; /* Rouge encore plus foncé */
+    transform: scale(1.1); /* Agrandissement au clic */
+}
+
+/* Style pour désactiver le bouton (si nécessaire) */
+#vider-panier:disabled {
+    background-color: #e0e0e0;
+    color: #a0a0a0;
+    cursor: not-allowed;
+}
+
+/* Ajouter une ombre au bouton */
+#vider-panier {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Le bouton est centré horizontalement */
+#vider-panier {
+    display: inline-block;
+    margin-top: 20px;
+    text-align: center;
+}
+
+
 /* Button CTA (choisir un point relais) */
 .cta-btn {
     display: block;
@@ -246,6 +291,8 @@ h2 {
         <h2>Votre Panier</h2>
         <div id="panier-list"></div>
         <div id="total">Total: €0.00</div>
+        <button id="vider-panier">Vider le panier</button> <!-- Bouton pour vider le panier -->
+
         <button id="select-point-relais" class="cta-btn" onclick="window.location.href='points-relais.html'">Choisir un point relais</button>
         <p id="selected-relay" style="text-align: center; font-weight: bold; margin-top: 10px;">Aucun point relais sélectionné</p>
     </section>
@@ -264,7 +311,6 @@ h2 {
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { initializeFirestore, memoryLocalCache, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     
-        // 🔥 Configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
             authDomain: "fleurdepau-1ce7d.firebaseapp.com",
@@ -275,46 +321,38 @@ h2 {
             measurementId: "G-D1J6X7BH9S"
         };
     
-        // 🚀 Initialisation Firebase & Firestore
         const app = initializeApp(firebaseConfig);
         const db = initializeFirestore(app, { localCache: memoryLocalCache() });
     
         console.log("✅ Firebase initialisé avec succès !");
     
-        // 📦 Panier global
         let panier = JSON.parse(localStorage.getItem("panier") || "[]");
     
-        // 🎯 Fonction pour nettoyer le panier avant de l'utiliser
-        function nettoyerPanier() {
-            // Vérification complète de chaque produit avant de filtrer
-            panier.forEach((item, index) => {
-                console.log(`Produit à l'index ${index}:`, item);  // Logue chaque produit avec son index
-                console.log(`Propriétés de l'objet à l'index ${index}:`, Object.keys(item));  // Logue les clés de l'objet
-            });
-        
-            // Filtrer les produits du panier qui ont un 'id' valide
-            panier = panier.filter(item => {
-                console.log("Vérification de la propriété 'id' pour:", item);
-                if (!item.id || typeof item.id !== 'string' || item.id.trim() === "") {
-                    console.log("Produit sans ID valide trouvé:", item);
-                    return false;
-                }
-                return true;
-            });
-            
-        
-            // Sauvegarde du panier nettoyé
-            localStorage.setItem("panier", JSON.stringify(panier));
-            return panier;  // Retourne le panier nettoyé
-        }
-        
+        async function nettoyerPanierDesProduitsSupprimes() {
+            let panierActuel = JSON.parse(localStorage.getItem("panier") || "[]");
+            let panierFiltre = [];
     
-        // 📥 Fonction pour récupérer un produit avec retries et timeout
+            for (let item of panierActuel) {
+                if (!item.id) continue;
+    
+                const produitRef = doc(db, "produits", item.id);
+                const produitSnap = await getDoc(produitRef);
+    
+                if (produitSnap.exists()) {
+                    panierFiltre.push(item);
+                } else {
+                    console.log(`🗑️ Produit supprimé retiré du panier: ${item.id}`);
+                }
+            }
+    
+            localStorage.setItem("panier", JSON.stringify(panierFiltre));
+            return panierFiltre;
+        }
+    
         async function fetchProduitAvecRetry(produitRef, retries = 3, delay = 5000) {
             for (let i = 0; i < retries; i++) {
                 try {
                     console.log(`🔍 Récupération du produit ID: ${produitRef.id} (tentative ${i + 1})`);
-    
                     const produitSnap = await Promise.race([
                         getDoc(produitRef),
                         new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 15000))
@@ -334,71 +372,91 @@ h2 {
             }
         }
     
-        // 🛒 Fonction pour afficher le panier
         async function afficherPanier() {
             let panierContainer = document.getElementById("panier-list");
             let totalElement = document.getElementById("total");
+    
+            if (!panierContainer || !totalElement) {
+                console.error("Les éléments HTML n'ont pas été trouvés.");
+                return;
+            }
+    
             panierContainer.innerHTML = "";
-        
-            // Nettoyer le panier AVANT de l'afficher
-            let panierNettoye = nettoyerPanier();
-            console.log("Panier nettoyé après nettoyage:", panierNettoye);
-        
-            // Si le panier est vide après nettoyage, on stoppe tout !
+    
+            let panierNettoye = await nettoyerPanierDesProduitsSupprimes();
             if (panierNettoye.length === 0) {
-                console.log("🛑 Panier vide après nettoyage. Aucun produit à afficher.");
                 panierContainer.innerHTML = "<p>Votre panier est vide.</p>";
                 totalElement.textContent = "Total: €0.00";
-                return; // STOP, on ne continue pas !
+                return;
             }
-        
+    
             let total = 0;
-        
+    
             for (let item of panierNettoye) {
-                console.log("Produit à l'index dans le panier:", item);
-        
-                // Assurez-vous que l'ID du produit est bien accessible
-                const produitRef = doc(db, "produits", item.id); // Utilisation de item.id ici
-                console.log("Référence Firestore pour le produit:", produitRef);
-        
+                if (!item.id) continue;
+                const produitRef = doc(db, "produits", item.id);
+    
                 try {
                     const produitData = await fetchProduitAvecRetry(produitRef);
                     let nom = produitData.nom || "Produit inconnu";
                     let prix = produitData.prix || 0;
                     let quantite = item.quantite ? Math.max(1, parseInt(item.quantite)) : 1;
                     let couleur = item.couleur || "Non spécifiée";
-                    let description = produitData.description || "Pas de description";
                     let imageUrl = produitData.imageUrl || "https://via.placeholder.com/150";
-        
+    
                     let panierItem = document.createElement("div");
                     panierItem.classList.add("panier-item");
                     panierItem.innerHTML = `
                         <img src="${imageUrl}" alt="${nom}" class="product-image" />
                         <span>${nom} - ${prix}€ - Couleur: ${couleur}</span>
-                        <p>${description}</p>
                         <div class="quantite-container">
-                            <input type="number" class="quantite-input" value="${quantite}" min="1" data-id="${item.idProduit}" />
-                            <button class="remove-item" data-id="${item.idProduit}"><i class="fas fa-trash-alt"></i></button>
+                            <input type="number" class="quantite-input" value="${quantite}" min="1" data-id="${item.id}" />
+                            <button class="remove-item" data-id="${item.id}"><i class="fas fa-trash-alt"></i></button>
                         </div>`;
-        
+    
                     total += prix * quantite;
                     panierContainer.appendChild(panierItem);
                 } catch (error) {
                     console.error("❌ Erreur lors de la récupération du produit:", error);
-                    let errorMessage = "Erreur de récupération des données.";
-                    let panierItem = document.createElement("div");
-                    panierItem.classList.add("panier-item", "error");
-                    panierItem.innerHTML = `<span>${errorMessage} (ID: ${item.id})</span>`;
-                    panierContainer.appendChild(panierItem);
                 }
             }
-        
-            totalElement.textContent = `Total: €${total.toFixed(2)}`;
-        }
-        
     
-        // 🛒 Initialisation du panier au chargement de la page
-        afficherPanier();
+            totalElement.textContent = `Total: €${total.toFixed(2)}`;
+            ajouterListenersSuppression();
+            ajouterListenersQuantite();
+        }
+    
+        function ajouterListenersSuppression() {
+            document.querySelectorAll(".remove-item").forEach(button => {
+                button.addEventListener("click", (event) => {
+                    let id = event.target.closest("button").getAttribute("data-id");
+                    panier = panier.filter(item => item.id !== id);
+                    localStorage.setItem("panier", JSON.stringify(panier));
+                    afficherPanier();
+                });
+            });
+        }
+    
+        function ajouterListenersQuantite() {
+            document.querySelectorAll(".quantite-input").forEach(input => {
+                input.addEventListener("change", (event) => {
+                    let id = event.target.getAttribute("data-id");
+                    let nouvelleQuantite = Math.max(1, parseInt(event.target.value));
+                    panier = panier.map(item => item.id === id ? { ...item, quantite: nouvelleQuantite } : item);
+                    localStorage.setItem("panier", JSON.stringify(panier));
+                    afficherPanier();
+                });
+            });
+        }
+    
+        document.getElementById("vider-panier").addEventListener("click", () => {
+            localStorage.removeItem("panier");
+            afficherPanier();
+        });
+    
+        document.addEventListener("DOMContentLoaded", () => {
+            afficherPanier();
+        });
     </script>
     
 </body>

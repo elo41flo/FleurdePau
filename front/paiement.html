@@ -112,6 +112,35 @@
             margin-top: 20px;
         }
 
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #333;
+        }
+        
+        #panier-total {
+            font-size: 20px;
+            margin: 20px 0;
+        }
+        
+        #paypal-button-container {
+            margin-top: 20px;
+        }
+        
+
         /* Responsive Styles */
         @media (max-width: 768px) {
             header {
@@ -193,9 +222,14 @@
 
     <!-- Section Paiement -->
     <main>
-        <h1>Paiement</h1>
-        <p>Montant à payer : <span id="total-price">0.00</span> €</p>
-        <div id="paypal-button-container"></div>
+        <div class="container">
+            <h1>Paiement de votre commande</h1>
+            <div id="panier-total">
+                <p>Total du panier : <span id="total-panier">€0.00</span></p>
+            </div>
+    
+            <div id="paypal-button-container"></div>
+        </div>
     </main>
 
     <script>
@@ -223,41 +257,47 @@ function calculerTotal() {
         }
     });
 
+    // Mettre à jour le total sur la page
+    document.getElementById("total-panier").textContent = "€" + total.toFixed(2);
+
     // Mettre à jour le total dans localStorage
     localStorage.setItem("total", total.toFixed(2));  // Sauvegarde du total avec 2 décimales
     return total;
 }
 
+// Calculer le total au chargement de la page
+let total = calculerTotal();
 
-        // Intégrer le bouton PayPal
-        paypal.Buttons({
-            createOrder: function(data, actions) {
-                return actions.order.create({
-                    purchase_units: [{
-                        amount: {
-                            value: total.toFixed(2) // Montant dynamique basé sur le panier
-                        },
-                        description: "Paiement de votre commande chez Ma Boutique Crochet"
-                    }]
-                });
-            },
-            onApprove: function(data, actions) {
-                return actions.order.capture().then(function(details) {
-                    alert('Paiement réussi pour ' + details.payer.name.given_name);
-                    console.log(details);
+// Intégrer le bouton PayPal
+paypal.Buttons({
+    createOrder: function(data, actions) {
+        return actions.order.create({
+            purchase_units: [{
+                amount: {
+                    value: total.toFixed(2) // Montant dynamique basé sur le panier
+                },
+                description: "Paiement de votre commande chez Ma Boutique Crochet"
+            }]
+        });
+    },
+    onApprove: function(data, actions) {
+        return actions.order.capture().then(function(details) {
+            alert('Paiement réussi pour ' + details.payer.name.given_name);
+            console.log(details);
 
-                    // Rediriger vers une page de confirmation (success.html)
-                    window.location.href = "success.html";
-                });
-            },
-            onCancel: function(data) {
-                alert("Le paiement a été annulé.");
-            },
-            onError: function(err) {
-                console.error(err);
-                alert("Une erreur est survenue pendant le paiement.");
-            }
-        }).render('#paypal-button-container');
+            // Rediriger vers une page de confirmation (success.html)
+            window.location.href = "success.html";
+        });
+    },
+    onCancel: function(data) {
+        alert("Le paiement a été annulé.");
+    },
+    onError: function(err) {
+        console.error(err);
+        alert("Une erreur est survenue pendant le paiement.");
+    }
+}).render('#paypal-button-container');
+
     </script>
 </body>
 </html>

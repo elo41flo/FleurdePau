@@ -228,6 +228,7 @@
         .catch(error => console.error("❌ Erreur de connexion Firebase Auth :", error));
 
     // 📌 Fonction pour afficher les produits
+    // Fonction pour afficher les produits
 async function obtenirProduits() {
     const produitsContainer = document.getElementById('produits-container');
     const produitsRef = collection(db, 'produits');
@@ -239,21 +240,13 @@ async function obtenirProduits() {
 
         querySnapshot.forEach(docSnapshot => {
             const produit = docSnapshot.data();
-            
+
             // Adapter ici pour parcourir les couleurs et afficher leur stock
             const couleursHTML = produit.couleurs ? 
-    // Si produit.couleurs est un tableau, on l'utilise, sinon on crée un tableau avec les clés de l'objet
-    (Array.isArray(produit.couleurs) ? 
-        produit.couleurs.map(couleur => {
-            const stock = produit.couleurs[couleur]; // Récupérer le stock de chaque couleur
-            return `<option value="${couleur}">${couleur} (${stock} en stock)</option>`;
-        }) : 
-        Object.keys(produit.couleurs).map(couleur => {
-            const stock = produit.couleurs[couleur]; // Récupérer le stock de chaque couleur
-            return `<option value="${couleur}">${couleur} (${stock} en stock)</option>`;
-        })
-    ).join("") : 'Aucune couleur disponible';
-
+                produit.couleurs.map(couleurData => {
+                    const { couleur, stock } = couleurData; // Déstructurer l'objet couleurData
+                    return `<option value="${couleur}">${couleur} (${stock} en stock)</option>`;
+                }).join("") : 'Aucune couleur disponible';
 
             produitsContainer.innerHTML += `
                 <div class="produit-card">
@@ -261,7 +254,11 @@ async function obtenirProduits() {
                     <p><strong>ID:</strong> ${docSnapshot.id}</p>
                     <p><strong>Description:</strong> ${produit.description}</p>
                     <p><strong>Prix:</strong> ${produit.prix}€</p>
-                    <p><strong>Couleurs:</strong> ${couleursHTML}</p>
+                    <p><strong>Couleurs:</strong> 
+                        <select id="couleur-${docSnapshot.id}">
+                            ${couleursHTML}
+                        </select>
+                    </p>
                     <img src="${produit.imageUrl}" alt="${produit.nom}" width="100">
                     <button class="btn-modifier" data-id="${docSnapshot.id}">Modifier</button>
                     <button class="btn-supprimer" data-id="${docSnapshot.id}">Supprimer</button>
@@ -283,27 +280,27 @@ async function obtenirProduits() {
         event.preventDefault();
         const btnSauvegarde = document.getElementById('btn-sauvegarde');
         const produitId = btnSauvegarde.getAttribute('data-id');
-
+    
         const nom = document.getElementById('nom-produit').value.trim();
         const description = document.getElementById('description-produit').value.trim();
         const prix = parseFloat(document.getElementById('prix-produit').value);
         const imageUrl = document.getElementById('image-url').value.trim();
         const couleursInput = document.getElementById('couleurs-produit').value.split(',').map(c => c.trim()).filter(c => c);
-
-        // Récupérer les stocks de chaque couleur
-        let couleurs = {};
+    
+        // Récupérer les stocks des couleurs depuis les inputs
+        let couleurs = [];
         couleursInput.forEach(couleur => {
-            const stock = parseInt(document.getElementById(`stock-${produitId}-${couleur}`)?.value || 0);
-            couleurs[couleur] = stock;
+            const stock = parseInt(document.getElementById(`stock-${couleur}`)?.value || 0);
+            couleurs.push({ couleur, stock });
         });
-
+    
         if (!nom || !description || isNaN(prix) || prix <= 0 || !imageUrl) {
             alert("Veuillez remplir tous les champs correctement.");
             return;
         }
-
+    
         const produitData = { nom, description, prix, imageUrl, couleurs };
-
+    
         try {
             produitId ? await updateDoc(doc(db, 'produits', produitId), produitData) : await addDoc(collection(db, 'produits'), produitData);
             alert("✅ Produit sauvegardé !");
@@ -314,31 +311,41 @@ async function obtenirProduits() {
             console.error("❌ Erreur sauvegarde produit :", error);
         }
     }
+    
+    
 
     // 📌 Modifier un produit
-    async function modifierProduit(id) {
-        try {
-            const produitSnap = await getDoc(doc(db, 'produits', id));
-            if (!produitSnap.exists()) throw new Error("Produit introuvable");
+    // Modifier un produit
+async function modifierProduit(id) {
+    try {
+        const produitSnap = await getDoc(doc(db, 'produits', id));
+        if (!produitSnap.exists()) throw new Error("Produit introuvable");
 
-            const produit = produitSnap.data();
-            document.getElementById('nom-produit').value = produit.nom;
-            document.getElementById('description-produit').value = produit.description;
-            document.getElementById('prix-produit').value = produit.prix;
-            document.getElementById('image-url').value = produit.imageUrl;
-            document.getElementById('couleurs-produit').value = Object.keys(produit.couleurs).join(', ');
-            
-            // Afficher les stocks des couleurs
-            Object.keys(produit.couleurs).forEach(couleur => {
-                const stock = produit.couleurs[couleur];
-                document.getElementById(`stock-${id}-${couleur}`).value = stock;
-            });
+        const produit = produitSnap.data();
+        document.getElementById('nom-produit').value = produit.nom;
+        document.getElementById('description-produit').value = produit.description;
+        document.getElementById('prix-produit').value = produit.prix;
+        document.getElementById('image-url').value = produit.imageUrl;
+        document.getElementById('couleurs-produit').value = produit.couleurs.map(c => c.couleur).join(', ');
 
-            document.getElementById('btn-sauvegarde').setAttribute("data-id", id);
-        } catch (error) {
-            console.error("❌ Erreur modification :", error);
-        }
+        // Afficher les champs de stock pour chaque couleur
+        let couleursHTML = '';
+        produit.couleurs.forEach(couleurData => {
+            couleursHTML += `
+                <div>
+                    <label for="stock-${couleurData.couleur}">${couleurData.couleur}</label>
+                    <input type="number" id="stock-${couleurData.couleur}" value="${couleurData.stock}" min="0">
+                </div>
+            `;
+        });
+        document.getElementById('couleurs-stock').innerHTML = couleursHTML;
+
+        document.getElementById('btn-sauvegarde').setAttribute("data-id", id);
+    } catch (error) {
+        console.error("❌ Erreur modification :", error);
     }
+}
+
 
     // 📌 Supprimer un produit
     async function supprimerProduit(id) {

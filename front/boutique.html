@@ -296,27 +296,24 @@
         function chargerProduitsBoutique() {
             const produitsContainer = document.getElementById("produits");
             const produitsRef = collection(db, "produits");
-    
-            // Écouter Firestore pour afficher les produits en temps réel
+        
             onSnapshot(produitsRef, (snapshot) => {
                 produitsContainer.innerHTML = ""; // Vider avant de recharger
-    
+        
                 snapshot.forEach((doc) => {
                     const produit = doc.data();
                     const produitId = doc.id;
-    
+        
                     const produitElement = document.createElement("div");
                     produitElement.classList.add("produit");
-    
-                    // 📌 Vérifie si l'image est définie, sinon utilise une image par défaut
+        
                     const imageUrl = produit.imageUrl || "https://i.imgur.com/jOTXXdh.jpeg";
-    
-                    // 📌 Génération dynamique des couleurs
+        
+                    // 📌 Vérification : si les couleurs sont stockées sous forme d'objets, on récupère juste les noms
                     const couleursOptions = produit.couleurs
-                        ? produit.couleurs.map(couleur => `<option value="${couleur}">${couleur}</option>`).join("")
+                        ? produit.couleurs.map(c => `<option value="${c.couleur}">${c.couleur}</option>`).join("")
                         : "<option value='default'>Aucune couleur</option>";
-    
-                    // 📌 Structure HTML du produit
+        
                     produitElement.innerHTML = 
                         `<img src="${imageUrl}" alt="${produit.nom}">
                         <h3>${produit.nom}</h3>
@@ -324,13 +321,11 @@
                         <p class="prix">${produit.prix}€</p>
                         <select class="select-couleur">${couleursOptions}</select>
                         <button class="add-to-cart">Ajouter au panier</button>`;
-    
-                    // 📌 Ajout au panier avec gestion des couleurs
+        
                     const addToCartButton = produitElement.querySelector(".add-to-cart");
                     addToCartButton.addEventListener("click", () => {
                         const couleurSelectionnee = produitElement.querySelector(".select-couleur").value;
                     
-                        // Vérification si l'ID du produit, son nom et son prix sont valides avant l'ajout au panier
                         if (produitId && produit.nom && produit.prix) {
                             const produitAjoute = {
                                 id: produitId,
@@ -339,25 +334,24 @@
                                 imageUrl: imageUrl,
                                 couleur: couleurSelectionnee
                             };
-                    
-                            // Vérification pour éviter les doublons dans le panier
+        
                             const isProduitDejaDansPanier = panier.some(item => item.id === produitId && item.couleur === couleurSelectionnee);
                             if (!isProduitDejaDansPanier) {
                                 panier.push(produitAjoute);
-                                mettreAJourPanier(); // Mettre à jour le panier
+                                mettreAJourPanier();
                             } else {
                                 console.log("Ce produit est déjà dans le panier !");
                             }
                         } else {
-                            // Log erreur si l'ID du produit est invalide ou manquant
                             console.error("Produit incomplet, impossible d'ajouter au panier. ID:", produitId);
                         }
-                    });                    
-    
+                    });                
+        
                     produitsContainer.appendChild(produitElement);
                 });
             });
         }
+        
     
         // 📌 Charger les produits et mettre à jour le panier au chargement de la page
         window.onload = () => {
