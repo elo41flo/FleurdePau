@@ -317,14 +317,13 @@
                         : "<option value='default'>Aucune couleur</option>";
     
                     // 📌 Structure HTML du produit
-                    produitElement.innerHTML = `
-                        <img src="${imageUrl}" alt="${produit.nom}">
+                    produitElement.innerHTML = 
+                        `<img src="${imageUrl}" alt="${produit.nom}">
                         <h3>${produit.nom}</h3>
                         <p>${produit.description}</p>
                         <p class="prix">${produit.prix}€</p>
                         <select class="select-couleur">${couleursOptions}</select>
-                        <button class="add-to-cart">Ajouter au panier</button>
-                    `;
+                        <button class="add-to-cart">Ajouter au panier</button>`;
     
                     // 📌 Ajout au panier avec gestion des couleurs
                     const addToCartButton = produitElement.querySelector(".add-to-cart");
@@ -366,10 +365,7 @@
             mettreAJourPanier();
         };
     </script>
-    
-    
 </head>
-
 <body>
     <!-- En-tête -->
     <header>
@@ -392,7 +388,7 @@
 
     <!-- Produits -->
     <div class="produits-grid" id="produits">
-        <!-- Les produits seront chargés ici dynamiquement -->
+        <!-- Les produits s'affichent ici -->
     </div>
 </body>
 

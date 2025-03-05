@@ -228,40 +228,55 @@
         .catch(error => console.error("❌ Erreur de connexion Firebase Auth :", error));
 
     // 📌 Fonction pour afficher les produits
-    async function obtenirProduits() {
-        const produitsContainer = document.getElementById('produits-container');
-        const produitsRef = collection(db, 'produits');
-        console.log("🔄 Tentative de récupération des produits...");
+async function obtenirProduits() {
+    const produitsContainer = document.getElementById('produits-container');
+    const produitsRef = collection(db, 'produits');
+    console.log("🔄 Tentative de récupération des produits...");
 
-        try {
-            const querySnapshot = await getDocs(produitsRef);
-            produitsContainer.innerHTML = querySnapshot.empty ? "<p>Aucun produit trouvé.</p>" : "";
+    try {
+        const querySnapshot = await getDocs(produitsRef);
+        produitsContainer.innerHTML = querySnapshot.empty ? "<p>Aucun produit trouvé.</p>" : "";
 
-            querySnapshot.forEach(docSnapshot => {
-                const produit = docSnapshot.data();
-                const couleursHTML = produit.couleurs ? produit.couleurs.join(', ') : 'Aucune';
+        querySnapshot.forEach(docSnapshot => {
+            const produit = docSnapshot.data();
+            
+            // Adapter ici pour parcourir les couleurs et afficher leur stock
+            const couleursHTML = produit.couleurs ? 
+    // Si produit.couleurs est un tableau, on l'utilise, sinon on crée un tableau avec les clés de l'objet
+    (Array.isArray(produit.couleurs) ? 
+        produit.couleurs.map(couleur => {
+            const stock = produit.couleurs[couleur]; // Récupérer le stock de chaque couleur
+            return `<option value="${couleur}">${couleur} (${stock} en stock)</option>`;
+        }) : 
+        Object.keys(produit.couleurs).map(couleur => {
+            const stock = produit.couleurs[couleur]; // Récupérer le stock de chaque couleur
+            return `<option value="${couleur}">${couleur} (${stock} en stock)</option>`;
+        })
+    ).join("") : 'Aucune couleur disponible';
 
-                produitsContainer.innerHTML += `
-                    <div class="produit-card">
-                        <h3>${produit.nom}</h3>
-                        <p><strong>ID:</strong> ${docSnapshot.id}</p>
-                        <p><strong>Description:</strong> ${produit.description}</p>
-                        <p><strong>Prix:</strong> ${produit.prix}€</p>
-                        <p><strong>Couleurs:</strong> ${couleursHTML}</p>
-                        <img src="${produit.imageUrl}" alt="${produit.nom}" width="100">
-                        <button class="btn-modifier" data-id="${docSnapshot.id}">Modifier</button>
-                        <button class="btn-supprimer" data-id="${docSnapshot.id}">Supprimer</button>
-                    </div>
-                `;
-            });
 
-            ajouterEvenements();
-            console.log("✅ Produits récupérés avec succès !");
-        } catch (error) {
-            console.error("❌ Erreur lors de la récupération des produits :", error);
-            alert("Impossible de récupérer les produits. Veuillez vérifier votre connexion.");
-        }
+            produitsContainer.innerHTML += `
+                <div class="produit-card">
+                    <h3>${produit.nom}</h3>
+                    <p><strong>ID:</strong> ${docSnapshot.id}</p>
+                    <p><strong>Description:</strong> ${produit.description}</p>
+                    <p><strong>Prix:</strong> ${produit.prix}€</p>
+                    <p><strong>Couleurs:</strong> ${couleursHTML}</p>
+                    <img src="${produit.imageUrl}" alt="${produit.nom}" width="100">
+                    <button class="btn-modifier" data-id="${docSnapshot.id}">Modifier</button>
+                    <button class="btn-supprimer" data-id="${docSnapshot.id}">Supprimer</button>
+                </div>
+            `;
+        });
+
+        ajouterEvenements();
+        console.log("✅ Produits récupérés avec succès !");
+    } catch (error) {
+        console.error("❌ Erreur lors de la récupération des produits :", error);
+        alert("Impossible de récupérer les produits. Veuillez vérifier votre connexion.");
     }
+}
+
 
     // 📌 Sauvegarde des produits
     async function sauvegarderProduit(event) {
@@ -273,7 +288,14 @@
         const description = document.getElementById('description-produit').value.trim();
         const prix = parseFloat(document.getElementById('prix-produit').value);
         const imageUrl = document.getElementById('image-url').value.trim();
-        const couleurs = document.getElementById('couleurs-produit').value.split(',').map(c => c.trim()).filter(c => c);
+        const couleursInput = document.getElementById('couleurs-produit').value.split(',').map(c => c.trim()).filter(c => c);
+
+        // Récupérer les stocks de chaque couleur
+        let couleurs = {};
+        couleursInput.forEach(couleur => {
+            const stock = parseInt(document.getElementById(`stock-${produitId}-${couleur}`)?.value || 0);
+            couleurs[couleur] = stock;
+        });
 
         if (!nom || !description || isNaN(prix) || prix <= 0 || !imageUrl) {
             alert("Veuillez remplir tous les champs correctement.");
@@ -304,7 +326,14 @@
             document.getElementById('description-produit').value = produit.description;
             document.getElementById('prix-produit').value = produit.prix;
             document.getElementById('image-url').value = produit.imageUrl;
-            document.getElementById('couleurs-produit').value = produit.couleurs.join(', ');
+            document.getElementById('couleurs-produit').value = Object.keys(produit.couleurs).join(', ');
+            
+            // Afficher les stocks des couleurs
+            Object.keys(produit.couleurs).forEach(couleur => {
+                const stock = produit.couleurs[couleur];
+                document.getElementById(`stock-${id}-${couleur}`).value = stock;
+            });
+
             document.getElementById('btn-sauvegarde').setAttribute("data-id", id);
         } catch (error) {
             console.error("❌ Erreur modification :", error);

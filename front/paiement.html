@@ -194,49 +194,40 @@
     <!-- Section Paiement -->
     <main>
         <h1>Paiement</h1>
-        <p>Montant à payer : <span id="total-price"></span> €</p>
+        <p>Montant à payer : <span id="total-price">0.00</span> €</p>
         <div id="paypal-button-container"></div>
     </main>
 
     <script>
         // Fonction pour calculer et mettre à jour le total du panier
-        function calculerTotal() {
-            let panier = JSON.parse(localStorage.getItem("panier")) || [];  // Récupérer le panier depuis localStorage
-            let total = 0;
+function calculerTotal() {
+    let panier = JSON.parse(localStorage.getItem("panier")) || [];  // Récupérer le panier depuis localStorage
+    let total = 0;
 
-            // Vérifier si le panier contient des éléments
-            if (panier.length === 0) {
-                console.error("Le panier est vide.");
-                return 0;
-            }
+    // Vérifier si le panier contient des éléments
+    if (panier.length === 0) {
+        console.error("Le panier est vide.");
+        return 0;
+    }
 
-            // Calcul du total basé sur le panier
-            panier.forEach(item => {
-                let prix = parseFloat(item.prix);
-                let quantite = parseInt(item.quantite);
+    // Calcul du total basé sur le panier
+    panier.forEach(item => {
+        let prix = parseFloat(item.prix);
+        let quantite = parseInt(item.quantite) || 1; // Prise en compte de la quantité (défaut à 1 si non définie)
 
-                // Vérifier que prix et quantite sont des nombres valides
-                if (!isNaN(prix) && !isNaN(quantite)) {
-                    total += prix * quantite;
-                } else {
-                    console.error("Produit invalide:", item);
-                }
-            });
-
-            // Mettre à jour le total dans localStorage
-            localStorage.setItem("total", total.toFixed(2));  // Sauvegarde du total avec 2 décimales
-            return total;
-        }
-
-        // Appeler cette fonction chaque fois que tu ajoutes ou modifies des produits dans le panier
-        const total = calculerTotal();  // Exécute cette fonction pour mettre à jour le total dans localStorage
-
-        // Vérifier si le total est valide et l'afficher
-        if (isNaN(total)) {
-            document.getElementById("total-price").textContent = "0.00";  // Afficher 0 si le total est invalide
+        // Vérifier que prix et quantite sont des nombres valides
+        if (!isNaN(prix) && !isNaN(quantite)) {
+            total += prix * quantite;
         } else {
-            document.getElementById("total-price").textContent = total.toFixed(2);
+            console.error("Produit invalide:", item);
         }
+    });
+
+    // Mettre à jour le total dans localStorage
+    localStorage.setItem("total", total.toFixed(2));  // Sauvegarde du total avec 2 décimales
+    return total;
+}
+
 
         // Intégrer le bouton PayPal
         paypal.Buttons({
