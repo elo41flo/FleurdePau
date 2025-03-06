@@ -375,7 +375,7 @@
         
         // Fonction pour envoyer le message de contact
         async function envoyerMessageContact(event) {
-            event.preventDefault(); // Empêcher la soumission par défaut du formulaire
+            event.preventDefault(); // Empêche la soumission par défaut
         
             const name = document.getElementById("name").value;
             const email = document.getElementById("email").value;
@@ -383,10 +383,10 @@
             const message = document.getElementById("message").value;
         
             try {
-                const response = await fetch("http://localhost:3000/send-contact-email", {
+                const response = await fetch("http://localhost:5000/send-contact-email", { // ✅ Assure-toi que c'est l'URL correcte du backend
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, email, subject, message })
+                    body: JSON.stringify({ name, email, subject, message }),
                 });
         
                 const result = await response.json();
@@ -400,6 +400,7 @@
                 console.error("Erreur:", error);
             }
         }
+        
         
         // Fonction pour nettoyer ou corriger une valeur erronée dans le panier
         function nettoyerPanierSiAnormal() {

@@ -3,232 +3,171 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const mailjet = require("node-mailjet");
-const admin = require("firebase-admin");
+const multer = require("multer");
+const fs = require("fs");
 const path = require("path");
+const admin = require("firebase-admin");
 const axios = require("axios");
 const xml2js = require("xml2js");
-const crypto = require('crypto');
+const crypto = require("crypto");
 
-// Initialisation de Firestore via Firebase Admin SDK (ajout d'une condition pour l'initialisation)
+// Initialisation du serveur Express
 const app = express();
 
-// Middleware
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, '../../front')));
+// 🔥 Configuration CORS avancée
+const corsOptions = {
+  origin: "http://localhost:5000", // Autorise les requêtes depuis ton frontend
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true, // Autorise les cookies si besoin
+};
 
-// Vérification des variables d'environnement
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Gère les requêtes preflight OPTIONS
+
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "../../front")));
+
+// 🔥 Configuration de Mailjet
+const mailjetClient = mailjet.apiConnect(
+  process.env.MAILJET_API_KEY,
+  process.env.MAILJET_API_SECRET
+);
+
+// 🔥 Vérification des variables d'environnement requises
 const requiredEnvVars = [
-    "FIREBASE_PRIVATE_KEY",
-    "FIREBASE_PROJECT_ID",
-    "FIREBASE_CLIENT_EMAIL",
-    "MAILJET_API_KEY",
-    "MAILJET_API_SECRET",
-    "MONDIAL_RELAY_ENS_CODE",
-    "MONDIAL_RELAY_PRIVATE_KEY"
+  "FIREBASE_PRIVATE_KEY",
+  "FIREBASE_PROJECT_ID",
+  "FIREBASE_CLIENT_EMAIL",
+  "MAILJET_API_KEY",
+  "MAILJET_API_SECRET",
+  "SENDER_EMAIL",
+  "MONDIAL_RELAY_ENS_CODE",
+  "MONDIAL_RELAY_PRIVATE_KEY",
 ];
 
 requiredEnvVars.forEach((envVar) => {
-    if (!process.env[envVar]) {
-        console.error(`\u274c Error: Missing environment variable: ${envVar}`);
-        process.exit(1);
-    }
+  if (!process.env[envVar]) {
+    console.error(`❌ Erreur : Variable d'environnement manquante : ${envVar}`);
+    process.exit(1);
+  }
 });
 
-// Initialisation Firebase Admin SDK uniquement si non déjà initialisé
+// 🔥 Initialisation Firebase
 if (admin.apps.length === 0) {
-    const serviceAccount = {
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    };
+  const serviceAccount = {
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  };
 
-    try {
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-            databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}.firebaseio.com`,
-        });
-        console.log("Firebase Admin SDK initialisé avec succès.");
-    } catch (error) {
-        console.error("Erreur lors de l'initialisation de Firebase Admin SDK :", error);
-        process.exit(1);
-    }
-} else {
-    console.log("Firebase déjà initialisé.");
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}.firebaseio.com`,
+    });
+    console.log("✅ Firebase Admin SDK initialisé.");
+  } catch (error) {
+    console.error("❌ Erreur Firebase :", error);
+    process.exit(1);
+  }
 }
 
-// Active la persistance pour Firestore
+// Active Firestore
 const db = admin.firestore();
-db.settings({ ignoreUndefinedProperties: true });  // Ajout pour éviter certains problèmes
+db.settings({ ignoreUndefinedProperties: true });
 
-// Collection Firestore
-const pointsRelaisCollection = db.collection('nom_de_la_collection');
+// 🖼️ Configuration du stockage des fichiers (multer)
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, "uploads/"),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
+  },
+});
 
-// Fonction pour générer la clé de sécurité
-const generateSecurityKey = (enseigne, pays, ville, cp, poids, action, delai, privateKey) => {
-    const securityString = `${enseigne}${pays}${ville}${cp}${poids}${action}${delai}${privateKey}`;
-    return crypto.createHash("md5").update(securityString).digest("hex").toUpperCase();
-};
+const upload = multer({ storage });
 
-// Route pour récupérer les points relais Mondial Relay
-app.post("/api/mondial-relay/points-relais", async (req, res) => {
-    console.log("Requête reçue pour /api/mondial-relay/points-relais");
-    const { ville, codePostal } = req.body;
-
-    if (!ville || !codePostal) {
-        return res.status(400).json({ success: false, message: "Ville et code postal requis" });
+// 📩 Route d'envoi d'email avec pièce jointe (SAV)
+app.post("/send-sav-email", upload.single("image"), async (req, res) => {
+    const { name, email, subject, message } = req.body;
+    const image = req.file;
+  
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({ success: false, message: "Tous les champs sont requis." });
     }
-
-    const securityKey = generateSecurityKey(
-        process.env.MONDIAL_RELAY_ENS_CODE,
-        "FR",
-        ville,
-        codePostal,
-        5000,
-        "REL",
-        "24R",
-        process.env.MONDIAL_RELAY_PRIVATE_KEY
-    );
-
-    const pointsRef = db.doc(`${ville}_${codePostal}`);
-    const doc = await pointsRef.get();
-
-    if (doc.exists) {
-        console.log("✅ Points relais trouvés dans Firestore");
-        return res.json({
-            success: true,
-            message: "Points relais récupérés depuis Firestore",
-            data: doc.data().points_relais
+  
+    try {
+      let attachments = [];
+      if (image) {
+        attachments.push({
+          ContentType: image.mimetype,
+          Filename: image.originalname,
+          Base64Content: fs.readFileSync(image.path, "base64"),
         });
-    }
-
-    const xmlRequest = `<?xml version="1.0" encoding="utf-8"?>
-    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                      xmlns:web="http://www.mondialrelay.fr/webservice/">
-        <soapenv:Header/>
-        <soapenv:Body>
-            <web:WSI3_PointRelais_Recherche>
-                <web:Enseigne>${process.env.MONDIAL_RELAY_ENS_CODE}</web:Enseigne>
-                <web:Pays>FR</web:Pays>
-                <web:Ville>${ville}</web:Ville>
-                <web:CP>${codePostal}</web:CP>
-                <web:NbResult>10</web:NbResult>
-                <web:Poids>5000</web:Poids>
-                <web:Action>REL</web:Action>
-                <web:Delai>24R</web:Delai>
-                <web:Security>${securityKey}</web:Security>
-            </web:WSI3_PointRelais_Recherche>
-        </soapenv:Body>
-    </soapenv:Envelope>`;
-
-    try {
-        const response = await axios.post("https://api.mondialrelay.com/WebService.asmx", xmlRequest, {
-            headers: { 'Content-Type': 'text/xml; charset=utf-8' }
-        });
-
-        console.log("Réponse Mondial Relay :", response.data);  // Log de la réponse brute
-
-        xml2js.parseString(response.data, { explicitArray: false }, async (err, result) => {
-            if (err) {
-                console.error("Erreur XML:", err);
-                return res.status(500).json({ success: false, message: "Erreur XML", error: err });
-            }
-
-            try {
-                const pointsRelais = result?.['soap:Envelope']?.['soap:Body']?.['WSI3_PointRelais_RechercheResponse']?.['WSI3_PointRelais_RechercheResult']?.['LST_PointRelais'];
-                if (pointsRelais) {
-                    await pointsRef.set({ points_relais: pointsRelais, lastUpdated: admin.firestore.FieldValue.serverTimestamp() });
-                    return res.json({ success: true, message: "Points relais trouvés", data: pointsRelais });
-                } else {
-                    return res.status(404).json({ success: false, message: "Aucun point relais trouvé" });
-                }
-            } catch (e) {
-                console.error("Erreur traitement Mondial Relay:", e);
-                return res.status(500).json({ success: false, message: "Erreur interne", error: e });
-            }
-        });
-
+      }
+  
+      const result = await mailjetClient.post("send", { version: "v3.1" }).request({
+        Messages: [
+          {
+            From: { Email: process.env.SENDER_EMAIL, Name: "Fleur De Pau" },
+            To: [{ Email: process.env.RECEIVER_EMAIL, Name: "Admin" }],
+            ReplyTo: { Email: email },
+            Subject: subject,
+            TextPart: `Nom: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+            HTMLPart: `<h3>Nouveau message de ${name}</h3><p>Email: ${email}</p><p>${message}</p>`,
+            Attachments: attachments,
+          },
+        ],
+      });
+  
+      if (result.body.Messages[0].Status === "success") {
+        res.redirect('/contact.html'); // Redirection vers contact.html
+      } else {
+        res.status(500).json({ success: false, message: "Erreur d'envoi d'email." });
+      }
     } catch (error) {
-        console.error("Erreur API Mondial Relay:", error.response ? error.response.data : error.message);
-        return res.status(500).json({ success: false, message: "Erreur serveur Mondial Relay", error: error.message });
+      console.error("❌ Erreur d'email :", error.message);
+      res.status(500).json({ success: false, message: "Erreur serveur." });
     }
+  });
+  
+
+// 📩 Route d'envoi d'email simple (Contact)
+app.post("/send-contact-email", async (req, res) => {
+  const { name, email, subject, message } = req.body;
+
+  if (!name || !email || !subject || !message) {
+    return res.status(400).json({ success: false, message: "Tous les champs sont requis." });
+  }
+
+  try {
+    const result = await mailjetClient.post("send", { version: "v3.1" }).request({
+      Messages: [
+        {
+          From: { Email: process.env.SENDER_EMAIL, Name: "Fleur De Pau" },
+          To: [{ Email: process.env.RECEIVER_EMAIL, Name: "Admin" }],
+          ReplyTo: { Email: email },
+          Subject: subject,
+          TextPart: `Nom: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+          HTMLPart: `<h3>Nouveau message de ${name}</h3><p>Email: ${email}</p><p>${message}</p>`,
+        },
+      ],
+    });
+
+    if (result.body.Messages[0].Status === "success") {
+      res.json({ success: true, message: "Email envoyé avec succès !" });
+    } else {
+      res.status(500).json({ success: false, message: "Erreur d'envoi d'email." });
+    }
+  } catch (error) {
+    console.error("❌ Erreur d'email :", error.message);
+    res.status(500).json({ success: false, message: "Erreur serveur." });
+  }
 });
 
-// Route pour tester la connexion à Firestore
-app.get("/api/test-firestore", async (req, res) => {
-    try {
-        const snapshot = await db.collection("produits").limit(1).get();
-        if (snapshot.empty) {
-            return res.json({ success: true, message: "Connexion Firestore OK, mais aucun produit trouvé." });
-        }
-        return res.json({ success: true, message: "Connexion Firestore OK", data: snapshot.docs[0].data() });
-    } catch (error) {
-        console.error("Erreur de connexion à Firestore :", error);
-        return res.status(500).json({ success: false, message: "Erreur de connexion à Firestore", error: error.message });
-    }
-});
-
-// Route pour récupérer tous les produits
-app.get("/api/produits", async (req, res) => {
-    try {
-        const snapshot = await db.collection("produits").get();
-        const produits = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        res.json({ success: true, data: produits });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Erreur lors de la récupération des produits", error: error.message });
-    }
-});
-
-// Route pour ajouter un produit
-app.post("/api/produits", async (req, res) => {
-    try {
-        const { nom, description, prix, imageUrl, couleurs } = req.body;
-        if (!nom || !prix) {
-            return res.status(400).json({ success: false, message: "Nom et prix sont obligatoires." });
-        }
-
-        const produitRef = await db.collection("produits").add({
-            nom, description, prix, imageUrl, couleurs,
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-        res.json({ success: true, message: "Produit ajouté avec succès", id: produitRef.id });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Erreur lors de l'ajout du produit", error: error.message });
-    }
-});
-
-// Route pour modifier un produit
-app.put("/api/produits/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updateData = req.body;
-
-        await db.collection("produits").doc(id).update(updateData);
-        res.json({ success: true, message: "Produit mis à jour avec succès" });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Erreur lors de la mise à jour du produit", error: error.message });
-    }
-});
-
-// Route pour supprimer un produit
-app.delete("/api/produits/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        await db.collection("produits").doc(id).delete();
-        res.json({ success: true, message: "Produit supprimé avec succès" });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Erreur lors de la suppression du produit", error: error.message });
-    }
-});
-
-// Lancement du serveur
+// ✅ Démarrage du serveur
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`));
 
 module.exports = app;
-
