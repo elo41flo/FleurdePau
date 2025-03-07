@@ -206,6 +206,105 @@
             }
         }
     </style>
+    <script type="module">
+        // Importer Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+    
+        // Configuration Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+            projectId: "fleurdepau-1ce7d",
+            storageBucket: "fleurdepau-1ce7d.appspot.com",
+            messagingSenderId: "394738141831",
+            appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+            measurementId: "G-D1J6X7BH9S"
+        };
+    
+        // Initialiser Firebase et Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+    
+        // Fonction pour sauvegarder la commande
+        async function saveOrderToDatabase(commandeData) {
+            try {
+                const ordersCollection = collection(db, "commande");
+                const docRef = await addDoc(ordersCollection, commandeData);
+                console.log("✅ Commande enregistrée avec ID :", docRef.id);
+                return docRef.id;
+            } catch (error) {
+                console.error("❌ Erreur lors de l'enregistrement :", error);
+                alert("Erreur de sauvegarde de la commande !");
+                throw error;
+            }
+        }
+    
+        // Fonction pour calculer et afficher le total du panier
+        function calculerTotal() {
+            let panier = JSON.parse(localStorage.getItem("panier")) || [];
+            let total = panier.reduce((sum, item) => sum + (parseFloat(item.prix) * (item.quantite || 1)), 0);
+            document.getElementById("total-panier").textContent = "€" + total.toFixed(2);
+            localStorage.setItem("total", total.toFixed(2));
+            return total;
+        }
+    
+        // Afficher le total au chargement
+        let total = calculerTotal();
+    
+        // Intégration du bouton PayPal
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: { value: total.toFixed(2), currency_code: 'EUR' },
+                        description: "Commande Fleur de Pau"
+                    }]
+                }).catch(error => {
+                    console.error('❌ Erreur PayPal:', error);
+                    alert('Erreur de création de la commande PayPal.');
+                });
+            },
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(async function(details) {
+                    console.log(`✅ Paiement validé par ${details.payer.name.given_name}`);
+    
+                    // Construire les données de la commande
+                    const commandeData = {
+                        nom: details.payer.name.given_name || "Nom inconnu",
+                        email: details.payer.email_address || "Email non fourni",
+                        total: total.toFixed(2),
+                        statut: "Payée",
+                        payée: true,
+                        date: new Date().toISOString(),
+                        archive: false,
+                        panier: JSON.parse(localStorage.getItem("panier")) || [],
+                        point_relais: JSON.parse(localStorage.getItem("point_relais")) || {},
+                        utilisateur: JSON.parse(localStorage.getItem("utilisateur")) || "Utilisateur inconnu",
+                        transaction_id: details.id
+                    };
+    
+                    // Sauvegarde de la commande
+                    try {
+                        await saveOrderToDatabase(commandeData);
+                        localStorage.removeItem("panier"); // Vider le panier après le paiement
+                        window.location.href = "success.html"; // Redirection vers la page de succès
+                    } catch (error) {
+                        console.error("❌ Erreur lors de la sauvegarde :", error);
+                        alert("Erreur lors de l'enregistrement de la commande.");
+                    }
+                }).catch(error => {
+                    console.error("❌ Erreur de paiement PayPal :", error);
+                    alert("Erreur lors du traitement du paiement.");
+                });
+            },
+            onError: function(err) {
+                console.error("❌ Erreur PayPal :", err);
+                alert("Une erreur est survenue pendant le paiement.");
+            }
+        }).render('#paypal-button-container');
+    </script>
+    
 </head>
 <body>
     <!-- Header -->
@@ -232,72 +331,5 @@
         </div>
     </main>
 
-    <script>
-        // Fonction pour calculer et mettre à jour le total du panier
-function calculerTotal() {
-    let panier = JSON.parse(localStorage.getItem("panier")) || [];  // Récupérer le panier depuis localStorage
-    let total = 0;
-
-    // Vérifier si le panier contient des éléments
-    if (panier.length === 0) {
-        console.error("Le panier est vide.");
-        return 0;
-    }
-
-    // Calcul du total basé sur le panier
-    panier.forEach(item => {
-        let prix = parseFloat(item.prix);
-        let quantite = parseInt(item.quantite) || 1; // Prise en compte de la quantité (défaut à 1 si non définie)
-
-        // Vérifier que prix et quantite sont des nombres valides
-        if (!isNaN(prix) && !isNaN(quantite)) {
-            total += prix * quantite;
-        } else {
-            console.error("Produit invalide:", item);
-        }
-    });
-
-    // Mettre à jour le total sur la page
-    document.getElementById("total-panier").textContent = "€" + total.toFixed(2);
-
-    // Mettre à jour le total dans localStorage
-    localStorage.setItem("total", total.toFixed(2));  // Sauvegarde du total avec 2 décimales
-    return total;
-}
-
-// Calculer le total au chargement de la page
-let total = calculerTotal();
-
-// Intégrer le bouton PayPal
-paypal.Buttons({
-    createOrder: function(data, actions) {
-        return actions.order.create({
-            purchase_units: [{
-                amount: {
-                    value: total.toFixed(2) // Montant dynamique basé sur le panier
-                },
-                description: "Paiement de votre commande chez Ma Boutique Crochet"
-            }]
-        });
-    },
-    onApprove: function(data, actions) {
-        return actions.order.capture().then(function(details) {
-            alert('Paiement réussi pour ' + details.payer.name.given_name);
-            console.log(details);
-
-            // Rediriger vers une page de confirmation (success.html)
-            window.location.href = "success.html";
-        });
-    },
-    onCancel: function(data) {
-        alert("Le paiement a été annulé.");
-    },
-    onError: function(err) {
-        console.error(err);
-        alert("Une erreur est survenue pendant le paiement.");
-    }
-}).render('#paypal-button-container');
-
-    </script>
 </body>
 </html>

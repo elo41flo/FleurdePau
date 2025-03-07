@@ -166,6 +166,24 @@ app.post("/send-contact-email", async (req, res) => {
   }
 });
 
+// Route POST pour sauvegarder la commande dans Firebase
+app.post('/save-order', async (req, res) => {
+  try {
+    const commandeData = req.body;  // Récupérer les données envoyées par le client
+    if (!commandeData || !commandeData.nom || !commandeData.email || !commandeData.produit) {
+      return res.status(400).json({ success: false, message: "Données de commande manquantes" });
+    }
+
+    const ordersCollection = db.collection('commande');  // Nom de ta collection dans Firestore
+    const docRef = await ordersCollection.add(commandeData);  // Ajouter la commande à Firestore
+
+    res.status(200).json({ success: true, docId: docRef.id });
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement de la commande:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // ✅ Démarrage du serveur
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`));
