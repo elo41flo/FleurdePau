@@ -16,7 +16,7 @@ const app = express();
 
 // 🔥 Configuration CORS avancée
 const corsOptions = {
-  origin: "http://localhost:5000", // Autorise les requêtes depuis ton frontend
+  origin: "*", // Autorise les requêtes depuis ton frontend
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true, // Autorise les cookies si besoin
