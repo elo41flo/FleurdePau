@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Commandes</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -85,6 +86,10 @@
     <header>
         <h1>Gestion des Commandes</h1>
     </header>
+    <button class="btn" onclick="window.location.href='https://connect.mondialrelay.com/YETI/Account/LogOn?ReturnUrl=%2f';">
+        Accéder à Mondial Relay
+    </button>
+    
     <main>
         <div class="commandes" id="commandes-container"></div>
     </main>
@@ -94,7 +99,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
         import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
-      
+    
         const firebaseConfig = {
             apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
             authDomain: "fleurdepau-1ce7d.firebaseapp.com",
@@ -104,85 +109,36 @@
             appId: "1:394738141831:web:a0cd5b9d0227267b248622",
             measurementId: "G-D1J6X7BH9S"
         };
-      
+    
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-      
+    
         const chargerCommandesPayees = async () => {
             const commandesContainer = document.getElementById('commandes-container');
-            commandesContainer.innerHTML = ''; // Effacer le contenu avant de charger
-        
+            commandesContainer.innerHTML = "<p>Chargement des commandes...</p>";
+    
             try {
-                console.log("🔄 Chargement des commandes depuis Firestore...");
-        
                 const commandesQuery = query(collection(db, 'commande'), where('payée', '==', true), where('archive', '==', false));
                 const commandesSnapshot = await getDocs(commandesQuery);
-        
-                console.log(`✅ ${commandesSnapshot.size} commandes trouvées !`);
-        
+    
                 if (commandesSnapshot.empty) {
                     commandesContainer.innerHTML = "<p>Aucune commande payée à afficher.</p>";
                     return;
                 }
-        
+    
+                commandesContainer.innerHTML = "";
+    
                 commandesSnapshot.forEach((docSnapshot) => {
                     const data = docSnapshot.data();
-                    console.log("Commande récupérée :", data);
-        
+    
                     const commandeCard = document.createElement('div');
                     commandeCard.classList.add('commande-card');
-        
-                    let produitsHTML = "<p><strong>Produits :</strong> Aucun produit enregistré</p>";
-                    
-                    // Vérification du contenu du panier et addition des quantités pour les produits identiques
-                    if (data.panier && Array.isArray(data.panier) && data.panier.length > 0) {
-                        // Créer un objet pour stocker la somme des quantités par produit
-                        const produitsAggreges = {};
-                        
-                        // Regrouper les produits par nom et couleur
-                        data.panier.forEach(item => {
-                            const key = `${item.nom}-${item.couleur}`;
-                            
-                            // Si le produit existe déjà, on additionne les quantités
-                            if (produitsAggreges[key]) {
-                                produitsAggreges[key].quantite += item.quantite;
-                            } else {
-                                // Sinon, on initialise l'agrégation
-                                produitsAggreges[key] = { ...item }; // Cloner l'objet pour ne pas modifier directement l'original
-                            }
-                        });
-                        
-                        // Générer le HTML des produits avec les quantités agrégées
-                        produitsHTML = `
-                            <p><strong>Produits :</strong></p>
-                            <ul>
-                                ${Object.values(produitsAggreges).map(item => {
-                                    console.log("Produit agrégé dans le panier:", item);
-                                    
-                                    const quantite = item.quantite || 1; // Si quantite est manquante, on met 1
-                                    const prix = parseFloat(item.prix) || 0; // Convertir en nombre décimal
-                                    const prixAffiche = prix > 0 ? `${prix}€` : 'Prix non spécifié';
-                                    const couleur = item.couleur || "Non spécifiée"; // Si couleur non définie
     
-                                    return `<li>${item.nom} x${quantite} - ${prixAffiche} - <strong>Couleur :</strong> ${couleur}</li>`;
-                                }).join('')}
-                            </ul>
-                        `;
-                    }
-        
-                    let savedRelay = localStorage.getItem("point_relais");
-                    let relayAddress = savedRelay ? JSON.parse(savedRelay) : null;
-                    let relayHTML = relayAddress 
-                        ? `<p><strong>Point Relais :</strong> ${relayAddress.Nom}<br>${relayAddress.Adresse1}, ${relayAddress.CP} ${relayAddress.Ville}</p>`
-                        : `<p><strong>Point Relais :</strong> Non sélectionné</p>`;
-        
                     commandeCard.innerHTML = `
                         <h3>Commande #${docSnapshot.id}</h3>
                         <p><strong>Client :</strong> ${data.nom}</p>
-                        ${produitsHTML}
                         <p><strong>Statut :</strong> ${data.statut}</p>
                         <p><strong>Payée :</strong> ${data.payée ? 'Oui' : 'Non'}</p>
-                        ${relayHTML}
                         <button class="btn statut-btn" data-id="${docSnapshot.id}" data-statut="${data.statut}">
                             Marquer comme ${data.statut === 'En attente' ? 'Envoyé' : 'En attente'}
                         </button>
@@ -190,16 +146,15 @@
                             Archiver
                         </button>
                     `;
-        
+    
                     commandesContainer.appendChild(commandeCard);
                 });
             } catch (error) {
-                console.error("❌ Erreur lors du chargement des commandes payées :", error);
+                commandesContainer.innerHTML = "<p>Une erreur est survenue lors du chargement des commandes.</p>";
             }
         };
-      
-        window.onload = chargerCommandesPayees;
-    </script>
     
+        chargerCommandesPayees();
+    </script>
 </body>
 </html>

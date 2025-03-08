@@ -11,30 +11,29 @@ const axios = require("axios");
 const xml2js = require("xml2js");
 const crypto = require("crypto");
 
-// Initialisation du serveur Express
 const app = express();
 
-// 🔥 Configuration CORS avancée
+// 🔥 Configuration avancée CORS
 const corsOptions = {
-  origin: "*", // Autorise les requêtes depuis ton frontend
+  origin: "http://localhost:5000", // Autoriser l'origine frontend
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true, // Autorise les cookies si besoin
+  credentials: true, // Important si utilisation de cookies
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Gère les requêtes preflight OPTIONS
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../../front")));
 
-// 🔥 Configuration de Mailjet
+// 🔥 Configuration Mailjet
 const mailjetClient = mailjet.apiConnect(
   process.env.MAILJET_API_KEY,
   process.env.MAILJET_API_SECRET
 );
 
-// 🔥 Vérification des variables d'environnement requises
+// 🔥 Vérification des variables d'environnement
 const requiredEnvVars = [
   "FIREBASE_PRIVATE_KEY",
   "FIREBASE_PROJECT_ID",
@@ -44,6 +43,7 @@ const requiredEnvVars = [
   "SENDER_EMAIL",
   "MONDIAL_RELAY_ENS_CODE",
   "MONDIAL_RELAY_PRIVATE_KEY",
+  "MONDIAL_RELAY_MARK_CODE",
 ];
 
 requiredEnvVars.forEach((envVar) => {
@@ -73,7 +73,6 @@ if (admin.apps.length === 0) {
   }
 }
 
-// Active Firestore
 const db = admin.firestore();
 db.settings({ ignoreUndefinedProperties: true });
 
@@ -88,60 +87,25 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// 📩 Route d'envoi d'email avec pièce jointe (SAV)
+// 📩 Route d'envoi d'email avec pièce jointe
 app.post("/send-sav-email", upload.single("image"), async (req, res) => {
-    const { name, email, subject, message } = req.body;
-    const image = req.file;
-  
-    if (!name || !email || !subject || !message) {
-      return res.status(400).json({ success: false, message: "Tous les champs sont requis." });
-    }
-  
-    try {
-      let attachments = [];
-      if (image) {
-        attachments.push({
-          ContentType: image.mimetype,
-          Filename: image.originalname,
-          Base64Content: fs.readFileSync(image.path, "base64"),
-        });
-      }
-  
-      const result = await mailjetClient.post("send", { version: "v3.1" }).request({
-        Messages: [
-          {
-            From: { Email: process.env.SENDER_EMAIL, Name: "Fleur De Pau" },
-            To: [{ Email: process.env.RECEIVER_EMAIL, Name: "Admin" }],
-            ReplyTo: { Email: email },
-            Subject: subject,
-            TextPart: `Nom: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
-            HTMLPart: `<h3>Nouveau message de ${name}</h3><p>Email: ${email}</p><p>${message}</p>`,
-            Attachments: attachments,
-          },
-        ],
-      });
-  
-      if (result.body.Messages[0].Status === "success") {
-        res.redirect('/contact.html'); // Redirection vers contact.html
-      } else {
-        res.status(500).json({ success: false, message: "Erreur d'envoi d'email." });
-      }
-    } catch (error) {
-      console.error("❌ Erreur d'email :", error.message);
-      res.status(500).json({ success: false, message: "Erreur serveur." });
-    }
-  });
-  
-
-// 📩 Route d'envoi d'email simple (Contact)
-app.post("/send-contact-email", async (req, res) => {
   const { name, email, subject, message } = req.body;
+  const image = req.file;
 
   if (!name || !email || !subject || !message) {
     return res.status(400).json({ success: false, message: "Tous les champs sont requis." });
   }
 
   try {
+    let attachments = [];
+    if (image) {
+      attachments.push({
+        ContentType: image.mimetype,
+        Filename: image.originalname,
+        Base64Content: fs.readFileSync(image.path, "base64"),
+      });
+    }
+
     const result = await mailjetClient.post("send", { version: "v3.1" }).request({
       Messages: [
         {
@@ -151,38 +115,101 @@ app.post("/send-contact-email", async (req, res) => {
           Subject: subject,
           TextPart: `Nom: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
           HTMLPart: `<h3>Nouveau message de ${name}</h3><p>Email: ${email}</p><p>${message}</p>`,
+          Attachments: attachments,
         },
       ],
     });
 
     if (result.body.Messages[0].Status === "success") {
-      res.json({ success: true, message: "Email envoyé avec succès !" });
+      res.redirect("/contact.html");
     } else {
       res.status(500).json({ success: false, message: "Erreur d'envoi d'email." });
     }
   } catch (error) {
-    console.error("❌ Erreur d'email :", error.message);
     res.status(500).json({ success: false, message: "Erreur serveur." });
   }
 });
 
-// Route POST pour sauvegarder la commande dans Firebase
-app.post('/save-order', async (req, res) => {
-  try {
-    const commandeData = req.body;  // Récupérer les données envoyées par le client
-    if (!commandeData || !commandeData.nom || !commandeData.email || !commandeData.produit) {
-      return res.status(400).json({ success: false, message: "Données de commande manquantes" });
+// Fonction pour générer la clé de sécurité
+function generateSecurityKey(data, privateKey) {
+  const concatenatedString = Object.values(data).join("") + privateKey;
+  return crypto.createHash("md5").update(concatenatedString).digest("hex").toUpperCase();
+}
+
+// Middleware pour parser le corps de la requête en JSON
+app.use(bodyParser.json());
+
+// Route pour générer l'étiquette Mondial Relay
+app.post('/generate-label', async (req, res) => {
+    try {
+        const { nom, adresse, pointRelais } = req.body;
+
+        // Validation des données
+        if (!nom || !adresse || !adresse.Adresse1 || !adresse.CP || !adresse.Ville || !pointRelais || !pointRelais.ID) {
+            return res.status(400).json({
+                error: "Les informations nécessaires sont manquantes. Veuillez fournir un nom, une adresse complète et un point relais valide."
+            });
+        }
+
+        // Log des données reçues
+        console.log('Données reçues pour la génération de l\'étiquette :', req.body);
+
+        // Formattage des données pour l'appel à l'API Mondial Relay
+        const xmlRequestBody = `
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://www.mondialrelay.fr/webservice/">
+                <soapenv:Header/>
+                <soapenv:Body>
+                    <web:WSI2_GenerationEtiquette>
+                        <web:Enseigne>${process.env.MONDIAL_RELAY_ENS_CODE}</web:Enseigne>
+                        <web:PrivateKey>${process.env.MONDIAL_RELAY_PRIVATE_KEY}</web:PrivateKey>
+                        <web:MarkCode>${process.env.MONDIAL_RELAY_MARK_CODE}</web:MarkCode>
+                        <web:NomDestinataire>${nom}</web:NomDestinataire>
+                        <web:AdresseDestinataire>${adresse.Adresse1}</web:AdresseDestinataire>
+                        <web:CPDestinataire>${adresse.CP}</web:CPDestinataire>
+                        <web:VilleDestinataire>${adresse.Ville}</web:VilleDestinataire>
+                        <web:PointRelais>${pointRelais.ID}</web:PointRelais>
+                    </web:WSI2_GenerationEtiquette>
+                </soapenv:Body>
+            </soapenv:Envelope>
+        `;
+
+        console.log('Corps de la requête XML :', xmlRequestBody); // Log du XML
+
+        // Faire l'appel à l'API Mondial Relay
+        const response = await axios.post('https://api.mondialrelay.com/webservice/GenerationEtiquette', xmlRequestBody, {
+            headers: {
+                'Content-Type': 'text/xml;charset=UTF-8',
+                'Accept': 'application/xml'
+            }
+        });
+
+        // Log de la réponse de l'API
+        console.log('Réponse de l\'API Mondial Relay:', response.status, response.data);
+
+        // Vérification de la réponse de l'API Mondial Relay
+        if (response.status === 200) {
+            console.log('Étiquette générée avec succès');
+            res.json({
+                success: true,
+                data: response.data
+            });
+        } else {
+            console.error('Erreur avec l\'API Mondial Relay:', response.statusText);
+            res.status(500).json({
+                error: 'Erreur de génération d\'étiquette avec Mondial Relay.',
+                response: response.data
+            });
+        }
+    } catch (error) {
+        console.error('Erreur côté serveur lors de la génération de l\'étiquette:', error);
+        res.status(500).json({
+            error: 'Erreur serveur lors de la génération de l\'étiquette.',
+            message: error.message,
+            stack: error.stack
+        });
     }
-
-    const ordersCollection = db.collection('commande');  // Nom de ta collection dans Firestore
-    const docRef = await ordersCollection.add(commandeData);  // Ajouter la commande à Firestore
-
-    res.status(200).json({ success: true, docId: docRef.id });
-  } catch (error) {
-    console.error('Erreur lors de l\'enregistrement de la commande:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
 });
+
 
 // ✅ Démarrage du serveur
 const PORT = process.env.PORT || 5000;
