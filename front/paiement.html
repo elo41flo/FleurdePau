@@ -227,6 +227,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
     
+        // Frais de port Mondial Relay
+        const FRAIS_DE_PORT = 4.30;
+    
         // Fonction pour sauvegarder la commande
         async function saveOrderToDatabase(commandeData) {
             try {
@@ -241,13 +244,14 @@
             }
         }
     
-        // Fonction pour calculer et afficher le total du panier
+        // Fonction pour calculer et afficher le total du panier (avec frais de port)
         function calculerTotal() {
             let panier = JSON.parse(localStorage.getItem("panier")) || [];
-            let total = panier.reduce((sum, item) => sum + (parseFloat(item.prix) * (item.quantite || 1)), 0);
-            document.getElementById("total-panier").textContent = "€" + total.toFixed(2);
-            localStorage.setItem("total", total.toFixed(2));
-            return total;
+            let totalProduits = panier.reduce((sum, item) => sum + (parseFloat(item.prix) * (item.quantite || 1)), 0);
+            let totalAvecFrais = totalProduits + FRAIS_DE_PORT;
+            document.getElementById("total-panier").textContent = "€" + totalAvecFrais.toFixed(2);
+            localStorage.setItem("total", totalAvecFrais.toFixed(2));
+            return totalAvecFrais;
         }
     
         // Afficher le total au chargement
@@ -259,7 +263,7 @@
                 return actions.order.create({
                     purchase_units: [{
                         amount: { value: total.toFixed(2), currency_code: 'EUR' },
-                        description: "Commande Fleur de Pau"
+                        description: "Commande Fleur de Pau (incl. frais de port)"
                     }]
                 }).catch(error => {
                     console.error('❌ Erreur PayPal:', error);
@@ -305,6 +309,7 @@
             }
         }).render('#paypal-button-container');
     </script>
+    
     
 </head>
 <body>
