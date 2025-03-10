@@ -179,6 +179,40 @@
             font-size: 1rem;
         }
 
+        /* Fond de la modal */
+.modal {
+    display: none; /* Cachée par défaut */
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+}
+
+/* Image agrandie */
+.modal-content {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(255, 255, 255, 0.3);
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Bouton pour fermer */
+.close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 30px;
+    color: white;
+    cursor: pointer;
+}
+
+
         /* Styles Responsives */
 
         @media (max-width: 480px) {
@@ -399,6 +433,32 @@
             chargerProduitsBoutique();
             mettreAJourPanier();
         });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const modal = document.getElementById("imageModal");
+            const modalImg = document.getElementById("modalImage");
+            const closeModal = document.querySelector(".close");
+        
+            // Délégation d'événement pour les images des produits
+            document.getElementById("produits").addEventListener("click", (event) => {
+                if (event.target.tagName === "IMG") {
+                    modal.style.display = "flex";
+                    modalImg.src = event.target.src;
+                }
+            });
+        
+            closeModal.addEventListener("click", () => {
+                modal.style.display = "none";
+            });
+        
+            modal.addEventListener("click", (e) => {
+                if (e.target === modal) {
+                    modal.style.display = "none";
+                }
+            });
+        });
+        
+        
         </script>
         
 </head>
@@ -426,6 +486,12 @@
     <div class="produits-grid" id="produits">
         <!-- Les produits s'affichent ici -->
     </div>
+
+    <div class="modal" id="imageModal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+    
 </body>
 
 </html>
