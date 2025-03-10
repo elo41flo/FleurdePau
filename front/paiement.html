@@ -210,7 +210,7 @@
     <script type="module">
         // Importer Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
     
         // Configuration Firebase
         const firebaseConfig = {
@@ -244,7 +244,7 @@
             }
         }
     
-        // Fonction pour calculer et afficher le total du panier (avec frais de port)
+        // Fonction pour calculer et afficher le total du panier
         function calculerTotal() {
             let panier = JSON.parse(localStorage.getItem("panier")) || [];
             let totalProduits = panier.reduce((sum, item) => sum + (parseFloat(item.prix) * (item.quantite || 1)), 0);
@@ -254,7 +254,6 @@
             return totalAvecFrais;
         }
     
-        // Afficher le total au chargement
         let total = calculerTotal();
     
         // Intégration du bouton PayPal
@@ -265,16 +264,14 @@
                         amount: { value: total.toFixed(2), currency_code: 'EUR' },
                         description: "Commande Fleur de Pau (incl. frais de port)"
                     }]
-                }).catch(error => {
-                    console.error('❌ Erreur PayPal:', error);
-                    alert('Erreur de création de la commande PayPal.');
                 });
             },
-            onApprove: function(data, actions) {
+            onApprove: async function(data, actions) {
                 return actions.order.capture().then(async function(details) {
                     console.log(`✅ Paiement validé par ${details.payer.name.given_name}`);
     
-                    // Construire les données de la commande
+                    const panier = JSON.parse(localStorage.getItem("panier")) || [];
+                    
                     const commandeData = {
                         nom: details.payer.name.given_name || "Nom inconnu",
                         email: details.payer.email_address || "Email non fourni",
@@ -283,32 +280,47 @@
                         payée: true,
                         date: new Date().toISOString(),
                         archive: false,
-                        panier: JSON.parse(localStorage.getItem("panier")) || [],
+                        panier: panier,
                         point_relais: JSON.parse(localStorage.getItem("point_relais")) || {},
                         utilisateur: JSON.parse(localStorage.getItem("utilisateur")) || "Utilisateur inconnu",
                         transaction_id: details.id
                     };
     
-                    // Sauvegarde de la commande
                     try {
                         await saveOrderToDatabase(commandeData);
-                        localStorage.removeItem("panier"); // Vider le panier après le paiement
-                        window.location.href = "success.html"; // Redirection vers la page de succès
+                        await mettreAJourStockApresPaiement(panier); // ✅ Mise à jour du stock après paiement
+                        localStorage.removeItem("panier");
+                        window.location.href = "success.html";
                     } catch (error) {
                         console.error("❌ Erreur lors de la sauvegarde :", error);
                         alert("Erreur lors de l'enregistrement de la commande.");
                     }
-                }).catch(error => {
-                    console.error("❌ Erreur de paiement PayPal :", error);
-                    alert("Erreur lors du traitement du paiement.");
                 });
-            },
-            onError: function(err) {
-                console.error("❌ Erreur PayPal :", err);
-                alert("Une erreur est survenue pendant le paiement.");
             }
         }).render('#paypal-button-container');
+    
+        async function mettreAJourStockApresPaiement(panier) {
+            for (const item of panier) {
+                const produitRef = doc(db, "produits", item.id);
+                const produitSnap = await getDoc(produitRef);
+    
+                if (produitSnap.exists()) {
+                    const produitData = produitSnap.data();
+                    const updatedCouleurs = produitData.couleurs.map(c => {
+                        if (c.couleur === item.couleur) {
+                            return { couleur: c.couleur, stock: Math.max(0, c.stock - 1) }; 
+                        }
+                        return c;
+                    });
+    
+                    await updateDoc(produitRef, { couleurs: updatedCouleurs });
+                }
+            }
+    
+            console.log("✅ Stock mis à jour !");
+        }
     </script>
+    
     
     
 </head>

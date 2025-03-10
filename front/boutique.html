@@ -240,12 +240,11 @@
             }
         }
     </style>
-    <script type="module">
-        // Importer Firebase SDK
+    <script type="module" defer>
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, getDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    
+        
         // 🔥 Configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
@@ -256,12 +255,12 @@
             appId: "1:394738141831:web:a0cd5b9d0227267b248622",
             measurementId: "G-D1J6X7BH9S"
         };
-    
+        
         // 🔥 Initialisation Firebase et Firestore
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-    
+        
         // 📌 Gestion de la déconnexion
         document.addEventListener("DOMContentLoaded", () => {
             const logoutButton = document.getElementById("logout-icon");
@@ -277,25 +276,29 @@
                 });
             }
         });
-    
+        
         // 📌 Gestion du panier
         let panier = JSON.parse(localStorage.getItem("panier")) || [];
         const panierCount = document.createElement("span");
-    
+        
         // Sélecteur de l'icône du panier et ajout du compteur
         const panierIcon = document.querySelector(".fa-shopping-cart");
-        panierIcon.style.position = "relative";
-        panierIcon.appendChild(panierCount);
-    
+        if (panierIcon) {
+            panierIcon.style.position = "relative";
+            panierIcon.appendChild(panierCount);
+        }
+        
         // Fonction pour mettre à jour le panier
         function mettreAJourPanier() {
             panierCount.innerText = panier.length;
             localStorage.setItem("panier", JSON.stringify(panier));
         }
-    
+        
         // 📌 Chargement des produits avec écoute en temps réel
         function chargerProduitsBoutique() {
             const produitsContainer = document.getElementById("produits");
+            if (!produitsContainer) return;
+        
             const produitsRef = collection(db, "produits");
         
             onSnapshot(produitsRef, (snapshot) => {
@@ -312,7 +315,11 @@
         
                     // 📌 Vérification : si les couleurs sont stockées sous forme d'objets, on récupère juste les noms
                     const couleursOptions = produit.couleurs
-                        ? produit.couleurs.map(c => `<option value="${c.couleur}">${c.couleur}</option>`).join("")
+                        ? produit.couleurs
+                            .map(c => `<option value="${c.couleur}" ${c.stock === 0 ? "disabled" : ""}>
+                                    ${c.couleur} (${c.stock} en stock)
+                                </option>`)
+                            .join("")
                         : "<option value='default'>Aucune couleur</option>";
         
                     produitElement.innerHTML = 
@@ -326,7 +333,7 @@
                     const addToCartButton = produitElement.querySelector(".add-to-cart");
                     addToCartButton.addEventListener("click", () => {
                         const couleurSelectionnee = produitElement.querySelector(".select-couleur").value;
-                    
+        
                         if (produitId && produit.nom && produit.prix) {
                             const produitAjoute = {
                                 id: produitId,
@@ -353,13 +360,47 @@
             });
         }
         
-    
+        // 📌 Mise à jour du stock après paiement
+        async function mettreAJourStockApresPaiement(panier) {
+            for (const item of panier) {
+                const produitRef = doc(db, "produits", item.id);
+                const produitSnap = await getDoc(produitRef);
+        
+                if (produitSnap.exists()) {
+                    const produitData = produitSnap.data();
+                    const updatedCouleurs = produitData.couleurs.map(c => {
+                        if (c.couleur === item.couleur) {
+                            return { couleur: c.couleur, stock: Math.max(0, c.stock - 1) }; 
+                        }
+                        return c;
+                    });
+        
+                    await updateDoc(produitRef, { couleurs: updatedCouleurs });
+                }
+            }
+        
+            localStorage.removeItem("panier"); // Vider le panier après mise à jour
+            alert("Stock mis à jour et panier vidé !");
+            window.location.reload(); // Recharger pour actualiser les stocks affichés
+        }
+        
+        // 🔥 Sécuriser l'ajout de l'événement pour éviter les erreurs si le bouton n'existe pas
+        document.addEventListener("DOMContentLoaded", () => {
+            const boutonPayer = document.getElementById("bouton-payer");
+            if (boutonPayer) {
+                boutonPayer.addEventListener("click", () => {
+                    mettreAJourStockApresPaiement(JSON.parse(localStorage.getItem("panier")) || []);
+                });
+            }
+        });
+        
         // 📌 Charger les produits et mettre à jour le panier au chargement de la page
-        window.onload = () => {
+        window.addEventListener("load", () => {
             chargerProduitsBoutique();
             mettreAJourPanier();
-        };
-    </script>
+        });
+        </script>
+        
 </head>
 <body>
     <!-- En-tête -->
