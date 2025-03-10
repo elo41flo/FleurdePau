@@ -98,8 +98,8 @@
     </footer>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
-    
+        import { getFirestore, collection, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+        
         const firebaseConfig = {
             apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
             authDomain: "fleurdepau-1ce7d.firebaseapp.com",
@@ -109,31 +109,31 @@
             appId: "1:394738141831:web:a0cd5b9d0227267b248622",
             measurementId: "G-D1J6X7BH9S"
         };
-    
+        
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-    
+        
         const chargerCommandesPayees = async () => {
             const commandesContainer = document.getElementById('commandes-container');
             commandesContainer.innerHTML = "<p>Chargement des commandes...</p>";
-    
+        
             try {
                 const commandesQuery = query(collection(db, 'commande'), where('payée', '==', true), where('archive', '==', false));
                 const commandesSnapshot = await getDocs(commandesQuery);
-    
+        
                 if (commandesSnapshot.empty) {
                     commandesContainer.innerHTML = "<p>Aucune commande payée à afficher.</p>";
                     return;
                 }
-    
+        
                 commandesContainer.innerHTML = "";
-    
+        
                 commandesSnapshot.forEach((docSnapshot) => {
                     const data = docSnapshot.data();
-    
+        
                     const commandeCard = document.createElement('div');
                     commandeCard.classList.add('commande-card');
-    
+        
                     commandeCard.innerHTML = `
                         <h3>Commande #${docSnapshot.id}</h3>
                         <p><strong>Client :</strong> ${data.nom}</p>
@@ -146,15 +146,48 @@
                             Archiver
                         </button>
                     `;
-    
+        
                     commandesContainer.appendChild(commandeCard);
                 });
+    
+                // Ajouter les événements aux boutons après le chargement des commandes
+                document.querySelectorAll('.statut-btn').forEach(button => {
+                    button.addEventListener('click', async (event) => {
+                        const commandeId = event.target.getAttribute('data-id');
+                        const statutActuel = event.target.getAttribute('data-statut');
+                        const nouveauStatut = statutActuel === 'En attente' ? 'Envoyé' : 'En attente';
+            
+                        try {
+                            await updateDoc(doc(db, 'commande', commandeId), { statut: nouveauStatut });
+                            alert(`Commande ${commandeId} marquée comme "${nouveauStatut}"`);
+                            chargerCommandesPayees(); // Rafraîchir la liste des commandes
+                        } catch (error) {
+                            console.error('Erreur lors de la mise à jour du statut :', error);
+                        }
+                    });
+                });
+        
+                document.querySelectorAll('.archive-btn').forEach(button => {
+                    button.addEventListener('click', async (event) => {
+                        const commandeId = event.target.getAttribute('data-id');
+        
+                        try {
+                            await updateDoc(doc(db, 'commande', commandeId), { archive: true });
+                            alert(`Commande ${commandeId} archivée`);
+                            chargerCommandesPayees(); // Rafraîchir la liste
+                        } catch (error) {
+                            console.error('Erreur lors de l\'archivage :', error);
+                        }
+                    });
+                });
+        
             } catch (error) {
                 commandesContainer.innerHTML = "<p>Une erreur est survenue lors du chargement des commandes.</p>";
             }
         };
-    
+        
         chargerCommandesPayees();
     </script>
+    
 </body>
 </html>
