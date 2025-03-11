@@ -310,7 +310,7 @@ h2 {
     </div>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { initializeFirestore, memoryLocalCache, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeFirestore, memoryLocalCache, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     
         const firebaseConfig = {
             apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
@@ -329,37 +329,37 @@ h2 {
     
         let panier = JSON.parse(localStorage.getItem("panier") || "[]");
     
-        async function nettoyerPanierDesProduitsSupprimes() {
-            let panierActuel = JSON.parse(localStorage.getItem("panier") || "[]");
-            let panierFiltre = [];
-    
-            for (let item of panierActuel) {
-                if (!item.id) continue;
-    
-                const produitRef = doc(db, "produits", item.id);
+        // Vérifie le stock d'un produit en fonction de la couleur
+        async function verifierStock(idProduit, couleur = "unique") {
+            try {
+                const produitRef = doc(db, "produits", idProduit);
                 const produitSnap = await getDoc(produitRef);
     
                 if (produitSnap.exists()) {
-                    panierFiltre.push(item);
-                } else {
-                    console.log(`🗑️ Produit supprimé retiré du panier: ${item.id}`);
+                    let produitData = produitSnap.data();
+                    let couleurData = produitData.couleurs.find(c => c.couleur === couleur);
+                    return couleurData ? couleurData.stock : 0;
                 }
+                return 0;
+            } catch (error) {
+                console.error("❌ Erreur lors de la vérification du stock:", error);
+                return 0;
             }
-    
-            localStorage.setItem("panier", JSON.stringify(panierFiltre));
-            return panierFiltre;
         }
     
-        async function fetchProduitAvecRetry(produitRef, retries = 3, delay = 5000) {
+        // Récupère un produit avec gestion des erreurs
+        async function fetchProduitAvecRetry(idProduit, retries = 3, delay = 2000) {
             for (let i = 0; i < retries; i++) {
                 try {
-                    console.log(`🔍 Récupération du produit ID: ${produitRef.id} (tentative ${i + 1})`);
-                    const produitSnap = await Promise.race([
-                        getDoc(produitRef),
-                        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 15000))
-                    ]);
+                    console.log(`🔍 Récupération du produit ID: ${idProduit} (tentative ${i + 1})`);
+                    const produitRef = doc(db, "produits", idProduit);
+                    const produitSnap = await getDoc(produitRef);
     
-                    if (produitSnap.exists()) return produitSnap.data();
+                    if (produitSnap.exists()) {
+                        console.log("✅ Produit trouvé:", produitSnap.data());
+                        return produitSnap.data();
+                    }
+    
                     throw new Error("Produit non trouvé");
                 } catch (error) {
                     console.error(`⛔ Erreur lors de la récupération (tentative ${i + 1}):`, error);
@@ -367,59 +367,50 @@ h2 {
                         console.log(`⏳ Nouvelle tentative dans ${delay / 1000} secondes...`);
                         await new Promise(res => setTimeout(res, delay));
                     } else {
-                        throw error;
+                        return null;
                     }
                 }
             }
         }
     
+        // Affiche le panier et met à jour les stocks
         async function afficherPanier() {
             let panierContainer = document.getElementById("panier-list");
             let totalElement = document.getElementById("total");
     
             if (!panierContainer || !totalElement) {
-                console.error("Les éléments HTML n'ont pas été trouvés.");
+                console.error("❌ Les éléments HTML n'ont pas été trouvés.");
                 return;
             }
     
             panierContainer.innerHTML = "";
-    
-            let panierNettoye = await nettoyerPanierDesProduitsSupprimes();
-            if (panierNettoye.length === 0) {
-                panierContainer.innerHTML = "<p>Votre panier est vide.</p>";
-                totalElement.textContent = "Total: €0.00";
-                return;
-            }
-    
             let total = 0;
     
-            for (let item of panierNettoye) {
+            for (let item of panier) {
                 if (!item.id) continue;
-                const produitRef = doc(db, "produits", item.id);
+                const produitData = await fetchProduitAvecRetry(item.id);
+                if (!produitData) continue;
     
-                try {
-                    const produitData = await fetchProduitAvecRetry(produitRef);
-                    let nom = produitData.nom || "Produit inconnu";
-                    let prix = produitData.prix || 0;
-                    let quantite = item.quantite ? Math.max(1, parseInt(item.quantite)) : 1;
-                    let couleur = item.couleur || "Non spécifiée";
-                    let imageUrl = produitData.imageUrl || "https://via.placeholder.com/150";
+                let nom = produitData.nom || "Produit inconnu";
+                let prix = produitData.prix || 0;
+                let couleur = item.couleur || "unique";
+                let couleurData = produitData.couleurs.find(c => c.couleur === couleur);
+                let stock = couleurData ? couleurData.stock : 0;
+                let quantite = Math.min(stock, item.quantite || 1);
+                let imageUrl = produitData.imageUrl || "https://via.placeholder.com/150";
     
-                    let panierItem = document.createElement("div");
-                    panierItem.classList.add("panier-item");
-                    panierItem.innerHTML = `
-                        <img src="${imageUrl}" alt="${nom}" class="product-image" />
-                        <span>${nom} - ${prix}€ - Couleur: ${couleur}</span>
-                        <div class="quantite-container">
-                            <input type="number" class="quantite-input" value="${quantite}" min="1" data-id="${item.id}" />
-                            <button class="remove-item" data-id="${item.id}"><i class="fas fa-trash-alt"></i></button>
-                        </div>`;
+                let panierItem = document.createElement("div");
+                panierItem.classList.add("panier-item");
+                panierItem.innerHTML = `
+                    <img src="${imageUrl}" alt="${nom}" class="product-image" />
+                    <span>${nom} - ${prix}€ - Couleur: ${couleur} (Stock: ${stock})</span>
+                    <div class="quantite-container">
+                        <input type="number" class="quantite-input" value="${quantite}" min="1" max="${stock}" data-id="${item.id}" data-couleur="${couleur}" />
+                        <button class="remove-item" data-id="${item.id}" data-couleur="${couleur}"><i class="fas fa-trash-alt"></i></button>
+                    </div>`;
     
-                    total += prix * quantite;
-                    panierContainer.appendChild(panierItem);
-                } catch (error) {
-                    console.error("❌ Erreur lors de la récupération du produit:", error);
-                }
+                total += prix * quantite;
+                panierContainer.appendChild(panierItem);
             }
     
             totalElement.textContent = `Total: €${total.toFixed(2)}`;
@@ -427,6 +418,33 @@ h2 {
             ajouterListenersQuantite();
         }
     
+        // Met à jour le stock dans Firestore après un changement de quantité
+        async function mettreAJourStockDansFirestore(idProduit, couleur, ancienneQuantite, nouvelleQuantite) {
+            const produitRef = doc(db, "produits", idProduit);
+            const produitSnap = await getDoc(produitRef);
+    
+            if (!produitSnap.exists()) {
+                console.error("❌ Produit introuvable !");
+                return;
+            }
+    
+            let produitData = produitSnap.data();
+            let nouvellesCouleurs = produitData.couleurs.map(c => {
+                if (c.couleur === couleur) {
+                    return { couleur: c.couleur, stock: c.stock + ancienneQuantite - nouvelleQuantite };
+                }
+                return c;
+            });
+    
+            try {
+                await updateDoc(produitRef, { couleurs: nouvellesCouleurs });
+                console.log(`✅ Stock mis à jour pour ${idProduit} (${couleur})`);
+            } catch (error) {
+                console.error("❌ Erreur lors de la mise à jour du stock :", error);
+            }
+        }
+    
+        // Écouteurs pour supprimer un produit du panier
         function ajouterListenersSuppression() {
             document.querySelectorAll(".remove-item").forEach(button => {
                 button.addEventListener("click", (event) => {
@@ -438,27 +456,33 @@ h2 {
             });
         }
     
+        // Écouteurs pour modifier la quantité
         function ajouterListenersQuantite() {
             document.querySelectorAll(".quantite-input").forEach(input => {
-                input.addEventListener("change", (event) => {
+                input.addEventListener("change", async (event) => {
                     let id = event.target.getAttribute("data-id");
+                    let couleur = event.target.getAttribute("data-couleur");
+                    let ancienneQuantite = panier.find(item => item.id === id && item.couleur === couleur)?.quantite || 1;
                     let nouvelleQuantite = Math.max(1, parseInt(event.target.value));
-                    panier = panier.map(item => item.id === id ? { ...item, quantite: nouvelleQuantite } : item);
+    
+                    const stockDisponible = await verifierStock(id, couleur);
+                    if (nouvelleQuantite > stockDisponible) {
+                        alert(`❌ Stock insuffisant. Il reste seulement ${stockDisponible} unités.`);
+                        nouvelleQuantite = stockDisponible;
+                    }
+    
+                    panier = panier.map(item => item.id === id && item.couleur === couleur ? { ...item, quantite: nouvelleQuantite } : item);
                     localStorage.setItem("panier", JSON.stringify(panier));
+    
+                    await mettreAJourStockDansFirestore(id, couleur, ancienneQuantite, nouvelleQuantite);
                     afficherPanier();
                 });
             });
         }
     
-        document.getElementById("vider-panier").addEventListener("click", () => {
-            localStorage.removeItem("panier");
-            afficherPanier();
-        });
-    
-        document.addEventListener("DOMContentLoaded", () => {
-            afficherPanier();
-        });
+        document.addEventListener("DOMContentLoaded", afficherPanier);
     </script>
+    
     
 </body>
 </html>
