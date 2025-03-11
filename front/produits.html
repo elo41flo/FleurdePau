@@ -181,9 +181,7 @@
     </style>
 </head>
 <script type="module">
-    import { 
-        getFirestore, enableIndexedDbPersistence, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, enableNetwork 
-    } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+    import { getFirestore, enableIndexedDbPersistence, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, enableNetwork } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
     
@@ -209,10 +207,8 @@
     enableIndexedDbPersistence(db)
         .catch((err) => {
             if (err.code == 'failed-precondition') {
-                // Persistance non disponible si plusieurs onglets sont ouverts avec la même session.
                 console.error("❌ Plusieurs onglets ouverts, persistance impossible : ", err);
             } else if (err.code == 'unimplemented') {
-                // Le navigateur ne prend pas en charge la persistance.
                 console.error("❌ Persistance hors-ligne non prise en charge dans ce navigateur : ", err);
             }
         });
@@ -227,67 +223,20 @@
         .then(() => console.log("✅ Utilisateur connecté anonymement !"))
         .catch(error => console.error("❌ Erreur de connexion Firebase Auth :", error));
 
-    // 📌 Fonction pour afficher les produits
-    // Fonction pour afficher les produits
-async function obtenirProduits() {
-    const produitsContainer = document.getElementById('produits-container');
-    const produitsRef = collection(db, 'produits');
-    console.log("🔄 Tentative de récupération des produits...");
-
-    try {
-        const querySnapshot = await getDocs(produitsRef);
-        produitsContainer.innerHTML = querySnapshot.empty ? "<p>Aucun produit trouvé.</p>" : "";
-
-        querySnapshot.forEach(docSnapshot => {
-            const produit = docSnapshot.data();
-
-            // Adapter ici pour parcourir les couleurs et afficher leur stock
-            const couleursHTML = produit.couleurs ? 
-                produit.couleurs.map(couleurData => {
-                    const { couleur, stock } = couleurData; // Déstructurer l'objet couleurData
-                    return `<option value="${couleur}">${couleur} (${stock} en stock)</option>`;
-                }).join("") : 'Aucune couleur disponible';
-
-            produitsContainer.innerHTML += `
-                <div class="produit-card">
-                    <h3>${produit.nom}</h3>
-                    <p><strong>ID:</strong> ${docSnapshot.id}</p>
-                    <p><strong>Description:</strong> ${produit.description}</p>
-                    <p><strong>Prix:</strong> ${produit.prix}€</p>
-                    <p><strong>Couleurs:</strong> 
-                        <select id="couleur-${docSnapshot.id}">
-                            ${couleursHTML}
-                        </select>
-                    </p>
-                    <img src="${produit.imageUrl}" alt="${produit.nom}" width="100">
-                    <button class="btn-modifier" data-id="${docSnapshot.id}">Modifier</button>
-                    <button class="btn-supprimer" data-id="${docSnapshot.id}">Supprimer</button>
-                </div>
-            `;
-        });
-
-        ajouterEvenements();
-        console.log("✅ Produits récupérés avec succès !");
-    } catch (error) {
-        console.error("❌ Erreur lors de la récupération des produits :", error);
-        alert("Impossible de récupérer les produits. Veuillez vérifier votre connexion.");
-    }
-}
-
-
-    // 📌 Sauvegarde des produits
+    // 📌 Fonction pour sauvegarder les produits
     async function sauvegarderProduit(event) {
-        event.preventDefault();
-        const btnSauvegarde = document.getElementById('btn-sauvegarde');
-        const produitId = btnSauvegarde.getAttribute('data-id');
+        event.preventDefault(); // Empêche la soumission du formulaire
     
+        // Récupération des éléments du formulaire
+        const btnSauvegarde = document.getElementById('btn-sauvegarde');
+        const produitId = btnSauvegarde.getAttribute('data-id'); // ID du produit à modifier (si présent)
+        
         const nom = document.getElementById('nom-produit').value.trim();
         const description = document.getElementById('description-produit').value.trim();
         const prix = parseFloat(document.getElementById('prix-produit').value);
         const imageUrl = document.getElementById('image-url').value.trim();
         const couleursInput = document.getElementById('couleurs-produit').value.split(',').map(c => c.trim()).filter(c => c);
-    
-        // Récupérer les stocks des couleurs depuis les inputs
+        
         let couleurs = [];
         couleursInput.forEach(couleur => {
             const stock = parseInt(document.getElementById(`stock-${couleur}`)?.value || 0);
@@ -302,73 +251,132 @@ async function obtenirProduits() {
         const produitData = { nom, description, prix, imageUrl, couleurs };
     
         try {
-            produitId ? await updateDoc(doc(db, 'produits', produitId), produitData) : await addDoc(collection(db, 'produits'), produitData);
-            alert("✅ Produit sauvegardé !");
-            btnSauvegarde.removeAttribute('data-id');
-            document.getElementById('form-produit').reset();
-            obtenirProduits();
-        } catch (error) {
-            console.error("❌ Erreur sauvegarde produit :", error);
-        }
-    }
-    
-    
-
-    // 📌 Modifier un produit
-    // Modifier un produit
-async function modifierProduit(id) {
-    try {
-        const produitSnap = await getDoc(doc(db, 'produits', id));
-        if (!produitSnap.exists()) throw new Error("Produit introuvable");
-
-        const produit = produitSnap.data();
-        document.getElementById('nom-produit').value = produit.nom;
-        document.getElementById('description-produit').value = produit.description;
-        document.getElementById('prix-produit').value = produit.prix;
-        document.getElementById('image-url').value = produit.imageUrl;
-        document.getElementById('couleurs-produit').value = produit.couleurs.map(c => c.couleur).join(', ');
-
-        // Afficher les champs de stock pour chaque couleur
-        let couleursHTML = '';
-        produit.couleurs.forEach(couleurData => {
-            couleursHTML += `
-                <div>
-                    <label for="stock-${couleurData.couleur}">${couleurData.couleur}</label>
-                    <input type="number" id="stock-${couleurData.couleur}" value="${couleurData.stock}" min="0">
-                </div>
-            `;
-        });
-        document.getElementById('couleurs-stock').innerHTML = couleursHTML;
-
-        document.getElementById('btn-sauvegarde').setAttribute("data-id", id);
-    } catch (error) {
-        console.error("❌ Erreur modification :", error);
-    }
-}
-
-
-    // 📌 Supprimer un produit
-    async function supprimerProduit(id) {
-        if (confirm("🗑️ Supprimer ce produit ?")) {
-            try {
-                await deleteDoc(doc(db, 'produits', id));
-                alert("✅ Produit supprimé !");
-                obtenirProduits();
-            } catch (error) {
-                console.error("❌ Erreur suppression produit :", error);
+            if (produitId) {
+                // Mode modification
+                await updateDoc(doc(db, 'produits', produitId), produitData);
+                alert("✅ Produit mis à jour !");
+            } else {
+                // Mode ajout
+                await addDoc(collection(db, 'produits'), produitData);
+                alert("✅ Nouveau produit ajouté !");
             }
+    
+            // Recharger les produits après la sauvegarde
+            obtenirProduits();
+            document.getElementById('form-produit').reset();
+            document.getElementById('form-produit').addEventListener('submit', sauvegarderProduit);
+    
+        } catch (error) {
+            console.error("❌ Erreur lors de l'enregistrement du produit : ", error);
+            alert("Erreur lors de l'enregistrement du produit. Veuillez réessayer.");
+        }
+    }
+    
+    // 📌 Charger la liste des produits au chargement de la page
+    document.addEventListener('DOMContentLoaded', obtenirProduits);
+
+    // 📌 Charger les produits
+    async function obtenirProduits() {
+        const produitsContainer = document.getElementById('produits-container');
+        const produitsRef = collection(db, 'produits');
+        console.log("🔄 Tentative de récupération des produits...");
+        
+        try {
+            const querySnapshot = await getDocs(produitsRef);
+            produitsContainer.innerHTML = querySnapshot.empty ? "<p>Aucun produit trouvé.</p>" : "";
+            
+            querySnapshot.forEach(docSnapshot => {
+                const produit = docSnapshot.data();
+
+                const couleursHTML = produit.couleurs ? produit.couleurs.map(couleurData => {
+                    const { couleur, stock } = couleurData;
+                    return `<option value="${couleur}">${couleur} (${stock} en stock)</option>`;
+                }).join("") : 'Aucune couleur disponible';
+
+                produitsContainer.innerHTML += `
+                    <div class="produit-card">
+                        <h3>${produit.nom}</h3>
+                        <p><strong>ID:</strong> ${docSnapshot.id}</p>
+                        <p><strong>Description:</strong> ${produit.description}</p>
+                        <p><strong>Prix:</strong> ${produit.prix}€</p>
+                        <p><strong>Couleurs:</strong>
+                            <select id="couleur-${docSnapshot.id}">
+                                ${couleursHTML}
+                            </select>
+                        </p>
+                        <img src="${produit.imageUrl}" alt="${produit.nom}" width="100">
+                        <button class="btn-modifier" data-id="${docSnapshot.id}">Modifier</button>
+                        <button class="btn-supprimer" data-id="${docSnapshot.id}">Supprimer</button>
+                    </div>
+                `;
+            });
+
+            ajouterEvenements();
+            console.log("✅ Produits récupérés avec succès !");
+        } catch (error) {
+            console.error("❌ Erreur lors de la récupération des produits :", error);
+            alert("Impossible de récupérer les produits. Veuillez vérifier votre connexion.");
         }
     }
 
-    // 📌 Ajouter événements aux boutons
+    // 📌 Ajouter les événements pour modifier ou supprimer un produit
     function ajouterEvenements() {
-        document.querySelectorAll('.btn-modifier').forEach(button => button.addEventListener('click', e => modifierProduit(e.target.dataset.id)));
-        document.querySelectorAll('.btn-supprimer').forEach(button => button.addEventListener('click', e => supprimerProduit(e.target.dataset.id)));
+        // Ajouter l'événement de modification
+        const btnModifier = document.querySelectorAll('.btn-modifier');
+        btnModifier.forEach(button => {
+            button.addEventListener('click', async function() {
+                const produitId = button.getAttribute('data-id');
+                console.log(`Modifier le produit avec l'ID : ${produitId}`);
+
+                // Récupérer les données du produit depuis Firestore
+                const produitRef = doc(db, 'produits', produitId);
+                const produitSnap = await getDoc(produitRef);
+                
+                if (produitSnap.exists()) {
+                    const produit = produitSnap.data();
+                    
+                    // Remplir le formulaire avec les données du produit
+                    document.getElementById('nom-produit').value = produit.nom;
+                    document.getElementById('description-produit').value = produit.description;
+                    document.getElementById('prix-produit').value = produit.prix;
+                    document.getElementById('image-url').value = produit.imageUrl;
+
+                    // Remplir les couleurs (s'il y en a)
+                    const couleursInput = produit.couleurs.map(couleurData => couleurData.couleur).join(', ');
+                    document.getElementById('couleurs-produit').value = couleursInput;
+
+                    // Mettre l'ID du produit dans le bouton "Sauvegarder" pour l'édition
+                    const btnSauvegarde = document.getElementById('btn-sauvegarde');
+                    btnSauvegarde.setAttribute('data-id', produitId);
+
+                    // Optionnel : Désactiver le bouton "Ajouter" si on est en mode modification
+                    btnSauvegarde.textContent = 'Modifier le produit';
+                } else {
+                    console.log("❌ Produit non trouvé");
+                    alert("Produit non trouvé.");
+                }
+            });
+        });
+
+        // Ajouter l'événement de suppression
+        const btnSupprimer = document.querySelectorAll('.btn-supprimer');
+        btnSupprimer.forEach(button => {
+            button.addEventListener('click', async function() {
+                const produitId = button.getAttribute('data-id');
+                console.log(`Supprimer le produit avec l'ID : ${produitId}`);
+
+                // Code pour supprimer le produit de Firestore
+                await deleteDoc(doc(db, 'produits', produitId));
+                alert("✅ Produit supprimé !");
+                
+                // Rafraîchir la liste des produits après suppression
+                obtenirProduits();
+            });
+        });
     }
 
-    // 📌 Charger les produits au démarrage
-    document.addEventListener("DOMContentLoaded", () => {
-        obtenirProduits();
+    // S'assurer que la fonction de sauvegarde est liée correctement
+    document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('form-produit').addEventListener('submit', sauvegarderProduit);
     });
 </script>
@@ -382,38 +390,23 @@ async function modifierProduit(id) {
     <header>
         <h1>Gestion des Produits</h1>
     </header>
-    <main>
-        <div class="form-container">
-            <h3>Ajouter ou Modifier un Produit</h3>
-            <form id="form-produit">
-                <label for="nom-produit">Nom :</label>
-                <input type="text" id="nom-produit" required>
-            
-                <label for="description-produit">Description :</label>
-                <textarea id="description-produit"></textarea>
-            
-                <label for="prix-produit">Prix :</label>
-                <input type="number" id="prix-produit" required>
-            
-                <label for="image-url">Image URL :</label>
-                <input type="text" id="image-url">
-            
-                <label for="couleurs-produit">Couleurs (séparées par des virgules) :</label>
-                <input type="text" id="couleurs-produit">
-            
-                <!-- Bouton d'ajout (par défaut) -->
-                <button type="submit">Enregistrer</button>
-            
-                <!-- Bouton de sauvegarde pour la modification (caché par défaut) -->
-                <button type="button" id="btn-sauvegarde" style="display:none;">Sauvegarder</button>
-            </form>
-        </div>
-        <div class="produits" id="produits-container">
-            <!-- Les produits seront affichés ici -->
-        </div>
-    </main>
+
+    <div class="form-container">
+        <form id="form-produit" onsubmit="sauvegarderProduit(event)">
+            <input type="text" id="nom-produit" placeholder="Nom du produit" required>
+            <textarea id="description-produit" placeholder="Description du produit" required></textarea>
+            <input type="number" id="prix-produit" placeholder="Prix" required>
+            <input type="text" id="image-url" placeholder="URL de l'image" required>
+            <input type="text" id="couleurs-produit" placeholder="Couleurs disponibles (séparées par une virgule)" required>
+            <div id="stock-fields"></div>
+            <button type="submit" id="btn-sauvegarde">Ajouter le produit</button>
+        </form>
+    </div>
+
+    <div class="produits" id="produits-container"></div>
+
     <footer>
-        <p>© 2025 Fleur de Pau - Tous droits réservés</p>
+        <p>&copy; 2025 Fleur de Pau</p>
     </footer>
 </body>
 </html>
