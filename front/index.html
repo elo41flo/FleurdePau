@@ -230,93 +230,106 @@
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
-        // Configuration Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
-            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
-            projectId: "fleurdepau-1ce7d",
-            storageBucket: "fleurdepau-1ce7d.appspot.com",
-            messagingSenderId: "394738141831",
-            appId: "1:394738141831:web:a0cd5b9d0227267b248622",
-            measurementId: "G-D1J6X7BH9S"
-        };
+// Configuration Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+    authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+    projectId: "fleurdepau-1ce7d",
+    storageBucket: "fleurdepau-1ce7d.appspot.com",
+    messagingSenderId: "394738141831",
+    appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+    measurementId: "G-D1J6X7BH9S"
+};
 
-        // Initialiser Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+// Initialiser Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-        // Déconnexion
-        document.addEventListener("DOMContentLoaded", () => {
-            const logoutButton = document.getElementById("logout-icon");
-            if (logoutButton) {
-                logoutButton.addEventListener("click", async () => {
-                    try {
-                        await signOut(auth);
-                        localStorage.removeItem("utilisateurConnecte");
-                        window.location.href = "login.html"; // Rediriger après déconnexion
-                    } catch (error) {
-                        console.error("Erreur lors de la déconnexion:", error);
-                    }
-                });
+// Fonction pour vérifier l'état de l'utilisateur et afficher le statut dans la console
+function checkUserState() {
+    const utilisateurConnecte = JSON.parse(localStorage.getItem("utilisateurConnecte"));
+    console.log("Vérification dans localStorage : ", utilisateurConnecte); // Affichage du contenu de localStorage
+    
+    const userIcon = document.querySelector(".header-icons a[href='mon-compte.html']");
+    
+    if (utilisateurConnecte) {
+        console.log("Utilisateur connecté :", utilisateurConnecte);
+        userIcon && (userIcon.style.display = "inline-block");
+    } else {
+        console.log("Aucun utilisateur connecté.");
+        userIcon && (userIcon.style.display = "none");
+    }
+}
+
+// Fonction de gestion de la déconnexion
+document.addEventListener("DOMContentLoaded", () => {
+    const logoutButton = document.getElementById("logout-icon");
+    if (logoutButton) {
+        logoutButton.addEventListener("click", async () => {
+            try {
+                await signOut(auth); // Déconnexion de Firebase
+                console.log("Déconnexion réussie.");
+                localStorage.removeItem("utilisateurConnecte"); // Suppression de l'utilisateur dans le localStorage
+                window.location.href = "login.html"; // Rediriger après déconnexion
+            } catch (error) {
+                console.error("Erreur lors de la déconnexion:", error);
             }
         });
+    }
+});
 
-        // Chargement des produits
-        async function chargerProduitsBoutique() {
-            const produitsContainer = document.getElementById("produits");
-            produitsContainer.innerHTML = "";
+// Gérer la connexion de l'utilisateur
+onAuthStateChanged(auth, (user) => {
+    console.log("onAuthStateChanged déclenché");
 
-            const produitsSnapshot = await getDocs(collection(db, "produits"));
-            if (produitsSnapshot.empty) {
-                produitsContainer.innerHTML = "<p>Aucun produit trouvé.</p>";
-                return;
-            }
-
-            produitsSnapshot.forEach((docSnap) => {
-                const produit = docSnap.data();
-                const produitElement = document.createElement("div");
-                produitElement.classList.add("produit");
-
-                produitElement.innerHTML = `
-                    <img src="${produit.image || 'https://i.imgur.com/jOTXXdh.jpeg'}" alt="${produit.nom}">
-                    <h3>${produit.nom}</h3>
-                    <p>${produit.description}</p>
-                    <p class="prix">${produit.prix}€</p>
-                    <button class="add-to-cart" data-id="${docSnap.id}">Ajouter au panier</button>
-                `;
-
-                produitsContainer.appendChild(produitElement);
-            });
-
-            document.querySelectorAll(".add-to-cart").forEach(button => {
-                button.addEventListener("click", function () {
-                    ajouterAuPanier(this.getAttribute("data-id"));
-                });
-            });
-        }
-
-        function ajouterAuPanier(id) {
-            let panier = JSON.parse(localStorage.getItem("panier")) || [];
-            panier.push({ idProduit: id });
-            localStorage.setItem("panier", JSON.stringify(panier));
-
-            alert("Produit ajouté au panier !");
-            miseAJourPanier();
-        }
-
-        function miseAJourPanier() {
-            const panier = JSON.parse(localStorage.getItem("panier")) || [];
-            document.querySelector(".cart-count").textContent = panier.length > 0 ? panier.length : "0";
-        }
-
-        window.onload = function () {
-            chargerProduitsBoutique();
-            miseAJourPanier();
+    if (user) {
+        // Si l'utilisateur est connecté, stocker ses informations dans localStorage
+        const utilisateurData = {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || "Utilisateur"
         };
+        console.log("Utilisateur authentifié :", utilisateurData);
+        
+        // S'assurer que la donnée est bien stockée
+        try {
+            localStorage.setItem("utilisateurConnecte", JSON.stringify(utilisateurData));
+            console.log("Utilisateur stocké dans localStorage.");
+        } catch (error) {
+            console.error("Erreur lors du stockage dans localStorage :", error);
+        }
+
+        // Vérifier l'état après une petite pause pour laisser Firebase mettre à jour localStorage
+        setTimeout(() => {
+            console.log("Vérification après connexion Firebase");
+            checkUserState();
+        }, 1000); // Délai de 1 seconde
+    } else {
+        console.log("Aucun utilisateur connecté.");
+        // Si l'utilisateur n'est pas connecté, supprimer l'objet dans le localStorage
+        localStorage.removeItem("utilisateurConnecte");
+
+        // Vérifier l'état après une petite pause pour laisser Firebase mettre à jour localStorage
+        setTimeout(() => {
+            console.log("Vérification après déconnexion Firebase");
+            checkUserState();
+        }, 1000); // Délai de 1 seconde
+    }
+});
+
+// Vérification de l'état de l'utilisateur après un délai
+window.onload = function () {
+    console.log("Vérification initiale de l'état de l'utilisateur.");
+    
+    // Attendre 2 secondes pour s'assurer que Firebase a le temps de répondre
+    setTimeout(function() {
+        console.log("Vérification initiale dans localStorage");
+        checkUserState(); // Vérifier si un utilisateur est connecté
+    }, 2000); // Attente de 2 secondes
+};
+
     </script>
 </head>
 
@@ -375,5 +388,3 @@
 </body>
 
 </html>
-
-<!--Elo, fini le 10/03/25-->

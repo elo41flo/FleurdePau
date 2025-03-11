@@ -32,12 +32,31 @@
             font-size: 50px;
             color: gray;
         }
-        .info {
+        .info, .update-form {
             margin-top: 20px;
         }
         .info p {
             font-size: 16px;
             color: #555;
+        }
+        .update-form input,
+        .update-form select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .update-form button {
+            background-color: #5e380c;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .update-form button:hover {
+            background-color: #a44b4b;
         }
         .orders, .address {
             margin-top: 20px;
@@ -93,16 +112,48 @@
             <p id="user-address">Chargement...</p>
             <p id="user-shipping">Chargement...</p>
         </div>
+
+        <!-- Formulaire de mise à jour du profil -->
+        <div class="update-form">
+            <h3>Modifier mes informations</h3>
+            <form id="update-info-form">
+                <label for="new-name">Nouveau nom:</label>
+                <input type="text" id="new-name" placeholder="Entrez votre nouveau nom">
+
+                <label for="new-address">Nouvelle adresse:</label>
+                <input type="text" id="new-address" placeholder="Entrez votre nouvelle adresse (optionnel)">
+                
+                <label for="new-shipping">Nouveau mode de livraison:</label>
+                <select id="new-shipping">
+                    <option value="standard">Livraison standard</option>
+                    <option value="express">Livraison express</option>
+                </select>
+
+                <label for="provide-info">Souhaitez-vous fournir vos informations personnelles ?</label>
+                <input type="checkbox" id="provide-info">
+                <p><small>En cochant cette case, vous acceptez que vos informations soient stockées et protégées dans notre base de données Firebase, conformément à notre politique de confidentialité.</small></p>
+
+                <button type="submit">Mettre à jour</button>
+            </form>
+        </div>
+
+        <!-- Message de confidentialité -->
+        <div class="privacy-notice">
+            <p><strong>Protection de vos données :</strong> Vos informations personnelles sont stockées de manière sécurisée dans notre base de données Firebase et sont utilisées uniquement dans le cadre de votre expérience avec notre service. Nous prenons votre vie privée au sérieux.</p>
+        </div>
     </div>
+
+    <!-- Suppression du compte -->
     <div class="delete-account">
         <button id="delete-account-btn" class="btn" style="background-color: #e74c3c; width: 100%;">Supprimer mon compte</button>
     </div>    
-    
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+        import { getAuth, reauthenticateWithCredential, EmailAuthProvider, deleteUser, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+        import { getFirestore, getDoc, setDoc, doc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+        
+        // 🔥 Configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
             authDomain: "fleurdepau-1ce7d.firebaseapp.com",
@@ -112,54 +163,109 @@
             appId: "1:394738141831:web:a0cd5b9d0227267b248622"
         };
         
+        // 🔥 Initialisation de Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         
+        // ⚡ Gérer l'état de connexion de l'utilisateur
         onAuthStateChanged(auth, async (user) => {
+            console.log("Utilisateur détecté :", user);
+            
             if (user) {
                 document.getElementById("user-name").textContent = user.displayName || "Non défini";
                 document.getElementById("user-email").textContent = user.email;
-                
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    document.getElementById("user-address").textContent = userData.address || "Aucune adresse enregistrée";
-                    document.getElementById("user-shipping").textContent = userData.shipping || "Aucun mode de livraison sélectionné";
-                    
-                    let ordersHTML = "";
-                    if (userData.orders && userData.orders.length > 0) {
-                        userData.orders.forEach(order => {
-                            ordersHTML += `<div class='order-item'>
-                                <p><strong>Commande #${order.id}</strong></p>
-                                <p>Statut: ${order.status}</p>
-                                <p><a class='btn' href='${order.invoice}' target='_blank'>Télécharger la facture</a></p>
-                            </div>`;
-                        });
-                    } else {
-                        ordersHTML = "<p>Aucune commande enregistrée.</p>";
-                    }
-                    document.getElementById("orders-list").innerHTML = ordersHTML;
-                }
-
-                // Gérer le bouton "Supprimer mon compte"
-        document.getElementById("delete-account-btn").addEventListener("click", async () => {
-            if (confirm("Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.")) {
+        
                 try {
-                    // Supprimer les données de l'utilisateur dans Firestore
-                    await deleteDoc(doc(db, "users", user.uid)); // Supprimer le document utilisateur de Firestore
-                    // Supprimer l'utilisateur de Firebase Auth
-                    await deleteUser(user);
-                    alert("Votre compte a été supprimé avec succès.");
-                    window.location.href = "index.html"; // Rediriger l'utilisateur vers la page d'accueil ou autre page
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+        
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        document.getElementById("user-address").textContent = userData.address || "Aucune adresse enregistrée";
+                        document.getElementById("user-shipping").textContent = userData.shipping || "Aucun mode de livraison sélectionné";
+                    } else {
+                        console.log("Aucune donnée utilisateur trouvée dans Firestore.");
+                        document.getElementById("user-address").textContent = "Aucune adresse enregistrée";
+                        document.getElementById("user-shipping").textContent = "Aucun mode de livraison sélectionné";
+                    }
                 } catch (error) {
-                    console.error("Erreur lors de la suppression du compte : ", error.message);
-                    alert("Une erreur est survenue, veuillez réessayer.");
+                    console.error("Erreur lors de la récupération des données utilisateur:", error);
                 }
+            } else {
+                console.log("Utilisateur non connecté. Redirection vers la page de connexion...");
+                window.location.href = "login.html";
             }
         });
-            } else {
-                window.location.href = "login.html";
+
+        // 📝 Gérer la mise à jour des informations utilisateur
+        document.getElementById("update-info-form").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            
+            const user = auth.currentUser;
+            if (!user) {
+                alert("Aucun utilisateur connecté. Vous devez être connecté pour modifier vos informations.");
+                return;
+            }
+
+            const newName = document.getElementById("new-name").value;
+            const newAddress = document.getElementById("new-address").value;
+            const newShipping = document.getElementById("new-shipping").value;
+            const provideInfo = document.getElementById("provide-info").checked;
+
+            try {
+                // Mise à jour des informations dans Firestore
+                await setDoc(doc(db, "users", user.uid), {
+                    displayName: newName,
+                    address: newAddress,
+                    shipping: newShipping,
+                    provideInfo: provideInfo
+                }, { merge: true });
+
+                // Mise à jour dans l'interface utilisateur
+                document.getElementById("user-name").textContent = newName;
+                document.getElementById("user-address").textContent = newAddress;
+                document.getElementById("user-shipping").textContent = newShipping;
+
+                alert("Vos informations ont été mises à jour avec succès.");
+            } catch (error) {
+                console.error("Erreur lors de la mise à jour des informations utilisateur:", error);
+                alert("Erreur lors de la mise à jour de vos informations. Veuillez réessayer.");
+            }
+        });
+
+        // 🗑 Gérer la suppression de compte
+        document.getElementById("delete-account-btn").addEventListener("click", async () => {
+            const user = auth.currentUser;
+            if (!user) {
+                alert("Aucun utilisateur connecté. Vous devez être connecté pour supprimer votre compte.");
+                return;
+            }
+        
+            if (confirm("Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.")) {
+                try {
+                    const credential = EmailAuthProvider.credential(user.email, prompt("Veuillez entrer votre mot de passe pour confirmer la suppression de votre compte"));
+                    await reauthenticateWithCredential(user, credential);
+                    console.log("Réauthentification réussie.");
+        
+                    await setDoc(doc(db, "users", user.uid), { deleted: true }, { merge: true }); 
+                    console.log("Données Firestore supprimées avec succès.");
+        
+                    await deleteUser(user); 
+                    console.log("Utilisateur supprimé de Firebase Auth avec succès.");
+        
+                    alert("Votre compte a été supprimé avec succès.");
+                    window.location.href = "login.html"; 
+        
+                } catch (error) {
+                    console.error("Erreur lors de la suppression du compte :", error.message);
+                    console.log("Code d'erreur Firebase : ", error.code);
+        
+                    if (error.code === "auth/requires-recent-login") {
+                        alert("Votre session a expiré. Veuillez vous reconnecter et essayer à nouveau.");
+                    } else {
+                        alert("Erreur lors de la suppression de votre compte. Veuillez réessayer.");
+                    }
+                }
             }
         });
     </script>

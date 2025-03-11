@@ -299,28 +299,31 @@
             // Vérification de l'état de connexion
             onAuthStateChanged(auth, (user) => {
                 if (user) {
-                    signOut(auth).then(() => {
-                        loadingScreen.style.display = 'none';
-                        loginContainer.style.display = 'block';
-                    }).catch((error) => {
-                        console.error('Erreur de déconnexion :', error);
-                        loadingScreen.style.display = 'none';
-                        loginContainer.style.display = 'block';
-                    });
+                    console.log("Utilisateur connecté :", user);
+                    // L'utilisateur est connecté, vous pouvez afficher son état ici
+                    // Mais n'appelez pas signOut() ici si vous ne voulez pas déconnecter l'utilisateur immédiatement.
+                    loadingScreen.style.display = 'none';
+                    loginContainer.style.display = 'block';
                 } else {
+                    console.log("Aucun utilisateur connecté.");
                     loadingScreen.style.display = 'none';
                     loginContainer.style.display = 'block';
                 }
             });
+            
 
             // Connexion utilisateur
             loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
-
+            
                 try {
-                    await signInWithEmailAndPassword(auth, email, password);
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    console.log("Utilisateur connecté : ", user);
+            
+                    // Après la connexion réussie, rediriger
                     if (email === EMAIL_GERANTE) {
                         window.location.href = 'admin.html';
                     } else {
@@ -330,6 +333,7 @@
                     errorMessage.textContent = "Erreur : " + error.message;
                 }
             });
+            
         }
     </script>
 </body>
