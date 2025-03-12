@@ -254,6 +254,13 @@ h2 {
     cursor: pointer;
 }
 
+footer {
+    text-align: center;
+    padding: 1rem;
+    background-color: #333;
+    color: #fff;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .panier-item {
@@ -293,6 +300,7 @@ h2 {
         <div id="panier-list"></div>
         <div id="total">Total: €0.00</div>
         <button id="vider-panier">Vider le panier</button> <!-- Bouton pour vider le panier -->
+        <p>Le montant de la livraison vous sera indiqué lorsque le choix du point relais sera fait.</p>
 
         <button id="select-point-relais" class="cta-btn" onclick="window.location.href='points-relais.html'">Choisir un point relais</button>
         <p id="selected-relay" style="text-align: center; font-weight: bold; margin-top: 10px;">Aucun point relais sélectionné</p>
@@ -308,6 +316,14 @@ h2 {
             <div id="relay-list"></div>
         </div>
     </div>
+
+    <footer>
+        <p>© 2025 Fleur de Pau - Tous droits réservés | 
+            <a href="cgv.html">CGV</a> | 
+            <a href="mentionslégals.html">Mentions légales</a> | 
+            <a href="politiqueconfidentialité.html">Politique de confidentialité</a>
+        </p>
+    </footer>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { initializeFirestore, memoryLocalCache, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
