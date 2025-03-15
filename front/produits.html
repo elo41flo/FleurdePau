@@ -181,9 +181,18 @@
     </style>
 </head>
 <script type="module">
-    import { getFirestore, enableIndexedDbPersistence, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, enableNetwork } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
+    import { 
+        initializeApp 
+    } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
+    
+    import { 
+        getAuth, onAuthStateChanged, signOut 
+    } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
+    
+    import { 
+        getFirestore, enableIndexedDbPersistence, collection, addDoc, 
+        updateDoc, deleteDoc, doc, getDocs, getDoc, enableNetwork 
+    } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
     
     // 🔥 Configuration Firebase
     const firebaseConfig = {
@@ -202,27 +211,41 @@
     const auth = getAuth(app);
     window.db = db;
     window.auth = auth;
-
-    // Activer la persistance hors-ligne
-    enableIndexedDbPersistence(db)
-        .catch((err) => {
-            if (err.code == 'failed-precondition') {
-                console.error("❌ Plusieurs onglets ouverts, persistance impossible : ", err);
-            } else if (err.code == 'unimplemented') {
-                console.error("❌ Persistance hors-ligne non prise en charge dans ce navigateur : ", err);
+    
+    // ✅ Activation du mode hors ligne pour Firestore
+    enableIndexedDbPersistence(db).catch((err) => {
+        console.error("❌ Erreur de persistance Firestore :", err);
+    });
+    
+    // ✅ Vérifier la connexion Firestore et tenter de rétablir en cas d'échec
+    async function verifierConnexionFirestore() {
+        try {
+            await enableNetwork(db);
+            console.log("✅ Firestore en ligne !");
+        } catch (error) {
+            console.warn("⚠️ Firestore hors ligne. Nouvelle tentative dans 10 secondes...");
+            setTimeout(verifierConnexionFirestore, 10000);
+        }
+    }
+    verifierConnexionFirestore();
+    
+    // 🚨 Empêcher la connexion anonyme
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            if (user.isAnonymous) {
+                console.warn("⚠️ Déconnexion de l'utilisateur anonyme...");
+                signOut(auth).then(() => {
+                    window.location.href = "login.html"; // Redirection vers la page de connexion
+                });
+            } else {
+                console.log("✅ Utilisateur connecté :", user.email || "Utilisateur authentifié");
             }
-        });
-
-    // Vérifier la connexion Firestore
-    enableNetwork(db).catch((err) => console.error("⚠️ Firestore hors ligne :", err));
+        } else {
+            console.warn("⚠️ Aucun utilisateur connecté, redirection vers la connexion...");
+            window.location.href = "login.html";
+        }
+    });
     
-    console.log("🔥 Firestore initialisé :", db);
-    
-    // Connexion anonyme à Firebase Auth
-    signInAnonymously(auth)
-        .then(() => console.log("✅ Utilisateur connecté anonymement !"))
-        .catch(error => console.error("❌ Erreur de connexion Firebase Auth :", error));
-
     // 📌 Fonction pour sauvegarder les produits
     async function sauvegarderProduit(event) {
         event.preventDefault(); // Empêche la soumission du formulaire
@@ -274,25 +297,33 @@
     
     // 📌 Charger la liste des produits au chargement de la page
     document.addEventListener('DOMContentLoaded', obtenirProduits);
-
+    
     // 📌 Charger les produits
     async function obtenirProduits() {
-        const produitsContainer = document.getElementById('produits-container');
-        const produitsRef = collection(db, 'produits');
+        console.log("🔄 Vérification de la connexion Firestore...");
+        try {
+            await enableNetwork(db); // ⚠️ Tente d'activer Firestore
+            console.log("✅ Firestore en ligne !");
+        } catch (error) {
+            console.warn("⚠️ Firestore toujours hors ligne :", error);
+        }
+    
         console.log("🔄 Tentative de récupération des produits...");
-        
+        const produitsRef = collection(db, 'produits');
+    
         try {
             const querySnapshot = await getDocs(produitsRef);
+            const produitsContainer = document.getElementById('produits-container');
             produitsContainer.innerHTML = querySnapshot.empty ? "<p>Aucun produit trouvé.</p>" : "";
-            
+    
             querySnapshot.forEach(docSnapshot => {
                 const produit = docSnapshot.data();
-
+    
                 const couleursHTML = produit.couleurs ? produit.couleurs.map(couleurData => {
                     const { couleur, stock } = couleurData;
                     return `<option value="${couleur}">${couleur} (${stock} en stock)</option>`;
                 }).join("") : 'Aucune couleur disponible';
-
+    
                 produitsContainer.innerHTML += `
                     <div class="produit-card">
                         <h3>${produit.nom}</h3>
@@ -310,7 +341,7 @@
                     </div>
                 `;
             });
-
+    
             ajouterEvenements();
             console.log("✅ Produits récupérés avec succès !");
         } catch (error) {
@@ -318,68 +349,32 @@
             alert("Impossible de récupérer les produits. Veuillez vérifier votre connexion.");
         }
     }
-
+    
     // 📌 Ajouter les événements pour modifier ou supprimer un produit
     function ajouterEvenements() {
-        // Ajouter l'événement de modification
-        const btnModifier = document.querySelectorAll('.btn-modifier');
-        btnModifier.forEach(button => {
+        document.querySelectorAll('.btn-modifier').forEach(button => {
             button.addEventListener('click', async function() {
                 const produitId = button.getAttribute('data-id');
-                console.log(`Modifier le produit avec l'ID : ${produitId}`);
-
-                // Récupérer les données du produit depuis Firestore
                 const produitRef = doc(db, 'produits', produitId);
                 const produitSnap = await getDoc(produitRef);
                 
                 if (produitSnap.exists()) {
                     const produit = produitSnap.data();
-                    
-                    // Remplir le formulaire avec les données du produit
                     document.getElementById('nom-produit').value = produit.nom;
                     document.getElementById('description-produit').value = produit.description;
                     document.getElementById('prix-produit').value = produit.prix;
                     document.getElementById('image-url').value = produit.imageUrl;
-
-                    // Remplir les couleurs (s'il y en a)
-                    const couleursInput = produit.couleurs.map(couleurData => couleurData.couleur).join(', ');
-                    document.getElementById('couleurs-produit').value = couleursInput;
-
-                    // Mettre l'ID du produit dans le bouton "Sauvegarder" pour l'édition
-                    const btnSauvegarde = document.getElementById('btn-sauvegarde');
-                    btnSauvegarde.setAttribute('data-id', produitId);
-
-                    // Optionnel : Désactiver le bouton "Ajouter" si on est en mode modification
-                    btnSauvegarde.textContent = 'Modifier le produit';
                 } else {
-                    console.log("❌ Produit non trouvé");
                     alert("Produit non trouvé.");
                 }
             });
         });
-
-        // Ajouter l'événement de suppression
-        const btnSupprimer = document.querySelectorAll('.btn-supprimer');
-        btnSupprimer.forEach(button => {
-            button.addEventListener('click', async function() {
-                const produitId = button.getAttribute('data-id');
-                console.log(`Supprimer le produit avec l'ID : ${produitId}`);
-
-                // Code pour supprimer le produit de Firestore
-                await deleteDoc(doc(db, 'produits', produitId));
-                alert("✅ Produit supprimé !");
-                
-                // Rafraîchir la liste des produits après suppression
-                obtenirProduits();
-            });
-        });
     }
-
-    // S'assurer que la fonction de sauvegarde est liée correctement
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('form-produit').addEventListener('submit', sauvegarderProduit);
-    });
+    
+    
 </script>
+
+
 
 <body>
     <nav>
