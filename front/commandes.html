@@ -118,7 +118,7 @@
             commandesContainer.innerHTML = "<p>Chargement des commandes...</p>";
         
             try {
-                const commandesQuery = query(collection(db, 'commande'), where('payée', '==', true), where('archive', '==', false));
+                const commandesQuery = query(collection(db, 'commandes'), where('payée', '==', true), where('archive', '==', false));
                 const commandesSnapshot = await getDocs(commandesQuery);
         
                 if (commandesSnapshot.empty) {
