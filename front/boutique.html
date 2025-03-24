@@ -426,17 +426,16 @@ footer {
         
             onSnapshot(produitsRef, (snapshot) => {
                 produitsContainer.innerHTML = ""; // Vider avant de recharger
-        
-                snapshot.forEach((doc) => {
-                    const produit = doc.data();
-                    const produitId = doc.id;
-        
+                
+                snapshot.forEach((produitDoc) => {  
+                    const produit = produitDoc.data();  
+                    const produitId = produitDoc.id;                  
+                    
                     const produitElement = document.createElement("div");
                     produitElement.classList.add("produit");
-        
+            
                     const imageUrl = produit.imageUrl || "https://i.imgur.com/jOTXXdh.jpeg";
-        
-                    // 📌 Vérification : si les couleurs sont stockées sous forme d'objets, on récupère juste les noms
+            
                     const couleursOptions = produit.couleurs
                         ? produit.couleurs
                             .map(c => `<option value="${c.couleur}" ${c.stock === 0 ? "disabled" : ""}>
@@ -444,7 +443,7 @@ footer {
                                 </option>`)
                             .join("")
                         : "<option value='default'>Aucune couleur</option>";
-        
+            
                     produitElement.innerHTML = 
                         `<img src="${imageUrl}" alt="${produit.nom}">
                         <h3>${produit.nom}</h3>
@@ -452,35 +451,36 @@ footer {
                         <p class="prix">${produit.prix}€</p>
                         <select class="select-couleur">${couleursOptions}</select>
                         <button class="add-to-cart">Ajouter au panier</button>`;
-        
+            
                     const addToCartButton = produitElement.querySelector(".add-to-cart");
-                    addToCartButton.addEventListener("click", () => {
+                    addToCartButton.addEventListener("click", async () => {
                         const couleurSelectionnee = produitElement.querySelector(".select-couleur").value;
-        
-                        if (produitId && produit.nom && produit.prix) {
-                            const produitAjoute = {
-                                id: produitId,
-                                nom: produit.nom,
-                                prix: produit.prix,
-                                imageUrl: imageUrl,
-                                couleur: couleurSelectionnee
-                            };
-        
-                            const isProduitDejaDansPanier = panier.some(item => item.id === produitId && item.couleur === couleurSelectionnee);
-                            if (!isProduitDejaDansPanier) {
-                                panier.push(produitAjoute);
+                        const produitRef = doc(db, "produits", produitId);
+                        const produitSnap = await getDoc(produitRef);
+            
+                        if (produitSnap.exists()) {
+                            const produitData = produitSnap.data();
+                            const couleurDispo = produitData.couleurs.find(c => c.couleur === couleurSelectionnee);
+            
+                            if (couleurDispo && couleurDispo.stock > 0) {
+                                panier.push({
+                                    id: produitId,
+                                    nom: produit.nom,
+                                    prix: produit.prix,
+                                    imageUrl: imageUrl,
+                                    couleur: couleurSelectionnee
+                                });
                                 mettreAJourPanier();
                             } else {
-                                console.log("Ce produit est déjà dans le panier !");
+                                alert("Produit en rupture de stock !");
                             }
-                        } else {
-                            console.error("Produit incomplet, impossible d'ajouter au panier. ID:", produitId);
                         }
-                    });                
-        
+                    });
+            
                     produitsContainer.appendChild(produitElement);
                 });
             });
+            
         }
         
         // 📌 Mise à jour du stock après paiement

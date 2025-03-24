@@ -137,43 +137,61 @@
         const db = getFirestore(app);
         
         // Fonction pour charger les produits
-       // Fonction pour charger les produits
-async function chargerProduits() {
-    const produitsContainer = document.getElementById("produits");
-    produitsContainer.innerHTML = ""; // Vide le conteneur avant de charger les produits
-    const produitsSnapshot = await getDocs(collection(db, "produits"));
-
-    produitsSnapshot.forEach((docSnap) => {
-        const produit = docSnap.data();
-        const produitElement = document.createElement("div");
-        produitElement.classList.add("produit");
-
-        let stockHtml = "";
-        if (Array.isArray(produit.couleurs)) { // Vérifie que "couleurs" est un tableau
-            produit.couleurs.forEach(({ couleur, stock }) => { // On récupère la couleur et le stock
-                stockHtml += `
-                    <div style="margin-top:10px;">
-                        <label><strong>${couleur} :</strong></label>
-                        <span style="background-color: ${couleur}; display: inline-block; width: 30px; height: 30px; margin-right: 10px;"></span>
-                        <input type="number" value="${stock}" min="0" id="stock-${docSnap.id}-${couleur}" />
-                    </div>
+        async function chargerProduits() {
+            const produitsContainer = document.getElementById("produits");
+            produitsContainer.innerHTML = ""; // Vide le conteneur avant de charger les produits
+            const produitsSnapshot = await getDocs(collection(db, "produits"));
+        
+            produitsSnapshot.forEach((docSnap) => {
+                const produit = docSnap.data();
+                console.log("Produit récupéré :", produit); // Debugging
+        
+                // Vérification si la clé `couleurs` est présente
+                console.log("Type de produit.couleurs :", typeof produit.couleurs);
+                console.log("Valeur de produit.couleurs :", produit.couleurs);
+        
+                const produitElement = document.createElement("div");
+                produitElement.classList.add("produit");
+        
+                let stockHtml = "";
+        
+                // Vérifier si `couleurs` est un tableau, sinon le transformer en tableau
+                let couleursArray = [];
+                if (Array.isArray(produit.couleurs)) {
+                    couleursArray = produit.couleurs;
+                } else if (typeof produit.couleurs === "object") {
+                    couleursArray = [produit.couleurs]; // Convertir l'objet en tableau
+                }
+        
+                console.log("Tableau de couleurs après conversion :", couleursArray);
+        
+                // Génération du formulaire de stock
+                if (couleursArray.length > 0) {
+                    couleursArray.forEach(({ couleur, stock }) => {
+                        stockHtml += `
+                            <div style="margin-top:10px;">
+                                <label><strong>${couleur === "unique" ? "Stock :" : couleur + " :"}</strong></label>
+                                <span style="background-color: ${couleur !== "unique" ? couleur : "transparent"}; display: inline-block; width: 30px; height: 30px; margin-right: 10px;"></span>
+                                <input type="number" value="${stock}" min="0" id="stock-${docSnap.id}-${couleur}" />
+                            </div>
+                        `;
+                    });
+                } else {
+                    stockHtml = "<p>Aucune couleur définie</p>";
+                }
+        
+                produitElement.innerHTML = `
+                    <img src="${produit.imageUrl || 'https://i.imgur.com/jOTXXdh.jpeg'}" alt="${produit.nom}">
+                    <h3>${produit.nom}</h3>
+                    <p>${produit.description}</p>
+                    <div>${stockHtml}</div>
+                    <button onclick="mettreAJourStock('${docSnap.id}')">Mettre à jour</button>
                 `;
+        
+                produitsContainer.appendChild(produitElement);
             });
-        } else {
-            stockHtml = "<p>Aucune couleur définie</p>";
         }
-
-        produitElement.innerHTML = `
-            <img src="${produit.imageUrl || 'https://i.imgur.com/jOTXXdh.jpeg'}" alt="${produit.nom}">
-            <h3>${produit.nom}</h3>
-            <p>${produit.description}</p>
-            <div>${stockHtml}</div>
-            <button onclick="mettreAJourStock('${docSnap.id}')">Mettre à jour</button>
-        `;
-
-        produitsContainer.appendChild(produitElement);
-    });
-}
+        
 
 // Fonction pour mettre à jour le stock et la couleur du produit dans Firebase
 window.mettreAJourStock = async function (id) {
@@ -187,25 +205,34 @@ window.mettreAJourStock = async function (id) {
     }
 
     const produitData = produitDoc.data();
-    const updatedCouleurs = []; // Création d'un nouveau tableau pour stocker les mises à jour
+    let couleursArray = [];
 
-    // Pour chaque couleur, on récupère le stock
-    produitData.couleurs.forEach(({ couleur }) => {
+    // Assurer que `couleurs` est bien un tableau
+    if (Array.isArray(produitData.couleurs)) {
+        couleursArray = produitData.couleurs;
+    } else if (typeof produitData.couleurs === "object") {
+        couleursArray = [produitData.couleurs]; // Convertir en tableau
+    }
+
+    const updatedCouleurs = [];
+
+    // Récupérer les valeurs des inputs
+    couleursArray.forEach(({ couleur, stock }) => {
         const stockInput = document.getElementById(`stock-${id}-${couleur}`);
         if (stockInput) {
             const newStock = parseInt(stockInput.value);
             updatedCouleurs.push({
                 couleur: couleur,
-                stock: isNaN(newStock) ? 0 : newStock, // Si la valeur est NaN, on met 0 comme stock
+                stock: isNaN(newStock) ? stock : newStock, // Si NaN, garder l'ancienne valeur
             });
         }
     });
 
     try {
-        // Mettre à jour les stocks dans Firestore
+        // Mettre à jour le stock dans Firestore
         await updateDoc(produitRef, { couleurs: updatedCouleurs });
         alert("Stock mis à jour avec succès !");
-        chargerProduits(); // Recharge la liste des produits après mise à jour
+        chargerProduits(); // Recharge les produits après mise à jour
     } catch (error) {
         alert("Erreur lors de la mise à jour du stock.");
         console.error(error);

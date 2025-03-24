@@ -140,74 +140,57 @@ function generateSecurityKey(data, privateKey) {
 app.use(bodyParser.json());
 
 // Route pour générer l'étiquette Mondial Relay
-app.post('/generate-label', async (req, res) => {
-    try {
-        const { nom, adresse, pointRelais } = req.body;
+// Route pour rechercher des points relais
+app.post("/search-relays", async (req, res) => {
+  const { postalCode, city } = req.body;
 
-        // Validation des données
-        if (!nom || !adresse || !adresse.Adresse1 || !adresse.CP || !adresse.Ville || !pointRelais || !pointRelais.ID) {
-            return res.status(400).json({
-                error: "Les informations nécessaires sont manquantes. Veuillez fournir un nom, une adresse complète et un point relais valide."
-            });
-        }
+  if (!postalCode && !city) {
+    return res.status(400).json({ error: "Le code postal ou la ville est requis." });
+  }
 
-        // Log des données reçues
-        console.log('Données reçues pour la génération de l\'étiquette :', req.body);
+  try {
+    // Construction de la requête XML pour récupérer les points relais
+    const xmlRequestBody = `
+      <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://www.mondialrelay.fr/webservice/">
+        <soapenv:Header/>
+        <soapenv:Body>
+          <web:WSI2_ListePointsRelais>
+            <web:Enseigne>${process.env.MONDIAL_RELAY_ENS_CODE}</web:Enseigne>
+            <web:PrivateKey>${process.env.MONDIAL_RELAY_PRIVATE_KEY}</web:PrivateKey>
+            <web:CPDestinataire>${postalCode}</web:CPDestinataire>
+            <web:VilleDestinataire>${city}</web:VilleDestinataire>
+          </web:WSI2_ListePointsRelais>
+        </soapenv:Body>
+      </soapenv:Envelope>
+    `;
 
-        // Formattage des données pour l'appel à l'API Mondial Relay
-        const xmlRequestBody = `
-            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://www.mondialrelay.fr/webservice/">
-                <soapenv:Header/>
-                <soapenv:Body>
-                    <web:WSI2_GenerationEtiquette>
-                        <web:Enseigne>${process.env.MONDIAL_RELAY_ENS_CODE}</web:Enseigne>
-                        <web:PrivateKey>${process.env.MONDIAL_RELAY_PRIVATE_KEY}</web:PrivateKey>
-                        <web:MarkCode>${process.env.MONDIAL_RELAY_MARK_CODE}</web:MarkCode>
-                        <web:NomDestinataire>${nom}</web:NomDestinataire>
-                        <web:AdresseDestinataire>${adresse.Adresse1}</web:AdresseDestinataire>
-                        <web:CPDestinataire>${adresse.CP}</web:CPDestinataire>
-                        <web:VilleDestinataire>${adresse.Ville}</web:VilleDestinataire>
-                        <web:PointRelais>${pointRelais.ID}</web:PointRelais>
-                    </web:WSI2_GenerationEtiquette>
-                </soapenv:Body>
-            </soapenv:Envelope>
-        `;
+    // Appel à l'API Mondial Relay
+    const response = await axios.post('https://api.mondialrelay.com/webservice/ListePointsRelais', xmlRequestBody, {
+      headers: {
+        'Content-Type': 'text/xml;charset=UTF-8',
+        'Accept': 'application/xml'
+      }
+    });
 
-        console.log('Corps de la requête XML :', xmlRequestBody); // Log du XML
+    // Traitement de la réponse XML
+    xml2js.parseString(response.data, { explicitArray: false }, (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: "Erreur lors du traitement de la réponse de l'API." });
+      }
 
-        // Faire l'appel à l'API Mondial Relay
-        const response = await axios.post('https://api.mondialrelay.com/webservice/GenerationEtiquette', xmlRequestBody, {
-            headers: {
-                'Content-Type': 'text/xml;charset=UTF-8',
-                'Accept': 'application/xml'
-            }
-        });
+      const relays = result["soapenv:Envelope"]["soapenv:Body"]["web:WSI2_ListePointsRelaisResponse"]["web:ListePointsRelais"]["PointRelais"];
 
-        // Log de la réponse de l'API
-        console.log('Réponse de l\'API Mondial Relay:', response.status, response.data);
+      if (relays) {
+        return res.json({ success: true, relays });
+      } else {
+        return res.status(404).json({ error: "Aucun point relais trouvé pour cette zone." });
+      }
+    });
 
-        // Vérification de la réponse de l'API Mondial Relay
-        if (response.status === 200) {
-            console.log('Étiquette générée avec succès');
-            res.json({
-                success: true,
-                data: response.data
-            });
-        } else {
-            console.error('Erreur avec l\'API Mondial Relay:', response.statusText);
-            res.status(500).json({
-                error: 'Erreur de génération d\'étiquette avec Mondial Relay.',
-                response: response.data
-            });
-        }
-    } catch (error) {
-        console.error('Erreur côté serveur lors de la génération de l\'étiquette:', error);
-        res.status(500).json({
-            error: 'Erreur serveur lors de la génération de l\'étiquette.',
-            message: error.message,
-            stack: error.stack
-        });
-    }
+  } catch (error) {
+    console.error("Erreur lors de la recherche des points relais :", error);
+    res.status(500).json({ error: "Erreur serveur lors de la recherche des points relais." });
+  }
 });
 
 

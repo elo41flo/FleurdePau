@@ -245,21 +245,23 @@
             window.location.href = "login.html";
         }
     });
-    
+
     // 📌 Fonction pour sauvegarder les produits
     async function sauvegarderProduit(event) {
         event.preventDefault(); // Empêche la soumission du formulaire
-    
+        
+        console.log("Formulaire soumis"); // Ajoute ce log pour vérifier si la fonction est bien appelée
+        
         // Récupération des éléments du formulaire
         const btnSauvegarde = document.getElementById('btn-sauvegarde');
         const produitId = btnSauvegarde.getAttribute('data-id'); // ID du produit à modifier (si présent)
-        
+    
         const nom = document.getElementById('nom-produit').value.trim();
         const description = document.getElementById('description-produit').value.trim();
         const prix = parseFloat(document.getElementById('prix-produit').value);
         const imageUrl = document.getElementById('image-url').value.trim();
         const couleursInput = document.getElementById('couleurs-produit').value.split(',').map(c => c.trim()).filter(c => c);
-        
+    
         let couleurs = [];
         couleursInput.forEach(couleur => {
             const stock = parseInt(document.getElementById(`stock-${couleur}`)?.value || 0);
@@ -286,28 +288,28 @@
     
             // Recharger les produits après la sauvegarde
             obtenirProduits();
-            document.getElementById('form-produit').reset();
-            document.getElementById('form-produit').addEventListener('submit', sauvegarderProduit);
+            document.getElementById('form-produit').reset();  // Réinitialiser le formulaire
+            btnSauvegarde.removeAttribute('data-id');  // Retirer l'ID de modification
+            btnSauvegarde.textContent = 'Ajouter le produit';  // Réinitialiser le texte du bouton
     
         } catch (error) {
             console.error("❌ Erreur lors de l'enregistrement du produit : ", error);
             alert("Erreur lors de l'enregistrement du produit. Veuillez réessayer.");
         }
     }
-    
+
     // 📌 Charger la liste des produits au chargement de la page
-    document.addEventListener('DOMContentLoaded', obtenirProduits);
+    document.addEventListener('DOMContentLoaded', () => {
+        // Ajout de l'événement de soumission au formulaire
+        const form = document.getElementById('form-produit');
+        form.addEventListener('submit', sauvegarderProduit);
+
+        // Charger les produits dès que la page est prête
+        obtenirProduits();
+    });
     
     // 📌 Charger les produits
     async function obtenirProduits() {
-        console.log("🔄 Vérification de la connexion Firestore...");
-        try {
-            await enableNetwork(db); // ⚠️ Tente d'activer Firestore
-            console.log("✅ Firestore en ligne !");
-        } catch (error) {
-            console.warn("⚠️ Firestore toujours hors ligne :", error);
-        }
-    
         console.log("🔄 Tentative de récupération des produits...");
         const produitsRef = collection(db, 'produits');
     
@@ -342,7 +344,7 @@
                 `;
             });
     
-            ajouterEvenements();
+            ajouterEvenements();  // Cette fonction s'assure que les boutons sont fonctionnels.
             console.log("✅ Produits récupérés avec succès !");
         } catch (error) {
             console.error("❌ Erreur lors de la récupération des produits :", error);
@@ -352,27 +354,62 @@
     
     // 📌 Ajouter les événements pour modifier ou supprimer un produit
     function ajouterEvenements() {
+        // Ajouter un événement pour la modification des produits
         document.querySelectorAll('.btn-modifier').forEach(button => {
             button.addEventListener('click', async function() {
                 const produitId = button.getAttribute('data-id');
                 const produitRef = doc(db, 'produits', produitId);
                 const produitSnap = await getDoc(produitRef);
-                
+    
                 if (produitSnap.exists()) {
                     const produit = produitSnap.data();
                     document.getElementById('nom-produit').value = produit.nom;
                     document.getElementById('description-produit').value = produit.description;
                     document.getElementById('prix-produit').value = produit.prix;
                     document.getElementById('image-url').value = produit.imageUrl;
+    
+                    // Remplir les champs couleurs et stock dynamiquement
+                    let couleursHTML = '';
+                    produit.couleurs.forEach(couleurData => {
+                        const { couleur, stock } = couleurData;
+                        couleursHTML += `
+                            <div>
+                                <input type="text" value="${couleur}" disabled> Stock: 
+                                <input type="number" id="stock-${couleur}" value="${stock}" min="0">
+                            </div>
+                        `;
+                    });
+                    document.getElementById('stock-fields').innerHTML = couleursHTML;
+    
+                    // Modifier le bouton pour indiquer qu'on est en mode modification
+                    const btnSauvegarde = document.getElementById('btn-sauvegarde');
+                    btnSauvegarde.setAttribute('data-id', produitId);  // Assigner l'ID du produit pour la modification
+                    btnSauvegarde.textContent = 'Mettre à jour le produit';
                 } else {
                     alert("Produit non trouvé.");
                 }
             });
         });
+    
+        // Ajouter un événement pour supprimer un produit
+        document.querySelectorAll('.btn-supprimer').forEach(button => {
+            button.addEventListener('click', async function() {
+                const produitId = button.getAttribute('data-id');
+                const produitRef = doc(db, 'produits', produitId);
+    
+                try {
+                    await deleteDoc(produitRef);
+                    alert("✅ Produit supprimé avec succès !");
+                    obtenirProduits();  // Rafraîchir la liste des produits
+                } catch (error) {
+                    console.error("❌ Erreur lors de la suppression du produit :", error);
+                    alert("Impossible de supprimer le produit. Veuillez réessayer.");
+                }
+            });
+        });
     }
-    
-    
 </script>
+
 
 
 

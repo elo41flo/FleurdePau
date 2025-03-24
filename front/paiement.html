@@ -277,11 +277,16 @@
             onApprove: async function(data, actions) {
                 return actions.order.capture().then(async function(details) {
                     console.log(`✅ Paiement validé par ${details.payer.name.given_name}`);
-    
+            
+                    // ✅ Récupérer les infos stockées par l'utilisateur
+                    const nomClient = localStorage.getItem("nomClient") || details.payer.name.given_name || "Nom inconnu";
+                    const telephoneClient = localStorage.getItem("telephoneClient") || "Téléphone non fourni";
+            
                     const panier = JSON.parse(localStorage.getItem("panier")) || [];
                     
                     const commandeData = {
-                        nom: details.payer.name.given_name || "Nom inconnu",
+                        nom: nomClient, // ✅ Ajout du nom récupéré
+                        telephone: telephoneClient, // ✅ Ajout du téléphone récupéré
                         email: details.payer.email_address || "Email non fourni",
                         total: total.toFixed(2),
                         statut: "Payée",
@@ -293,40 +298,52 @@
                         utilisateur: JSON.parse(localStorage.getItem("utilisateur")) || "Utilisateur inconnu",
                         transaction_id: details.id
                     };
-    
+            
                     try {
                         await saveOrderToDatabase(commandeData);
                         await mettreAJourStockApresPaiement(panier); // ✅ Mise à jour du stock après paiement
+                        
+                        // ✅ Supprimer les infos après validation
                         localStorage.removeItem("panier");
-                        window.location.href = "success.html";
+                        localStorage.removeItem("nomClient");
+                        localStorage.removeItem("telephoneClient");
+            
+                        window.location.href = "success.html"; // Redirection après paiement réussi
                     } catch (error) {
                         console.error("❌ Erreur lors de la sauvegarde :", error);
                         alert("Erreur lors de l'enregistrement de la commande.");
                     }
                 });
-            }
+            }            
         }).render('#paypal-button-container');
     
         async function mettreAJourStockApresPaiement(panier) {
             for (const item of panier) {
                 const produitRef = doc(db, "produits", item.id);
                 const produitSnap = await getDoc(produitRef);
-    
+        
                 if (produitSnap.exists()) {
                     const produitData = produitSnap.data();
                     const updatedCouleurs = produitData.couleurs.map(c => {
                         if (c.couleur === item.couleur) {
-                            return { couleur: c.couleur, stock: Math.max(0, c.stock - 1) }; 
+                            return { couleur: c.couleur, stock: Math.max(0, c.stock - 1) };
                         }
                         return c;
                     });
-    
+        
+                    // Mettre à jour Firestore
                     await updateDoc(produitRef, { couleurs: updatedCouleurs });
+        
+                    console.log(`Stock mis à jour pour ${item.nom} - Couleur: ${item.couleur}`);
                 }
             }
-    
-            console.log("✅ Stock mis à jour !");
+        
+            // Vider le panier après paiement
+            localStorage.removeItem("panier");
+            alert("Merci pour votre achat ! Le stock a été mis à jour.");
+            window.location.reload();
         }
+        
     </script>
     
     
