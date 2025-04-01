@@ -6,7 +6,7 @@
     <title>Paiement</title>
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;600&family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://www.paypal.com/sdk/js?client-id=Ad-LXzB5pZkUfmCM-cufQOIrdLqZEGdF4tzn9DSDHrH7MCl-JwQK1YlX1pRj5LRmuMq0v3AtLdFBR11i&currency=EUR"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AYouHwrSsZYBHQDxKiOJO9_Z1vJ5Iz-PQysXibK9UyuIPtYYsjdqu0diibcE6F8C4l7xWc5PCh7AY33m&currency=EUR"></script>
     <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     <style>
         /* Global Styles */
@@ -217,136 +217,168 @@
     </style>
     <script type="module">
         // Importer Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
-    
-        // Configuration Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
-            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
-            projectId: "fleurdepau-1ce7d",
-            storageBucket: "fleurdepau-1ce7d.appspot.com",
-            messagingSenderId: "394738141831",
-            appId: "1:394738141831:web:a0cd5b9d0227267b248622",
-            measurementId: "G-D1J6X7BH9S"
-        };
-    
-        // Initialiser Firebase et Firestore
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-    
-        // Frais de port Mondial Relay
-        const FRAIS_DE_PORT = 4.30;
-    
-        // Fonction pour sauvegarder la commande
-        async function saveOrderToDatabase(commandeData) {
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";        
+
+// Configuration Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+    authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+    projectId: "fleurdepau-1ce7d",
+    storageBucket: "fleurdepau-1ce7d.appspot.com",
+    messagingSenderId: "394738141831",
+    appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+    measurementId: "G-D1J6X7BH9S"
+};
+
+// Initialisation Firebase et Firestore
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Frais de port Mondial Relay
+const FRAIS_DE_PORT = 4.30;
+
+// Fonction pour sauvegarder la commande dans Firestore
+async function saveOrderToDatabase(commandeData) {
+    try {
+        const ordersCollection = collection(db, "commande");
+        const docRef = await addDoc(ordersCollection, commandeData);
+        console.log("✅ Commande enregistrée avec ID :", docRef.id);
+        return docRef.id;
+    } catch (error) {
+        console.error("❌ Erreur lors de l'enregistrement :", error);
+        alert("Erreur lors de la sauvegarde de la commande !");
+        throw error;
+    }
+}
+
+// Fonction pour calculer et afficher le total du panier
+function calculerTotal() {
+    let panier = JSON.parse(localStorage.getItem("panier")) || [];
+    let totalProduits = panier.reduce((sum, item) => sum + (parseFloat(item.prix) * (item.quantite || 1)), 0);
+    let totalAvecFrais = totalProduits + FRAIS_DE_PORT;
+    document.getElementById("total-panier").textContent = "€" + totalAvecFrais.toFixed(2);
+    localStorage.setItem("total", totalAvecFrais.toFixed(2));
+    return totalAvecFrais;
+}
+
+// Récupération du total
+let total = calculerTotal();
+
+// Intégration du bouton PayPal
+paypal.Buttons({
+    createOrder: function(data, actions) {
+        let panier = JSON.parse(localStorage.getItem("panier")) || [];
+        let totalProduits = panier.reduce((sum, item) => sum + (parseFloat(item.prix) * (item.quantite || 1)), 0);
+        let totalAvecFrais = totalProduits + FRAIS_DE_PORT;
+
+        return actions.order.create({
+            purchase_units: [{
+                amount: { value: totalAvecFrais.toFixed(2), currency_code: 'EUR' },
+                description: "Commande Fleur de Pau (incl. frais de port)"
+            }]
+        });
+    },
+
+    onApprove: async function(data, actions) {
+        return actions.order.capture().then(async function(details) {
+            console.log(`✅ Paiement validé par ${details.payer.name.given_name}`);
+
+            // Récupérer les informations stockées par l'utilisateur
+            const nomClient = localStorage.getItem("nomClient") || details.payer.name.given_name || "Nom inconnu";
+            const telephoneClient = localStorage.getItem("telephoneClient") || "Téléphone non fourni";
+            const panier = JSON.parse(localStorage.getItem("panier")) || [];
+
+            if (panier.length === 0) {
+                console.error("❌ Erreur : Panier vide !");
+                alert("Erreur : Votre panier est vide !");
+                return;
+            }
+
+            const commandeData = {
+                nom: nomClient,
+                telephone: telephoneClient,
+                email: details.payer.email_address || "Email non fourni",
+                total: total.toFixed(2),
+                statut: "Payée",
+                payée: true,
+                date: new Date().toISOString(),
+                archive: false,
+                panier: panier,
+                point_relais: JSON.parse(localStorage.getItem("point_relais")) || {},
+                utilisateur: JSON.parse(localStorage.getItem("utilisateur")) || "Utilisateur inconnu",
+                transaction_id: details.id
+            };
+
             try {
-                const ordersCollection = collection(db, "commande");
-                const docRef = await addDoc(ordersCollection, commandeData);
-                console.log("✅ Commande enregistrée avec ID :", docRef.id);
-                return docRef.id;
+                // 🔹 Sauvegarde de la commande dans Firestore uniquement si le paiement est validé
+                await saveOrderToDatabase(commandeData);
+
+                // 🔹 Mise à jour du stock après validation de l'enregistrement
+                await mettreAJourStockApresPaiement(panier);
+
+                // 🔹 Nettoyage des données locales
+                localStorage.removeItem("panier");
+                localStorage.removeItem("nomClient");
+                localStorage.removeItem("telephoneClient");
+
+                window.location.href = "success.html"; // Redirection après paiement réussi
             } catch (error) {
-                console.error("❌ Erreur lors de l'enregistrement :", error);
-                alert("Erreur de sauvegarde de la commande !");
-                throw error;
+                console.error("❌ Erreur lors de la sauvegarde :", error);
+                alert("Erreur lors de l'enregistrement de la commande.");
             }
-        }
-    
-        // Fonction pour calculer et afficher le total du panier
-        function calculerTotal() {
-            let panier = JSON.parse(localStorage.getItem("panier")) || [];
-            let totalProduits = panier.reduce((sum, item) => sum + (parseFloat(item.prix) * (item.quantite || 1)), 0);
-            let totalAvecFrais = totalProduits + FRAIS_DE_PORT;
-            document.getElementById("total-panier").textContent = "€" + totalAvecFrais.toFixed(2);
-            localStorage.setItem("total", totalAvecFrais.toFixed(2));
-            return totalAvecFrais;
-        }
-    
-        let total = calculerTotal();
-    
-        // Intégration du bouton PayPal
-        paypal.Buttons({
-            createOrder: function(data, actions) {
-                return actions.order.create({
-                    purchase_units: [{
-                        amount: { value: total.toFixed(2), currency_code: 'EUR' },
-                        description: "Commande Fleur de Pau (incl. frais de port)"
-                    }]
-                });
-            },
-            onApprove: async function(data, actions) {
-                return actions.order.capture().then(async function(details) {
-                    console.log(`✅ Paiement validé par ${details.payer.name.given_name}`);
-            
-                    // ✅ Récupérer les infos stockées par l'utilisateur
-                    const nomClient = localStorage.getItem("nomClient") || details.payer.name.given_name || "Nom inconnu";
-                    const telephoneClient = localStorage.getItem("telephoneClient") || "Téléphone non fourni";
-            
-                    const panier = JSON.parse(localStorage.getItem("panier")) || [];
-                    
-                    const commandeData = {
-                        nom: nomClient, // ✅ Ajout du nom récupéré
-                        telephone: telephoneClient, // ✅ Ajout du téléphone récupéré
-                        email: details.payer.email_address || "Email non fourni",
-                        total: total.toFixed(2),
-                        statut: "Payée",
-                        payée: true,
-                        date: new Date().toISOString(),
-                        archive: false,
-                        panier: panier,
-                        point_relais: JSON.parse(localStorage.getItem("point_relais")) || {},
-                        utilisateur: JSON.parse(localStorage.getItem("utilisateur")) || "Utilisateur inconnu",
-                        transaction_id: details.id
-                    };
-            
-                    try {
-                        await saveOrderToDatabase(commandeData);
-                        await mettreAJourStockApresPaiement(panier); // ✅ Mise à jour du stock après paiement
-                        
-                        // ✅ Supprimer les infos après validation
-                        localStorage.removeItem("panier");
-                        localStorage.removeItem("nomClient");
-                        localStorage.removeItem("telephoneClient");
-            
-                        window.location.href = "success.html"; // Redirection après paiement réussi
-                    } catch (error) {
-                        console.error("❌ Erreur lors de la sauvegarde :", error);
-                        alert("Erreur lors de l'enregistrement de la commande.");
+        });
+    }
+}).render('#paypal-button-container');
+
+// Mise à jour du stock après paiement
+async function mettreAJourStockApresPaiement(panier) {
+    for (const item of panier) {
+        const produitRef = doc(db, "produits", item.id);
+        const produitSnap = await getDoc(produitRef);
+
+        if (produitSnap.exists()) {
+            let produitData = produitSnap.data();
+            if (produitData.couleurs && Array.isArray(produitData.couleurs)) {
+                let updatedCouleurs = produitData.couleurs.map(c => {
+                    if (c.couleur === item.couleur) {
+                        return { couleur: c.couleur, stock: Math.max(0, c.stock - item.quantite) };
                     }
+                    return c;
                 });
-            }            
-        }).render('#paypal-button-container');
-    
-        async function mettreAJourStockApresPaiement(panier) {
-            for (const item of panier) {
-                const produitRef = doc(db, "produits", item.id);
-                const produitSnap = await getDoc(produitRef);
-        
-                if (produitSnap.exists()) {
-                    const produitData = produitSnap.data();
-                    const updatedCouleurs = produitData.couleurs.map(c => {
-                        if (c.couleur === item.couleur) {
-                            return { couleur: c.couleur, stock: Math.max(0, c.stock - 1) };
-                        }
-                        return c;
-                    });
-        
-                    // Mettre à jour Firestore
-                    await updateDoc(produitRef, { couleurs: updatedCouleurs });
-        
-                    console.log(`Stock mis à jour pour ${item.nom} - Couleur: ${item.couleur}`);
-                }
+
+                await updateDoc(produitRef, { couleurs: updatedCouleurs });
+            } else {
+                let newStock = Math.max(0, produitData.stock - item.quantite);
+                await updateDoc(produitRef, { stock: newStock });
             }
-        
-            // Vider le panier après paiement
-            localStorage.removeItem("panier");
-            alert("Merci pour votre achat ! Le stock a été mis à jour.");
-            window.location.reload();
+
+            console.log(`Stock mis à jour pour ${item.nom} - Couleur: ${item.couleur}`);
         }
-        
+    }
+}
+
+
+// Écouteurs pour enregistrer nom et téléphone dans localStorage
+document.addEventListener("DOMContentLoaded", function () {
+    const nomCompletInput = document.getElementById("nom_complet");
+    const telInput = document.getElementById("telephone");
+
+    if (nomCompletInput) {
+        nomCompletInput.addEventListener("input", function () {
+            localStorage.setItem("nomClient", this.value); // Enregistrer le nom dans localStorage
+        });
+    }
+
+    if (telInput) {
+        telInput.addEventListener("input", function () {
+            localStorage.setItem("telephoneClient", this.value); // Enregistrer le numéro de téléphone dans localStorage
+        });
+    }
+});
+
+
     </script>
-    
-    
     
 </head>
 <body>

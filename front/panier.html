@@ -80,30 +80,10 @@
             margin-bottom: 20px;
         }
 
-<<<<<<< HEAD
-form {
-    text-align: center;
-    border-radius:2px;
-}        
-
-/* Style des éléments du panier */
-.panier-item {
-    padding: 20px;
-    margin-bottom: 20px;
-    background-color: #fff;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: transform 0.3s ease-in-out;
-}
-=======
         form {
             text-align: center;
             border-radius: 2px;
         }
->>>>>>> d51a19f (panier ok)
 
         /* Style des éléments du panier */
         .panier-item {
@@ -183,22 +163,6 @@ form {
             border-color: #742a08;
         }
 
-<<<<<<< HEAD
-        
-
-/* Style du bouton pour vider le panier */
-#vider-panier {
-    background-color: #742a08; /* Rouge vif */
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-=======
         #total {
             margin-top: 30px;
             font-size: 1.5rem;
@@ -206,7 +170,6 @@ form {
             text-align: center;
             color: #742a08;
         }
->>>>>>> d51a19f (panier ok)
 
         /* Style du bouton pour vider le panier */
         #vider-panier {
@@ -344,20 +307,11 @@ form {
         <div id="total">Total: €0.00</div>
         <p>Le montant de la livraison vous sera indiqué lorsque le choix du point relais sera fait.</p>
 
-<<<<<<< HEAD
-        <button id="select-point-relais" class="cta-btn" onclick="window.location.href='points-relais.html'">Choisir un point relais</button>
-        <br>
-        <form>
-            <input type="text" placeholder="Entrez votre nom et prénom">
-            <input type="number" placeholder="Entrez votre numéro de téléphone">
-=======
-        <!-- Le bouton est désactivé par défaut -->
         <button id="select-point-relais" class="cta-btn" onclick="window.location.href='points-relais.html'" disabled>Choisir un point relais</button>
         <br>
-        <form id="formulaire">
-            <input type="text" id="nom" placeholder="Entrez votre nom et prénom" required>
-            <input type="number" id="telephone" placeholder="Entrez votre numéro de téléphone" required>
->>>>>>> d51a19f (panier ok)
+        <form>
+            <input id="nom_complet" type="text" placeholder="Entrez votre nom complet">
+            <input id="telephone" type="number" placeholder="Entrez votre numéro de téléphone">
         </form>
     </section>
 
@@ -380,151 +334,220 @@ form {
         </p>
     </footer>
     <script type="module">
+        // 🔹 Importations en haut du module
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-// Configuration Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
-    authDomain: "fleurdepau-1ce7d.firebaseapp.com",
-    projectId: "fleurdepau-1ce7d",
-    storageBucket: "fleurdepau-1ce7d.appspot.com",
-    messagingSenderId: "394738141831",
-    appId: "1:394738141831:web:a0cd5b9d0227267b248622",
-    measurementId: "G-D1J6X7BH9S"
-};
-
-// Initialisation Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// Charger le panier depuis le localStorage
-let panier = JSON.parse(localStorage.getItem("panier") || "[]");
-
-// Sélection des éléments du DOM
-const panierList = document.getElementById("panier-list");
-const totalElement = document.getElementById("total");
-const boutonRelais = document.getElementById("select-point-relais");
-
-// Fonction pour ajouter un produit au panier
-function ajouterAuPanier(idProduit, nom, prix, imageUrl) {
-    const articleRef = doc(db, "produits", idProduit);
-
-    getDoc(articleRef).then((docSnap) => {
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            const stockDisponible = data.stock ?? 0; 
-
-            const indexExist = panier.findIndex(item => item.id === idProduit);
-            let nouvelleQuantite = indexExist !== -1 ? panier[indexExist].quantite + 1 : 1;
-
-            if (nouvelleQuantite > stockDisponible) {
-                alert(`Stock insuffisant ! Il ne reste que ${stockDisponible} articles.`);
-                return;
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        document.addEventListener('DOMContentLoaded', function () {
+            // 🔹 Configuration Firebase
+            const firebaseConfig = {
+                apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+                authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+                projectId: "fleurdepau-1ce7d",
+                storageBucket: "fleurdepau-1ce7d.appspot.com",
+                messagingSenderId: "394738141831",
+                appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+                measurementId: "G-D1J6X7BH9S"
+            };
+        
+            // 🔹 Initialisation Firebase
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+        
+            // 🔹 Charger le panier depuis le localStorage
+            let panier = JSON.parse(localStorage.getItem("panier") || "[]");
+        
+            // 🔹 Sélection des éléments du DOM
+            const panierList = document.getElementById("panier-list");
+            const totalElement = document.getElementById("total");
+        
+            // 🔹 Fonction pour ajouter un produit au panier
+            function ajouterAuPanier(idProduit, nom, prix, imageUrl) {
+                const articleRef = doc(db, "produits", idProduit);
+            
+                getDoc(articleRef).then((docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        const stockDisponible = data.stock ?? 0;
+                        const prixNumerique = parseFloat(prix); // Conversion explicite en nombre
+                    
+                        // Vérification si le prix est valide
+                        if (isNaN(prixNumerique)) {
+                            console.error("Erreur : prix invalide pour le produit", { idProduit, nom, prix });
+                            alert("Erreur : prix du produit invalide !");
+                            return;
+                        }
+                    
+                        const indexExist = panier.findIndex(item => item.id === idProduit);
+                    
+                        if (indexExist !== -1) {
+                            if (panier[indexExist].quantite + 1 > stockDisponible) {
+                                alert(`Stock insuffisant ! Il ne reste que ${stockDisponible} articles.`);
+                                return;
+                            }
+                            panier[indexExist].quantite += 1;
+                        } else {
+                            if (stockDisponible < 1) {
+                                alert(`Stock épuisé !`);
+                                return;
+                            }
+                            panier.push({
+                                id: idProduit,
+                                nom,
+                                prix: prixNumerique, // Stocker le prix sous forme de nombre
+                                imageUrl,
+                                couleur: data.couleur ?? "Non spécifiée",
+                                quantite: 1
+                            });
+                        }
+                    
+                        localStorage.setItem("panier", JSON.stringify(panier));
+                        afficherPanier();
+                    } else {
+                        console.error("Produit non trouvé dans Firebase !");
+                    }
+                }).catch(error => {
+                    console.error("Erreur lors de la récupération du produit :", error);
+                });
             }
-
-            if (indexExist !== -1) {
-                panier[indexExist].quantite = nouvelleQuantite;
-            } else {
-                panier.push({ id: idProduit, nom, prix, imageUrl, quantite: 1 });
+        
+            // 🔹 Modifier la quantité d'un article dans le panier
+            function modifierQuantite(index, nouvelleQuantite) {
+                nouvelleQuantite = Math.max(1, nouvelleQuantite); // Empêche d'aller en dessous de 1
+                panier[index].quantite = nouvelleQuantite; // Mise à jour de la quantité
+                localStorage.setItem("panier", JSON.stringify(panier)); // Sauvegarder le panier mis à jour
+                afficherPanier(); // Rafraîchir l'affichage du panier
             }
-
-            localStorage.setItem("panier", JSON.stringify(panier));
+        
+            // 🔹 Retirer un article du panier
+            function retirerArticle(index) {
+                panier.splice(index, 1);
+                localStorage.setItem("panier", JSON.stringify(panier));
+                afficherPanier();
+            }
+        
+            // 🔹 Vérification lors de l'affichage du panier
+            function afficherPanier() {
+                panierList.innerHTML = '';
+                let total = 0;
+        
+                console.log("Panier actuel :", panier); // Vérifier ce qui est chargé
+        
+                panier.forEach((item, index) => {
+                    console.log("Article affiché :", item); // Vérifier chaque élément
+        
+                    if (typeof item.quantite === "undefined") {
+                        console.error("Quantité non définie pour :", item);
+                        item.quantite = 1; // Correction de secours
+                    }
+        
+                    const prixNumerique = parseFloat(item.prix);
+        
+                    if (isNaN(prixNumerique)) {
+                        console.error("Prix invalide détecté :", item);
+                        return;
+                    }
+        
+                    total += item.quantite * prixNumerique;
+        
+                    const articleElement = document.createElement('div');
+                    articleElement.className = 'panier-item';
+                    articleElement.innerHTML = `
+                        <img src="${item.imageUrl}" alt="${item.nom}">
+                        <div>
+                            <h3>${item.nom}</h3>
+                            <p class="prix">${prixNumerique.toFixed(2)} €</p>
+                        </div>
+                        <div class="quantite-container">
+                            <button class="decrementer-btn">-</button>
+                            <span class="quantite-valeur">${item.quantite}</span>
+                            <button class="incrementer-btn">+</button>
+                        </div>
+                        <button class="retirer-btn">Retirer</button>
+                    `;
+                    panierList.appendChild(articleElement);
+        
+                    const decrementerBtn = articleElement.querySelector('.decrementer-btn');
+                    const incrementerBtn = articleElement.querySelector('.incrementer-btn');
+                    const retirerBtn = articleElement.querySelector('.retirer-btn');
+        
+                    decrementerBtn.addEventListener('click', function() {
+                        modifierQuantite(index, item.quantite - 1);
+                    });
+        
+                    incrementerBtn.addEventListener('click', function() {
+                        modifierQuantite(index, item.quantite + 1);
+                    });
+        
+                    retirerBtn.addEventListener('click', function() {
+                        retirerArticle(index);
+                    });
+                });
+        
+                totalElement.innerText = `Total: €${total.toFixed(2)}`;
+            }
+        
+            // 🔹 Initialiser l'affichage du panier
             afficherPanier();
-        }
-    });
-}
-
-// Fonction d'affichage du panier
-function afficherPanier() {
-    panierList.innerHTML = ''; 
-    let total = 0;
-
-    panier.forEach((item, index) => {
-        total += item.quantite * item.prix;
-
-        const articleElement = document.createElement('div');
-        articleElement.className = 'panier-item';
-        articleElement.innerHTML = `
-            <img src="${item.imageUrl}" alt="${item.nom}">
-            <div>
-                <h3>${item.nom}</h3>
-                <p class="prix">${item.prix} €</p>
-                <p class="quantite">Quantité: <span class="quantite-valeur">${item.quantite}</span></p>
-            </div>
-            <div class="quantite-container">
-                <input type="number" class="quantite-input" value="${item.quantite}" min="1">
-            </div>
-            <button class="retirer-btn">Retirer</button>
-        `;
-        panierList.appendChild(articleElement);
-
-        const quantiteInput = articleElement.querySelector('.quantite-input');
-        quantiteInput.addEventListener('change', function() {
-            modifierQuantite(index, quantiteInput.value);
-        });
-
-        const retirerBtn = articleElement.querySelector('.retirer-btn');
-        retirerBtn.addEventListener('click', function() {
-            retirerArticle(index);
-        });
-    });
-
-    totalElement.innerText = `Total: €${total.toFixed(2)}`;
-    verifierFormulaire();
-}
-
-// Fonction pour retirer un article du panier
-function retirerArticle(index) {
-    panier.splice(index, 1); 
-    localStorage.setItem("panier", JSON.stringify(panier)); 
-    afficherPanier(); 
-}
-
-// Vérifier si le formulaire est rempli et activer/désactiver le bouton relais
-function verifierFormulaire() {
-    const nom = document.getElementById("nom").value.trim();
-    const telephone = document.getElementById("telephone").value.trim();
-
-    if (nom !== "" && telephone !== "" && panier.length > 0) {
-        boutonRelais.disabled = false;
-    } else {
-        boutonRelais.disabled = true;
-    }
-}
-
-// Ajouter des écouteurs sur les champs du formulaire
-document.getElementById("nom").addEventListener("input", verifierFormulaire);
-document.getElementById("telephone").addEventListener("input", verifierFormulaire);
-
-// Fonction pour modifier la quantité d'un article
-function modifierQuantite(index, quantite) {
-    quantite = parseInt(quantite);
-    if (quantite < 1) return; 
-
-    const idProduit = panier[index].id;
-    const articleRef = doc(db, "produits", idProduit);
-
-    getDoc(articleRef).then((docSnap) => {
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            const stockDisponible = data.stock ?? 0; 
-
-            if (quantite > stockDisponible) {
-                alert(`Stock limité ! Il ne reste que ${stockDisponible} articles.`);
-                panier[index].quantite = stockDisponible;
-            } else {
-                panier[index].quantite = quantite;
+        
+            // 🔹 Gestion du formulaire de saisie du nom et du téléphone
+            const nomCompletInput = document.getElementById("nom_complet");
+            const telephoneInput = document.getElementById("telephone");
+            const boutonRelay = document.getElementById("select-point-relais");
+        
+            // Fonction pour vérifier si les champs sont remplis
+            function verifierChamps() {
+                const nomCompletRempli = nomCompletInput.value.trim() !== "";
+                const telephoneRempli = telephoneInput.value.trim() !== "";
+        
+                // Si les deux champs sont remplis, activer le bouton
+                if (nomCompletRempli && telephoneRempli) {
+                    boutonRelay.removeAttribute("disabled"); // Active le bouton
+                } else {
+                    boutonRelay.setAttribute("disabled", "true"); // Désactive le bouton
+                }
             }
-
-            localStorage.setItem("panier", JSON.stringify(panier));
-            afficherPanier();
-        }
-    });
-}
-
-// Initialiser l'affichage du panier
-afficherPanier();
+        
+            // Écouteurs pour les champs du formulaire
+            nomCompletInput.addEventListener("input", verifierChamps);
+            telephoneInput.addEventListener("input", verifierChamps);
+        
+            // Fonction pour enregistrer les informations dans Firestore
+            async function enregistrerDansFirestore(nom, telephone) {
+                const utilisateurRef = doc(db, "utilisateurs", telephone); // Utiliser le téléphone comme identifiant unique
+                
+                // Vérification si l'utilisateur existe déjà
+                const utilisateurSnap = await getDoc(utilisateurRef);
+                
+                if (utilisateurSnap.exists()) {
+                    console.log("Utilisateur déjà enregistré dans Firestore");
+                } else {
+                    try {
+                        await setDoc(utilisateurRef, {
+                            nom_complet: nom,
+                            telephone: telephone
+                        });
+                        console.log("Utilisateur enregistré dans Firestore");
+                    } catch (e) {
+                        console.error("Erreur lors de l'enregistrement dans Firestore : ", e);
+                    }
+                }
+            }
+        
+            // Sauvegarder les données dans localStorage et Firestore lors de l'enregistrement du panier
+            boutonRelay.addEventListener('click', function () {
+                if (nomCompletInput.value.trim() === "" || telephoneInput.value.trim() === "") {
+                    alert("Veuillez entrer votre nom complet et votre téléphone avant de continuer !");
+                    return;
+                }
+            
+                localStorage.setItem('nomClient', nomCompletInput.value.trim());
+                localStorage.setItem('telephoneClient', telephoneInput.value.trim());            
+        
+                // Continuer avec la redirection vers la page des points relais
+                window.location.href = 'points-relais.html';
+            });
+        });
     </script>
     
 </body>
