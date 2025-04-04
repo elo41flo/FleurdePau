@@ -249,19 +249,20 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// Fonction pour vérifier l'état de l'utilisateur et afficher le statut dans la console
+// Fonction pour vérifier l'état de l'utilisateur et rediriger s'il n'est pas connecté
 function checkUserState() {
     const utilisateurConnecte = JSON.parse(localStorage.getItem("utilisateurConnecte"));
-    console.log("Vérification dans localStorage : ", utilisateurConnecte); // Affichage du contenu de localStorage
-    
-    const userIcon = document.querySelector(".header-icons a[href='mon-compte.html']");
-    
-    if (utilisateurConnecte) {
-        console.log("Utilisateur connecté :", utilisateurConnecte);
-        userIcon && (userIcon.style.display = "inline-block");
+    console.log("Vérification dans localStorage : ", utilisateurConnecte);
+
+    // Si l'utilisateur n'est pas connecté, rediriger vers la page de connexion
+    if (!utilisateurConnecte) {
+        console.log("Aucun utilisateur connecté, redirection vers login.html.");
+        window.location.href = "login.html";  // Redirection vers login.html
     } else {
-        console.log("Aucun utilisateur connecté.");
-        userIcon && (userIcon.style.display = "none");
+        const userIcon = document.querySelector(".header-icons a[href='mon-compte.html']");
+        if (userIcon) {
+            userIcon.style.display = "inline-block";
+        }
     }
 }
 
@@ -295,7 +296,6 @@ onAuthStateChanged(auth, (user) => {
         };
         console.log("Utilisateur authentifié :", utilisateurData);
         
-        // S'assurer que la donnée est bien stockée
         try {
             localStorage.setItem("utilisateurConnecte", JSON.stringify(utilisateurData));
             console.log("Utilisateur stocké dans localStorage.");
@@ -303,33 +303,28 @@ onAuthStateChanged(auth, (user) => {
             console.error("Erreur lors du stockage dans localStorage :", error);
         }
 
-        // Vérifier l'état après une petite pause pour laisser Firebase mettre à jour localStorage
         setTimeout(() => {
             console.log("Vérification après connexion Firebase");
             checkUserState();
-        }, 1000); // Délai de 1 seconde
+        }, 1000); // Délai de 1 seconde pour s'assurer que localStorage a été mis à jour
     } else {
         console.log("Aucun utilisateur connecté.");
-        // Si l'utilisateur n'est pas connecté, supprimer l'objet dans le localStorage
         localStorage.removeItem("utilisateurConnecte");
-
-        // Vérifier l'état après une petite pause pour laisser Firebase mettre à jour localStorage
         setTimeout(() => {
             console.log("Vérification après déconnexion Firebase");
             checkUserState();
-        }, 1000); // Délai de 1 seconde
+        }, 1000); // Délai de 1 seconde pour s'assurer que localStorage a été mis à jour
     }
 });
 
 // Vérification de l'état de l'utilisateur après un délai
 window.onload = function () {
     console.log("Vérification initiale de l'état de l'utilisateur.");
-    
-    // Attendre 2 secondes pour s'assurer que Firebase a le temps de répondre
+
     setTimeout(function() {
         console.log("Vérification initiale dans localStorage");
         checkUserState(); // Vérifier si un utilisateur est connecté
-    }, 2000); // Attente de 2 secondes
+    }, 2000); // Attente de 2 secondes pour Firebase
 };
 
     </script>
