@@ -561,7 +561,13 @@ footer {
             <nav>
                 <ul>
                     <li><a href="index.html">Accueil</a></li>
-                    <li><a href="boutique.html">Boutique</a></li>
+                    <li id="menu-boutique">
+                        <a href="#" id="boutique-link">Boutique ▼</a>
+                        <ul id="submenu-container" style="display: none;">
+                            <li><a href="fleur.html">Fleur crochet</a></li>
+                            <li><a href="porte clé.html">Porte clé</a></li>
+                        </ul>
+                    </li>
                     <li><a href="contact.html">Contact</a></li>
                 </ul>
             </nav>
@@ -592,5 +598,29 @@ footer {
     </footer>
     
 </body>
+<script>
+    // Attendre que le DOM soit entièrement chargé
+document.addEventListener("DOMContentLoaded", function() {
+ const boutiqueLink = document.getElementById("boutique-link");
+ const submenuContainer = document.getElementById("submenu-container");
 
+ // Par défaut, cacher le sous-menu
+ submenuContainer.style.display = "none";
+
+ // Ajouter un événement pour afficher/masquer les sous-menus lorsque "Boutique" est cliqué
+ boutiqueLink.addEventListener("click", function(event) {
+     event.preventDefault(); // Empêcher le comportement de lien par défaut
+
+     // Vérifier si le sous-menu est déjà visible ou non
+     if (submenuContainer.style.display === "none") {
+         // Afficher le sous-menu
+         submenuContainer.style.display = "block";
+     } else {
+         // Cacher le sous-menu
+         submenuContainer.style.display = "none";
+     }
+ });
+});
+
+ </script>
 </html>

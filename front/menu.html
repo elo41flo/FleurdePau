@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Sous-Menus Boutique</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+    }
+    form {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin-bottom: 2rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.5rem;
+      margin: 0.3rem 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: white;
+      margin-bottom: 0.5rem;
+      padding: 0.8rem;
+      border-radius: 6px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    li button {
+      background: #dc3545;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Gestion des sous-menus "Boutique"</h1>
+
+  <form id="add-submenu-form">
+    <input type="text" id="submenu-title" placeholder="Titre du sous-menu" required>
+    <input type="text" id="submenu-url" placeholder="URL du sous-menu" required>
+    <button type="submit">Ajouter un sous-menu</button>
+  </form>
+
+  <h2>Sous-menus existants :</h2>
+  <ul id="submenuList"></ul>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  
+  <script>
+    // Configuration Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+      authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+      projectId: "fleurdepau-1ce7d",
+      storageBucket: "fleurdepau-1ce7d.appspot.com",
+      messagingSenderId: "394738141831",
+      appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+      measurementId: "G-D1J6X7BH9S"
+    };
+
+    // Initialiser Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(app);
+
+    const submenuList = document.getElementById("submenuList");
+
+    // Fonction pour charger les sous-menus depuis Firestore
+    async function loadSubmenus() {
+      const snapshot = await db.collection("menus").doc("produits").get();
+      const data = snapshot.data();
+      if (data && data.submenus) {
+        submenuList.innerHTML = "";
+        data.submenus.forEach((submenu, index) => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <span>${submenu.title} (<code>${submenu.url}</code>)</span>
+            <button onclick="deleteSubmenu(${index})">Supprimer</button>
+          `;
+          submenuList.appendChild(li);
+        });
+      }
+    }
+
+    // Fonction pour supprimer un sous-menu
+    async function deleteSubmenu(index) {
+      const snapshot = await db.collection("menus").doc("produits").get();
+      const data = snapshot.data();
+      if (data && data.submenus) {
+        data.submenus.splice(index, 1);
+        await db.collection("menus").doc("produits").update({
+          submenus: data.submenus
+        });
+        loadSubmenus(); // Recharger les sous-menus après suppression
+      }
+    }
+
+    // Fonction pour ajouter un sous-menu
+    document.getElementById("add-submenu-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const title = document.getElementById("submenu-title").value.trim();
+      const url = document.getElementById("submenu-url").value.trim();
+      if (!title || !url) return;
+
+      // Récupérer les sous-menus existants et ajouter le nouveau
+      const snapshot = await db.collection("menus").doc("produits").get();
+      const data = snapshot.data();
+      if (data && data.submenus) {
+        data.submenus.push({ title, url });
+        await db.collection("menus").doc("produits").update({
+          submenus: data.submenus
+        });
+      } else {
+        // Si aucun sous-menu existant, créer un nouveau tableau
+        await db.collection("menus").doc("produits").set({
+          submenus: [{ title, url }]
+        });
+      }
+      document.getElementById("add-submenu-form").reset();
+      loadSubmenus(); // Recharger les sous-menus après ajout
+    });
+
+    // Initialiser et charger les sous-menus
+    loadSubmenus();
+  </script>
+
+</body>
+</html>

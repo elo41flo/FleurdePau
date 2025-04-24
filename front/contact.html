@@ -295,7 +295,32 @@
     </style>
 </head>
 <body>
-    
+    <header>
+        <div class="header-content">
+            <h1 class="logo">Fleur De Pau</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Accueil</a></li>
+                    <li id="menu-boutique">
+                        <a href="#" id="boutique-link">Boutique ▼</a>
+                        <ul id="submenu-container" style="display: none;">
+                            <li><a href="fleur.html">Fleur crochet</a></li>
+                            <li><a href="porte clé.html">Porte clé</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+        <section id="header-icons" class="header-icons">
+            <a href="mon-compte.html"><i class="fas fa-user"></i></a>
+            <a href="login.html" class="logout-icon"><i class="fas fa-sign-out-alt"></i></a>
+            <a href="panier.html"><i class="fas fa-shopping-cart"></i>
+                <span class="cart-count" style="display:none;">0</span> <!-- Compteur du panier -->
+            </a>
+        </section>
+        
+    </header>
     <section class="contact-form">
         <h2>M'envoyer un message</h2>
         <form id="contactForm">
@@ -374,22 +399,6 @@
                 });
             }
         });
-        
-        // Fonction pour charger le header et mettre à jour le panier
-        async function chargerHeader() {
-            try {
-                const response = await fetch("header.html");
-                const data = await response.text();
-                document.body.insertAdjacentHTML("afterbegin", data);
-        
-                // Mettre à jour le compteur du panier après avoir inséré le header
-                setTimeout(() => {
-                    mettreAJourCompteur();
-                }, 0);
-            } catch (error) {
-                console.error("Erreur lors du chargement du header:", error);
-            }
-        }
         
         // Fonction pour envoyer le message de contact
         async function envoyerMessageContact(event) {
@@ -499,6 +508,27 @@
             mettreAJourCompteur();
         }
         
+    // Attendre que le DOM soit entièrement chargé
+document.addEventListener("DOMContentLoaded", function() {
+    const boutiqueLink = document.getElementById("boutique-link");
+    const submenuContainer = document.getElementById("submenu-container");
+
+    // Ajouter un événement pour afficher/masquer les sous-menus lorsque "Boutique" est cliqué
+    boutiqueLink.addEventListener("click", function(event) {
+        event.preventDefault(); // Empêcher le comportement de lien par défaut
+
+        // Vérifier si le sous-menu est déjà visible ou non
+        if (submenuContainer.style.display === "none") {
+            // Ajouter la classe show pour afficher le sous-menu avec transition
+            submenuContainer.classList.add("show");
+            submenuContainer.style.display = "block"; // Afficher le sous-menu
+        } else {
+            // Supprimer la classe show pour cacher le sous-menu avec transition
+            submenuContainer.classList.remove("show");
+            submenuContainer.style.display = "none"; // Cacher le sous-menu
+        }
+    });
+});
     </script>
 </body>
 </html>

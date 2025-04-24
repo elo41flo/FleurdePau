@@ -193,6 +193,48 @@ app.post("/search-relays", async (req, res) => {
   }
 });
 
+// 🔽 Gestion des sous-menus "Boutique"
+
+// 🔹 Récupérer tous les sous-menus
+app.get("/api/submenus", async (req, res) => {
+  try {
+    const snapshot = await db.collection("boutique_submenus").get();
+    const submenus = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json(submenus);
+  } catch (error) {
+    console.error("Erreur récupération sous-menus :", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// 🔹 Ajouter un sous-menu
+app.post("/api/submenus", async (req, res) => {
+  const { name, url } = req.body;
+  if (!name || !url) {
+    return res.status(400).json({ error: "Nom et URL requis." });
+  }
+
+  try {
+    const id = name.toLowerCase().replace(/\s+/g, "-");
+    await db.collection("boutique_submenus").doc(id).set({ name, url });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Erreur ajout sous-menu :", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// 🔹 Supprimer un sous-menu
+app.delete("/api/submenus/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.collection("boutique_submenus").doc(id).delete();
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Erreur suppression sous-menu :", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
 
 // ✅ Démarrage du serveur
 const PORT = process.env.PORT || 5000;

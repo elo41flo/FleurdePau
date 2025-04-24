@@ -178,6 +178,28 @@
             color: #fff;
         }
 
+        #submenu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            border-radius: 5px;
+            z-index: 999;
+            opacity: 0; /* Début transparent */
+            transition: opacity 0.3s ease-in-out; /* Transition douce */
+        }
+        
+        #submenu.show {
+            display: block;
+            opacity: 1; /* Devenir opaque */
+        }
+        
+
         /* Responsiveness */
         @media (max-width: 480px) {
             .produits-grid {
@@ -337,10 +359,17 @@ window.onload = function () {
             <nav>
                 <ul>
                     <li><a href="index.html">Accueil</a></li>
-                    <li><a href="boutique.html">Boutique</a></li>
+                    <li id="menu-boutique">
+                        <a href="#" id="boutique-link">Boutique ▼</a>
+                        <ul id="submenu-container" style="display: none;">
+                            <li><a href="fleur.html">Fleur crochet</a></li>
+                            <li><a href="porte clé.html">Porte clé</a></li>
+                        </ul>
+                    </li>
                     <li><a href="contact.html">Contact</a></li>
                 </ul>
             </nav>
+            
             <div class="header-icons">
                 <a href="mon-compte.html"><i class="fas fa-user"></i></a>
                 <a href="login.html" id="logout-icon"><i class="fas fa-sign-out-alt"></i></a>
@@ -353,7 +382,6 @@ window.onload = function () {
         <section class="hero">
             <h2 class="hero-title">L'art d'être soi-même</h2>
             <p class="hero-subtitle">Découvrez des pièces uniques, faites à la main.</p>
-            <a href="boutique.html" class="btn">Explorer la boutique</a>
         </section>
 
         <section id="about" class="about">
@@ -384,9 +412,30 @@ window.onload = function () {
             <a href="politiqueconfidentialité.html">Politique de confidentialité</a>
         </p>
     </footer>
-    
+    <script>
+       // Attendre que le DOM soit entièrement chargé
+document.addEventListener("DOMContentLoaded", function() {
+    const boutiqueLink = document.getElementById("boutique-link");
+    const submenuContainer = document.getElementById("submenu-container");
 
-    
+    // Par défaut, cacher le sous-menu
+    submenuContainer.style.display = "none";
+
+    // Ajouter un événement pour afficher/masquer les sous-menus lorsque "Boutique" est cliqué
+    boutiqueLink.addEventListener("click", function(event) {
+        event.preventDefault(); // Empêcher le comportement de lien par défaut
+
+        // Vérifier si le sous-menu est déjà visible ou non
+        if (submenuContainer.style.display === "none") {
+            // Afficher le sous-menu
+            submenuContainer.style.display = "block";
+        } else {
+            // Cacher le sous-menu
+            submenuContainer.style.display = "none";
+        }
+    });
+});
+
+    </script>
 </body>
-
 </html>
