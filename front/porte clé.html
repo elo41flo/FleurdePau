@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fleur de Pau</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6898936031660089"
+     crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Raleway:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+    <style>
+        /* Styles généraux */
+        body {
+            font-family: 'Raleway', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-content {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+        }
+        
+        .logo {
+            font-family: 'Pacifico', cursive;
+            font-size: 1.8rem;
+            color: #444;
+            margin: 10px 0;
+        }
+        
+        /* Menu */
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: flex-end;
+            padding: 0;
+            margin: 0;
+        }
+        
+        nav ul li {
+            margin: 0 1rem;
+        }
+        
+        nav ul li a {
+            text-decoration: none;
+            color: #555;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            color: #d85c5c;
+        }
+        
+        /* Icônes alignées à l'horizontale sur la droite */
+        .header-icons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 20px;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            align-items: center;
+        }
+        
+        .header-icons a,
+        .header-icons i {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+        
+        /* Styles du conteneur de produits */
+        .produits-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 produits par ligne par défaut */
+            gap: 20px;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: auto;
+        }
+        
+        /* Carte Produit */
+        .produit {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            text-align: center;
+            max-width: 300px;
+            width: 100%;
+            min-height: 420px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.3s, box-shadow 0.3s ease;
+            overflow: hidden; /* Pour s'assurer que l'image ne dépasse pas */
+            cursor: pointer;
+        }
+        
+        .produit:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Image du produit */
+        .produit img {
+            width: 100%; /* L'image prend 100% de la largeur de son conteneur */
+            height: 200px; /* Hauteur fixe pour éviter la distorsion */
+            object-fit: cover; /* L'image couvre tout le conteneur sans déformation */
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+        
+        .produit img:hover {
+            transform: scale(1.05);
+        }
+        
+        .produit h3 {
+            font-size: 1.2rem;
+            color: #333;
+            margin: 0.5rem 0;
+        }
+        
+        .produit p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .produit .prix {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #d85c5c;
+        }
+        
+        /* Bouton Ajout Panier */
+        button.add-to-cart {
+            background-color: #5e380c;
+            color: #fff;
+            border: none;
+            padding: 0.8rem 1.2rem; /* Augmentation de la taille du bouton */
+            font-size: 1.1rem; /* Augmenter légèrement la taille du texte */
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        button.add-to-cart:hover {
+            background-color: #a44b4b;
+            transform: scale(1.05); /* Légère augmentation de la taille au survol */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Ombre supplémentaire au survol */
+        }
+        
+        button.add-to-cart:active {
+            transform: scale(1); /* Réduit la taille lors du clic pour un effet de pression */
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Ombre plus petite quand cliqué */
+        }
+        
+        /* Modal d'agrandissement de l'image */
+        .modal {
+            display: none; /* Cachée par défaut */
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(255, 255, 255, 0.3);
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 30px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: #333;
+            color: #fff;
+        }
+
+        /* === Responsive === */
+        @media (max-width: 1024px) {
+            .produits-grid {
+                grid-template-columns: repeat(2, 1fr); /* 2 produits par ligne sur tablettes */
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-icons {
+                position: static;
+                margin-top: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .produits-grid {
+                grid-template-columns: 1fr; /* 1 produit par ligne sur petits écrans */
+                padding: 1rem;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+        
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+        
+            nav ul li {
+                margin: 0.5rem 0;
+            }
+        
+            .header-icons {
+                position: static;
+                margin-top: 10px;
+            }
+        
+            .header-content {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.3rem;
+            }
+
+            .produit h3 {
+                font-size: 1rem;
+            }
+
+            .produit p {
+                font-size: 0.8rem;
+            }
+
+            button.add-to-cart {
+                font-size: 1rem;
+                padding: 0.6rem 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                Fleur de Pau
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Accueil</a></li>
+                    <li id="menu-boutique">
+                        <a href="#" id="boutique-link">Boutique ▼</a>
+                        <ul id="submenu-container" style="display: none;">
+                            <li><a href="fleur.html">Fleur crochet</a></li>
+                            <li><a href="porte clé.html">Porte clé</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="header-icons">
+                <a href="mon-compte.html"><i class="fas fa-user"></i></a>
+                <a href="login.html" id="logout-icon"><i class="fas fa-sign-out-alt"></i></a>
+                <a href="panier.html"><i class="fas fa-shopping-cart"></i><span class="cart-count"></span></a>
+            </div>
+        </div>
+    </header>
+
+    <div id="produits" class="produits-grid"></div>
+
+    <!-- Modal Image -->
+    <div id="modal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modal-img" />
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Fleur de Pau</p>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+            projectId: "fleurdepau-1ce7d",
+            storageBucket: "fleurdepau-1ce7d.appspot.com",
+            messagingSenderId: "394738141831",
+            appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        const produitsDiv = document.getElementById('produits');
+
+        // Fonction pour afficher les produits
+        onSnapshot(collection(db, "porte clé"), (snapshot) => {
+            produitsDiv.innerHTML = "";
+            snapshot.forEach((doc) => {
+                const produit = doc.data();
+                const produitElement = document.createElement('div');
+                produitElement.classList.add('produit');
+                produitElement.innerHTML = `
+                    <img src="${produit.imageUrl}" alt="${produit.nom}" class="produit-img" />
+                    <h3>${produit.nom}</h3>
+                    <p>${produit.description}</p>
+                    <div class="prix">${produit.prix}€</div>
+                    <button class="add-to-cart">Ajouter au panier</button>
+                `;
+
+                const modal = document.getElementById('modal');
+                const modalImg = document.getElementById('modal-img');
+                const img = produitElement.querySelector('.produit-img');
+
+                img.onclick = function () {
+                    modal.style.display = "block";
+                    modalImg.src = produit.imageUrl;
+                };
+
+                document.querySelector(".close").onclick = function () {
+                    modal.style.display = "none";
+                };
+
+                produitsDiv.appendChild(produitElement);
+            });
+        });
+    </script>
+    <script>
+        // Attendre que le DOM soit entièrement chargé
+ document.addEventListener("DOMContentLoaded", function() {
+     const boutiqueLink = document.getElementById("boutique-link");
+     const submenuContainer = document.getElementById("submenu-container");
+ 
+     // Par défaut, cacher le sous-menu
+     submenuContainer.style.display = "none";
+ 
+     // Ajouter un événement pour afficher/masquer les sous-menus lorsque "Boutique" est cliqué
+     boutiqueLink.addEventListener("click", function(event) {
+         event.preventDefault(); // Empêcher le comportement de lien par défaut
+ 
+         // Vérifier si le sous-menu est déjà visible ou non
+         if (submenuContainer.style.display === "none") {
+             // Afficher le sous-menu
+             submenuContainer.style.display = "block";
+         } else {
+             // Cacher le sous-menu
+             submenuContainer.style.display = "none";
+         }
+     });
+ });
+ 
+     </script>
+</body>
+
+</html>

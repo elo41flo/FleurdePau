@@ -112,7 +112,9 @@ nav ul li a:hover {
     flex-direction: column;
     justify-content: space-between;
     transition: transform 0.3s, box-shadow 0.3s ease;
+    overflow: hidden; /* Pour s'assurer que l'image ne dépasse pas */
 }
+
 
 .produit:hover {
     transform: translateY(-5px);
@@ -121,9 +123,9 @@ nav ul li a:hover {
 
 /* Image du produit */
 .produit img {
-    max-width: 100%;
-    height: 180px;
-    object-fit: cover;
+    width: 100%; /* L'image prend 100% de la largeur de son conteneur */
+    height: 200px; /* Hauteur fixe pour éviter la distorsion */
+    object-fit: cover; /* L'image couvre tout le conteneur sans déformation */
     border-radius: 8px;
     transition: transform 0.3s ease;
 }
@@ -237,7 +239,7 @@ footer {
     }
 
     .produit img {
-        height: 200px; /* Augmenter la taille de l'image sur mobile */
+        height: 150px; /* Augmenter la taille de l'image sur mobile */
     }
 
     .produit h3 {
@@ -267,7 +269,7 @@ footer {
     }
 
     .produit img {
-        height: 160px; /* Image un peu plus grande que sur mobile */
+        height: 180px; /* Image un peu plus grande que sur mobile */
     }
 
     .produit h3 {
@@ -559,18 +561,19 @@ footer {
         <div class="header-content">
             <div class="logo">Fleur de Pau</div>
             <nav>
-                <ul>
-                    <li><a href="index.html">Accueil</a></li>
-                    <li id="menu-boutique">
-                        <a href="#" id="boutique-link">Boutique ▼</a>
-                        <ul id="submenu-container" style="display: none;">
-                            <li><a href="fleur.html">Fleur crochet</a></li>
-                            <li><a href="porte clé.html">Porte clé</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="contact.html">Contact</a></li>
-                </ul>
-            </nav>
+                <nav>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li id="menu-boutique">
+                            <a href="boutique.html" id="boutique-link">Boutique ▼</a>
+                            <ul id="submenu-container" style="display: none;">
+                                <li><a href="fleur.html">Fleur crochet</a></li>
+                                <li><a href="porte clé.html">Porte clé</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </nav>
         </div>
         <div class="header-icons">
             <a href="mon-compte.html"><i class="fas fa-user"></i></a>

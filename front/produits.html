@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -106,17 +107,6 @@
             background-color: #45a049;
         }
 
-        /* Style pour les cercles de couleur */
-        .color-circle {
-            width: 30px;  /* Taille du cercle */
-            height: 30px;
-            border-radius: 50%; /* Cercle */
-            display: inline-block; /* Affichage côte à côte */
-            margin-right: 10px;
-            cursor: pointer;
-            border: 2px solid #ccc; /* Bordure légère pour rendre les cercles plus visibles */
-        }
-
         footer {
             text-align: center;
             margin: 2rem 0;
@@ -124,77 +114,14 @@
             background-color: #444;
             color: white;
         }
-
-        /* Responsive Styles */
-        @media screen and (max-width: 768px) {
-            nav {
-                text-align: center;
-            }
-
-            nav a {
-                display: block;
-                padding: 10px;
-                width: 100%;
-                text-align: center;
-            }
-
-            h1 {
-                font-size: 2rem;
-            }
-
-            .form-container {
-                padding: 1rem;
-            }
-
-            .produits {
-                padding: 0;
-            }
-
-            .produit-card {
-                padding: 1rem;
-                margin: 1rem 0;
-            }
-
-            .btn {
-                width: 100%;
-                padding: 1rem;
-                margin-top: 10px;
-            }
-        }
-
-        @media screen and (max-width: 480px) {
-            .produit-card {
-                padding: 0.8rem;
-            }
-
-            .form-container input,
-            .form-container select,
-            .form-container textarea {
-                padding: 0.6rem;
-                font-size: 0.9rem;
-            }
-
-            h1 {
-                font-size: 1.8rem;
-            }
-        }
     </style>
 </head>
+
 <script type="module">
-    import { 
-        initializeApp 
-    } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
-    
-    import { 
-        getAuth, onAuthStateChanged, signOut 
-    } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
-    
-    import { 
-        getFirestore, enableIndexedDbPersistence, collection, addDoc, 
-        updateDoc, deleteDoc, doc, getDocs, getDoc, enableNetwork 
-    } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
-    
-    // 🔥 Configuration Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
+    import { getFirestore, enableIndexedDbPersistence, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, enableNetwork } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+
     const firebaseConfig = {
         apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
         authDomain: "fleurdepau-1ce7d.firebaseapp.com",
@@ -204,20 +131,17 @@
         appId: "1:394738141831:web:a0cd5b9d0227267b248622",
         measurementId: "G-D1J6X7BH9S"
     };
-    
-    // 🔥 Initialisation de Firebase
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
     window.db = db;
     window.auth = auth;
-    
-    // ✅ Activation du mode hors ligne pour Firestore
+
     enableIndexedDbPersistence(db).catch((err) => {
         console.error("❌ Erreur de persistance Firestore :", err);
     });
-    
-    // ✅ Vérifier la connexion Firestore et tenter de rétablir en cas d'échec
+
     async function verifierConnexionFirestore() {
         try {
             await enableNetwork(db);
@@ -228,14 +152,13 @@
         }
     }
     verifierConnexionFirestore();
-    
-    // 🚨 Empêcher la connexion anonyme
+
     onAuthStateChanged(auth, (user) => {
         if (user) {
             if (user.isAnonymous) {
                 console.warn("⚠️ Déconnexion de l'utilisateur anonyme...");
                 signOut(auth).then(() => {
-                    window.location.href = "login.html"; // Redirection vers la page de connexion
+                    window.location.href = "login.html";
                 });
             } else {
                 console.log("✅ Utilisateur connecté :", user.email || "Utilisateur authentifié");
@@ -246,133 +169,116 @@
         }
     });
 
-    // 📌 Fonction pour sauvegarder les produits
-    async function sauvegarderProduit(event) {
-        event.preventDefault(); // Empêche la soumission du formulaire
-        
-        console.log("Formulaire soumis"); // Ajoute ce log pour vérifier si la fonction est bien appelée
-        
-        // Récupération des éléments du formulaire
+    async function sauvegarderProduit(event, collectionName) {
+        event.preventDefault();
+
         const btnSauvegarde = document.getElementById('btn-sauvegarde');
-        const produitId = btnSauvegarde.getAttribute('data-id'); // ID du produit à modifier (si présent)
-    
+        const produitId = btnSauvegarde.getAttribute('data-id');
+
         const nom = document.getElementById('nom-produit').value.trim();
         const description = document.getElementById('description-produit').value.trim();
         const prix = parseFloat(document.getElementById('prix-produit').value);
         const imageUrl = document.getElementById('image-url').value.trim();
         const couleursInput = document.getElementById('couleurs-produit').value.split(',').map(c => c.trim()).filter(c => c);
-    
+
         let couleurs = [];
         couleursInput.forEach(couleur => {
             const stock = parseInt(document.getElementById(`stock-${couleur}`)?.value || 0);
             couleurs.push({ couleur, stock });
         });
-    
+
         if (!nom || !description || isNaN(prix) || prix <= 0 || !imageUrl) {
             alert("Veuillez remplir tous les champs correctement.");
             return;
         }
-    
+
         const produitData = { nom, description, prix, imageUrl, couleurs };
-    
+
         try {
             if (produitId) {
-                // Mode modification
-                await updateDoc(doc(db, 'produits', produitId), produitData);
+                await updateDoc(doc(db, collectionName, produitId), produitData);
                 alert("✅ Produit mis à jour !");
             } else {
-                // Mode ajout
-                await addDoc(collection(db, 'produits'), produitData);
+                await addDoc(collection(db, collectionName), produitData);
                 alert("✅ Nouveau produit ajouté !");
             }
-    
-            // Recharger les produits après la sauvegarde
-            obtenirProduits();
-            document.getElementById('form-produit').reset();  // Réinitialiser le formulaire
-            btnSauvegarde.removeAttribute('data-id');  // Retirer l'ID de modification
-            btnSauvegarde.textContent = 'Ajouter le produit';  // Réinitialiser le texte du bouton
-    
+
+            obtenirProduits(collectionName);
+            document.getElementById('form-produit').reset();
+            btnSauvegarde.removeAttribute('data-id');
+            btnSauvegarde.textContent = 'Ajouter le produit';
+
         } catch (error) {
             console.error("❌ Erreur lors de l'enregistrement du produit : ", error);
             alert("Erreur lors de l'enregistrement du produit. Veuillez réessayer.");
         }
     }
 
-    // 📌 Charger la liste des produits au chargement de la page
-    document.addEventListener('DOMContentLoaded', () => {
-        // Ajout de l'événement de soumission au formulaire
-        const form = document.getElementById('form-produit');
-        form.addEventListener('submit', sauvegarderProduit);
-
-        // Charger les produits dès que la page est prête
-        obtenirProduits();
-    });
-    
-    // 📌 Charger les produits
-    async function obtenirProduits() {
+    async function obtenirProduits(collectionName) {
         console.log("🔄 Tentative de récupération des produits...");
-        const produitsRef = collection(db, 'produits');
-    
+        const produitsRef = collection(db, collectionName);
+
         try {
             const querySnapshot = await getDocs(produitsRef);
-            const produitsContainer = document.getElementById('produits-container');
-            produitsContainer.innerHTML = querySnapshot.empty ? "<p>Aucun produit trouvé.</p>" : "";
-    
-            querySnapshot.forEach(docSnapshot => {
-                const produit = docSnapshot.data();
-    
-                const couleursHTML = produit.couleurs ? produit.couleurs.map(couleurData => {
-                    const { couleur, stock } = couleurData;
-                    return `<option value="${couleur}">${couleur} (${stock} en stock)</option>`;
-                }).join("") : 'Aucune couleur disponible';
-    
-                produitsContainer.innerHTML += `
-                    <div class="produit-card">
-                        <h3>${produit.nom}</h3>
-                        <p><strong>ID:</strong> ${docSnapshot.id}</p>
-                        <p><strong>Description:</strong> ${produit.description}</p>
-                        <p><strong>Prix:</strong> ${produit.prix}€</p>
-                        <p><strong>Couleurs:</strong>
-                            <select id="couleur-${docSnapshot.id}">
-                                ${couleursHTML}
-                            </select>
-                        </p>
-                        <img src="${produit.imageUrl}" alt="${produit.nom}" width="100">
-                        <button class="btn-modifier" data-id="${docSnapshot.id}">Modifier</button>
-                        <button class="btn-supprimer" data-id="${docSnapshot.id}">Supprimer</button>
-                    </div>
-                `;
-            });
-    
-            ajouterEvenements();  // Cette fonction s'assure que les boutons sont fonctionnels.
-            console.log("✅ Produits récupérés avec succès !");
+            const produitsContainer = document.getElementById(`produits-container-${collectionName.replace(/\s/g, '-').toLowerCase()}`);
+
+            if (produitsContainer) {
+                produitsContainer.innerHTML = querySnapshot.empty ? "<p>Aucun produit trouvé.</p>" : "";
+
+                querySnapshot.forEach(docSnapshot => {
+                    const produit = docSnapshot.data();
+                    const couleursHTML = produit.couleurs ? produit.couleurs.map(couleurData => {
+                        const { couleur, stock } = couleurData;
+                        return `<option value="${couleur}">${couleur} (${stock} en stock)</option>`;
+                    }).join("") : 'Aucune couleur disponible';
+
+                    produitsContainer.innerHTML += `
+
+                        <div class="produit-card">
+                            <h3>${produit.nom}</h3>
+                            <p><strong>ID:</strong> ${docSnapshot.id}</p>
+                            <p><strong>Description:</strong> ${produit.description}</p>
+                            <p><strong>Prix:</strong> ${produit.prix}€</p>
+                            <p><strong>Couleurs:</strong>
+                                <select id="couleur-${docSnapshot.id}">
+                                    ${couleursHTML}
+                                </select>
+                            </p>
+                            <img src="${produit.imageUrl}" alt="${produit.nom}" width="100">
+                            <button class="btn-modifier" data-id="${docSnapshot.id}">Modifier</button>
+                            <button class="btn-supprimer" data-id="${docSnapshot.id}">Supprimer</button>
+                        </div>
+                    `;
+                });
+
+                ajouterEvenements();
+                console.log("✅ Produits récupérés avec succès !");
+            }
         } catch (error) {
             console.error("❌ Erreur lors de la récupération des produits :", error);
             alert("Impossible de récupérer les produits. Veuillez vérifier votre connexion.");
         }
     }
-    
-    // 📌 Ajouter les événements pour modifier ou supprimer un produit
+
     function ajouterEvenements() {
-        // Ajouter un événement pour la modification des produits
         document.querySelectorAll('.btn-modifier').forEach(button => {
-            button.addEventListener('click', async function() {
+            button.addEventListener('click', async function () {
                 const produitId = button.getAttribute('data-id');
-                const produitRef = doc(db, 'produits', produitId);
+                const produitRef = doc(db, 'fleur', produitId);
                 const produitSnap = await getDoc(produitRef);
-    
+
                 if (produitSnap.exists()) {
                     const produit = produitSnap.data();
                     document.getElementById('nom-produit').value = produit.nom;
                     document.getElementById('description-produit').value = produit.description;
                     document.getElementById('prix-produit').value = produit.prix;
                     document.getElementById('image-url').value = produit.imageUrl;
-    
-                    // Remplir les champs couleurs et stock dynamiquement
+
                     let couleursHTML = '';
                     produit.couleurs.forEach(couleurData => {
                         const { couleur, stock } = couleurData;
                         couleursHTML += `
+
                             <div>
                                 <input type="text" value="${couleur}" disabled> Stock: 
                                 <input type="number" id="stock-${couleur}" value="${stock}" min="0">
@@ -380,27 +286,25 @@
                         `;
                     });
                     document.getElementById('stock-fields').innerHTML = couleursHTML;
-    
-                    // Modifier le bouton pour indiquer qu'on est en mode modification
+
                     const btnSauvegarde = document.getElementById('btn-sauvegarde');
-                    btnSauvegarde.setAttribute('data-id', produitId);  // Assigner l'ID du produit pour la modification
+                    btnSauvegarde.setAttribute('data-id', produitId);
                     btnSauvegarde.textContent = 'Mettre à jour le produit';
                 } else {
                     alert("Produit non trouvé.");
                 }
             });
         });
-    
-        // Ajouter un événement pour supprimer un produit
+
         document.querySelectorAll('.btn-supprimer').forEach(button => {
-            button.addEventListener('click', async function() {
+            button.addEventListener('click', async function () {
                 const produitId = button.getAttribute('data-id');
-                const produitRef = doc(db, 'produits', produitId);
-    
+                const produitRef = doc(db, 'fleur', produitId);
+
                 try {
                     await deleteDoc(produitRef);
                     alert("✅ Produit supprimé avec succès !");
-                    obtenirProduits();  // Rafraîchir la liste des produits
+                    obtenirProduits("fleur");
                 } catch (error) {
                     console.error("❌ Erreur lors de la suppression du produit :", error);
                     alert("Impossible de supprimer le produit. Veuillez réessayer.");
@@ -408,38 +312,53 @@
             });
         });
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        obtenirProduits("fleur");
+        obtenirProduits("porte clé");
+    });
 </script>
-
-
-
 
 <body>
     <nav>
-        <a href="admin.html">Accueil Admin</a>
-        <a href="commandes.html">Commandes</a>
-        <a href="produits.html">Produits</a>
-        <a href="menu.html">Menu</a>
+        <a href="#fleur">Fleur</a>
+        <a href="#porte-key">Porte-Clé</a>
     </nav>
+
     <header>
         <h1>Gestion des Produits</h1>
     </header>
 
     <div class="form-container">
-        <form id="form-produit" onsubmit="sauvegarderProduit(event)">
-            <input type="text" id="nom-produit" placeholder="Nom du produit" required>
-            <textarea id="description-produit" placeholder="Description du produit" required></textarea>
-            <input type="number" id="prix-produit" placeholder="Prix" required>
-            <input type="text" id="image-url" placeholder="URL de l'image" required>
-            <input type="text" id="couleurs-produit" placeholder="Couleurs disponibles (séparées par une virgule)" required>
+        <form id="form-produit" onsubmit="sauvegarderProduit(event, 'fleur')">
+            <label for="nom-produit">Nom du produit</label>
+            <input type="text" id="nom-produit" required>
+
+            <label for="description-produit">Description</label>
+            <textarea id="description-produit" required></textarea>
+
+            <label for="prix-produit">Prix</label>
+            <input type="number" id="prix-produit" step="0.01" required>
+
+            <label for="image-url">URL de l'image</label>
+            <input type="text" id="image-url" required>
+
+            <label for="couleurs-produit">Couleurs disponibles (séparées par des virgules)</label>
+            <input type="text" id="couleurs-produit">
+
             <div id="stock-fields"></div>
+
             <button type="submit" id="btn-sauvegarde">Ajouter le produit</button>
         </form>
     </div>
 
-    <div class="produits" id="produits-container"></div>
+    <div class="produits" id="produits-container-fleur"></div>
+    <div class="produits" id="produits-container-porte-key"></div>
 
     <footer>
-        <p>&copy; 2025 Fleur de Pau</p>
+        <p>© 2025 Fleur de Pau. Tous droits réservés.</p>
     </footer>
+
 </body>
+
 </html>
