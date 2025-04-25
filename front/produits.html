@@ -119,7 +119,7 @@
 <body>
     <nav>
         <a href="#fleur">Fleur</a>
-        <a href="#porte-clé">Porte-Clé</a>
+        <a href="#gravure">Gravure</a>
     </nav>
 
     <header>
@@ -150,7 +150,7 @@
     </div>
 
     <div class="produits" id="produits-container-fleur"></div>
-    <div class="produits" id="produits-container-porte-clé"></div>
+    <div class="produits" id="produits-container-gravure"></div>
 
     <footer>
         <p>© 2025 Fleur de Pau. Tous droits réservés.</p>
@@ -158,43 +158,37 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
-  import {
-      getFirestore,
-      initializeFirestore,
-      collection,
-      doc,
-      addDoc,
-      updateDoc,
-      deleteDoc,
-      getDocs,
-      getDoc
-  } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
+        import {
+            getFirestore,
+            initializeFirestore,
+            collection,
+            doc,
+            addDoc,
+            updateDoc,
+            deleteDoc,
+            getDocs,
+            getDoc
+        } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-      apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
-      authDomain: "fleurdepau-1ce7d.firebaseapp.com",
-      projectId: "fleurdepau-1ce7d",
-      storageBucket: "fleurdepau-1ce7d.appspot.com",
-      messagingSenderId: "394738141831",
-      appId: "1:394738141831:web:a0cd5b9d0227267b248622",
-      measurementId: "G-D1J6X7BH9S"
-  };
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+            projectId: "fleurdepau-1ce7d",
+            storageBucket: "fleurdepau-1ce7d.appspot.com",
+            messagingSenderId: "394738141831",
+            appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+            measurementId: "G-D1J6X7BH9S"
+        };
 
-  const app = initializeApp(firebaseConfig);
+        const app = initializeApp(firebaseConfig);
 
-  // ✅ Import correct de initializeFirestore
-  const db = initializeFirestore(app, {
-      experimentalForceLongPolling: true
-  });
+        // ✅ Import correct de initializeFirestore
+        const db = initializeFirestore(app, {
+            experimentalForceLongPolling: true
+        });
 
-  // ❌ Cette ligne était fausse si "auth" n'était pas défini :
-  //window.auth = auth;
-
-  // ✅ Si tu veux utiliser l’authentification, décommente cette ligne :
-    //const auth = getAuth(app);
-
-  window.db = db;
+        window.db = db;
 
         async function sauvegarderProduit(event, collectionName) {
             event.preventDefault();
@@ -262,11 +256,10 @@
                     const id = docSnap.id;
 
                     const couleursHTML = Array.isArray(data.couleurs)
-    ? data.couleurs.map(c =>
-        `<option value="${c.couleur}">${c.couleur} (${c.stock})</option>`
-      ).join("")
-    : "<option>Aucune couleur</option>";
-
+                        ? data.couleurs.map(c =>
+                            `<option value="${c.couleur}">${c.couleur} (${c.stock})</option>`
+                        ).join("")
+                        : "<option>Aucune couleur</option>";
 
                     produitsContainer.innerHTML += `
                         <div class="produit-card">
@@ -348,7 +341,7 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             obtenirProduits("fleur");
-            obtenirProduits("porte clé");
+            obtenirProduits("gravure");
 
             document.getElementById("form-produit").addEventListener("submit", e => {
                 const hash = location.hash?.replace("#", "") || "fleur";

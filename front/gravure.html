@@ -295,7 +295,7 @@
                         <a href="#" id="boutique-link">Boutique ▼</a>
                         <ul id="submenu-container" style="display: none;">
                             <li><a href="fleur.html">Fleur crochet</a></li>
-                            <li><a href="porte clé.html">Porte clé</a></li>
+                            <li><a href="gravure.html">Gravure</a></li>
                         </ul>
                     </li>
                     <li><a href="contact.html">Contact</a></li>
@@ -349,7 +349,7 @@ console.log("Firebase app initialized", app);
         const closeModal = document.querySelector(".close");
     
         // Fonction pour afficher les produits
-        onSnapshot(collection(db, "porte clé"), (snapshot) => {
+        onSnapshot(collection(db, "gravure"), (snapshot) => {
             console.log("Snapshot received", snapshot);  // Vérifie si le snapshot est bien reçu
             produitsDiv.innerHTML = ""; // Réinitialiser la div à chaque snapshot
             if (snapshot.empty) {
