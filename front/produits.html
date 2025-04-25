@@ -2,11 +2,10 @@
 <html lang="fr">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gestion des Produits</title>
     <style>
-        /* Global Styles */
         body {
             font-family: Arial, sans-serif;
             background-color: #f9f9f9;
@@ -117,212 +116,10 @@
     </style>
 </head>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
-    import { getFirestore, enableIndexedDbPersistence, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, enableNetwork } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
-        authDomain: "fleurdepau-1ce7d.firebaseapp.com",
-        projectId: "fleurdepau-1ce7d",
-        storageBucket: "fleurdepau-1ce7d.appspot.com",
-        messagingSenderId: "394738141831",
-        appId: "1:394738141831:web:a0cd5b9d0227267b248622",
-        measurementId: "G-D1J6X7BH9S"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    window.db = db;
-    window.auth = auth;
-
-    enableIndexedDbPersistence(db).catch((err) => {
-        console.error("❌ Erreur de persistance Firestore :", err);
-    });
-
-    async function verifierConnexionFirestore() {
-        try {
-            await enableNetwork(db);
-            console.log("✅ Firestore en ligne !");
-        } catch (error) {
-            console.warn("⚠️ Firestore hors ligne. Nouvelle tentative dans 10 secondes...");
-            setTimeout(verifierConnexionFirestore, 10000);
-        }
-    }
-    verifierConnexionFirestore();
-
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            if (user.isAnonymous) {
-                console.warn("⚠️ Déconnexion de l'utilisateur anonyme...");
-                signOut(auth).then(() => {
-                    window.location.href = "login.html";
-                });
-            } else {
-                console.log("✅ Utilisateur connecté :", user.email || "Utilisateur authentifié");
-            }
-        } else {
-            console.warn("⚠️ Aucun utilisateur connecté, redirection vers la connexion...");
-            window.location.href = "login.html";
-        }
-    });
-
-    async function sauvegarderProduit(event, collectionName) {
-        event.preventDefault();
-
-        const btnSauvegarde = document.getElementById('btn-sauvegarde');
-        const produitId = btnSauvegarde.getAttribute('data-id');
-
-        const nom = document.getElementById('nom-produit').value.trim();
-        const description = document.getElementById('description-produit').value.trim();
-        const prix = parseFloat(document.getElementById('prix-produit').value);
-        const imageUrl = document.getElementById('image-url').value.trim();
-        const couleursInput = document.getElementById('couleurs-produit').value.split(',').map(c => c.trim()).filter(c => c);
-
-        let couleurs = [];
-        couleursInput.forEach(couleur => {
-            const stock = parseInt(document.getElementById(`stock-${couleur}`)?.value || 0);
-            couleurs.push({ couleur, stock });
-        });
-
-        if (!nom || !description || isNaN(prix) || prix <= 0 || !imageUrl) {
-            alert("Veuillez remplir tous les champs correctement.");
-            return;
-        }
-
-        const produitData = { nom, description, prix, imageUrl, couleurs };
-
-        try {
-            if (produitId) {
-                await updateDoc(doc(db, collectionName, produitId), produitData);
-                alert("✅ Produit mis à jour !");
-            } else {
-                await addDoc(collection(db, collectionName), produitData);
-                alert("✅ Nouveau produit ajouté !");
-            }
-
-            obtenirProduits(collectionName);
-            document.getElementById('form-produit').reset();
-            btnSauvegarde.removeAttribute('data-id');
-            btnSauvegarde.textContent = 'Ajouter le produit';
-
-        } catch (error) {
-            console.error("❌ Erreur lors de l'enregistrement du produit : ", error);
-            alert("Erreur lors de l'enregistrement du produit. Veuillez réessayer.");
-        }
-    }
-
-    async function obtenirProduits(collectionName) {
-        console.log("🔄 Tentative de récupération des produits...");
-        const produitsRef = collection(db, collectionName);
-
-        try {
-            const querySnapshot = await getDocs(produitsRef);
-            const produitsContainer = document.getElementById(`produits-container-${collectionName.replace(/\s/g, '-').toLowerCase()}`);
-
-            if (produitsContainer) {
-                produitsContainer.innerHTML = querySnapshot.empty ? "<p>Aucun produit trouvé.</p>" : "";
-
-                querySnapshot.forEach(docSnapshot => {
-                    const produit = docSnapshot.data();
-                    const couleursHTML = produit.couleurs ? produit.couleurs.map(couleurData => {
-                        const { couleur, stock } = couleurData;
-                        return `<option value="${couleur}">${couleur} (${stock} en stock)</option>`;
-                    }).join("") : 'Aucune couleur disponible';
-
-                    produitsContainer.innerHTML += `
-
-                        <div class="produit-card">
-                            <h3>${produit.nom}</h3>
-                            <p><strong>ID:</strong> ${docSnapshot.id}</p>
-                            <p><strong>Description:</strong> ${produit.description}</p>
-                            <p><strong>Prix:</strong> ${produit.prix}€</p>
-                            <p><strong>Couleurs:</strong>
-                                <select id="couleur-${docSnapshot.id}">
-                                    ${couleursHTML}
-                                </select>
-                            </p>
-                            <img src="${produit.imageUrl}" alt="${produit.nom}" width="100">
-                            <button class="btn-modifier" data-id="${docSnapshot.id}">Modifier</button>
-                            <button class="btn-supprimer" data-id="${docSnapshot.id}">Supprimer</button>
-                        </div>
-                    `;
-                });
-
-                ajouterEvenements();
-                console.log("✅ Produits récupérés avec succès !");
-            }
-        } catch (error) {
-            console.error("❌ Erreur lors de la récupération des produits :", error);
-            alert("Impossible de récupérer les produits. Veuillez vérifier votre connexion.");
-        }
-    }
-
-    function ajouterEvenements() {
-        document.querySelectorAll('.btn-modifier').forEach(button => {
-            button.addEventListener('click', async function () {
-                const produitId = button.getAttribute('data-id');
-                const produitRef = doc(db, 'fleur', produitId);
-                const produitSnap = await getDoc(produitRef);
-
-                if (produitSnap.exists()) {
-                    const produit = produitSnap.data();
-                    document.getElementById('nom-produit').value = produit.nom;
-                    document.getElementById('description-produit').value = produit.description;
-                    document.getElementById('prix-produit').value = produit.prix;
-                    document.getElementById('image-url').value = produit.imageUrl;
-
-                    let couleursHTML = '';
-                    produit.couleurs.forEach(couleurData => {
-                        const { couleur, stock } = couleurData;
-                        couleursHTML += `
-
-                            <div>
-                                <input type="text" value="${couleur}" disabled> Stock: 
-                                <input type="number" id="stock-${couleur}" value="${stock}" min="0">
-                            </div>
-                        `;
-                    });
-                    document.getElementById('stock-fields').innerHTML = couleursHTML;
-
-                    const btnSauvegarde = document.getElementById('btn-sauvegarde');
-                    btnSauvegarde.setAttribute('data-id', produitId);
-                    btnSauvegarde.textContent = 'Mettre à jour le produit';
-                } else {
-                    alert("Produit non trouvé.");
-                }
-            });
-        });
-
-        document.querySelectorAll('.btn-supprimer').forEach(button => {
-            button.addEventListener('click', async function () {
-                const produitId = button.getAttribute('data-id');
-                const produitRef = doc(db, 'fleur', produitId);
-
-                try {
-                    await deleteDoc(produitRef);
-                    alert("✅ Produit supprimé avec succès !");
-                    obtenirProduits("fleur");
-                } catch (error) {
-                    console.error("❌ Erreur lors de la suppression du produit :", error);
-                    alert("Impossible de supprimer le produit. Veuillez réessayer.");
-                }
-            });
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        obtenirProduits("fleur");
-        obtenirProduits("porte clé");
-    });
-</script>
-
 <body>
     <nav>
         <a href="#fleur">Fleur</a>
-        <a href="#porte-key">Porte-Clé</a>
+        <a href="#porte-clé">Porte-Clé</a>
     </nav>
 
     <header>
@@ -330,21 +127,21 @@
     </header>
 
     <div class="form-container">
-        <form id="form-produit" onsubmit="sauvegarderProduit(event, 'fleur')">
+        <form id="form-produit">
             <label for="nom-produit">Nom du produit</label>
-            <input type="text" id="nom-produit" required>
+            <input type="text" id="nom-produit" required />
 
             <label for="description-produit">Description</label>
             <textarea id="description-produit" required></textarea>
 
             <label for="prix-produit">Prix</label>
-            <input type="number" id="prix-produit" step="0.01" required>
+            <input type="number" id="prix-produit" step="0.01" required />
 
             <label for="image-url">URL de l'image</label>
-            <input type="text" id="image-url" required>
+            <input type="text" id="image-url" required />
 
             <label for="couleurs-produit">Couleurs disponibles (séparées par des virgules)</label>
-            <input type="text" id="couleurs-produit">
+            <input type="text" id="couleurs-produit" />
 
             <div id="stock-fields"></div>
 
@@ -353,12 +150,212 @@
     </div>
 
     <div class="produits" id="produits-container-fleur"></div>
-    <div class="produits" id="produits-container-porte-key"></div>
+    <div class="produits" id="produits-container-porte-clé"></div>
 
     <footer>
         <p>© 2025 Fleur de Pau. Tous droits réservés.</p>
     </footer>
 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
+  import {
+      getFirestore,
+      initializeFirestore,
+      collection,
+      doc,
+      addDoc,
+      updateDoc,
+      deleteDoc,
+      getDocs,
+      getDoc
+  } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+      apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+      authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+      projectId: "fleurdepau-1ce7d",
+      storageBucket: "fleurdepau-1ce7d.appspot.com",
+      messagingSenderId: "394738141831",
+      appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+      measurementId: "G-D1J6X7BH9S"
+  };
+
+  const app = initializeApp(firebaseConfig);
+
+  // ✅ Import correct de initializeFirestore
+  const db = initializeFirestore(app, {
+      experimentalForceLongPolling: true
+  });
+
+  // ❌ Cette ligne était fausse si "auth" n'était pas défini :
+  //window.auth = auth;
+
+  // ✅ Si tu veux utiliser l’authentification, décommente cette ligne :
+    //const auth = getAuth(app);
+
+  window.db = db;
+
+        async function sauvegarderProduit(event, collectionName) {
+            event.preventDefault();
+
+            const nom = document.getElementById("nom-produit").value.trim();
+            const description = document.getElementById("description-produit").value.trim();
+            const prix = parseFloat(document.getElementById("prix-produit").value.trim());
+            const imageUrl = document.getElementById("image-url").value.trim();
+            const couleursBrutes = document.getElementById("couleurs-produit").value.trim().split(",");
+
+            const btn = document.getElementById("btn-sauvegarde");
+            const produitId = btn.getAttribute("data-id");
+
+            let couleurs = couleursBrutes.map(c => c.trim()).filter(Boolean).map(couleur => {
+                const stock = parseInt(document.getElementById(`stock-${couleur}`)?.value || "0");
+                return { couleur, stock };
+            });
+
+            if (!nom || !description || isNaN(prix) || !imageUrl) {
+                return alert("Veuillez remplir tous les champs.");
+            }
+
+            const produit = { nom, description, prix, imageUrl, couleurs };
+
+            try {
+                if (produitId) {
+                    await updateDoc(doc(db, collectionName, produitId), produit);
+                    alert("✅ Produit mis à jour !");
+                } else {
+                    await addDoc(collection(db, collectionName), produit);
+                    alert("✅ Produit ajouté !");
+                }
+
+                document.getElementById("form-produit").reset();
+                btn.removeAttribute("data-id");
+                btn.textContent = "Ajouter le produit";
+                obtenirProduits(collectionName);
+            } catch (err) {
+                console.error("Erreur sauvegarde :", err);
+                alert("Erreur lors de l'enregistrement.");
+            }
+        }
+
+        async function obtenirProduits(collectionName) {
+            console.log(`🔄 Chargement de : ${collectionName}`);
+            const containerId = `produits-container-${collectionName.toLowerCase().replace(/\s+/g, '-')}`;
+            const produitsContainer = document.getElementById(containerId);
+
+            if (!produitsContainer) {
+                console.warn(`⚠️ Conteneur manquant : ${containerId}`);
+                return;
+            }
+
+            produitsContainer.innerHTML = "";
+
+            try {
+                const snapshot = await getDocs(collection(db, collectionName));
+                if (snapshot.empty) {
+                    produitsContainer.innerHTML = "<p>Aucun produit.</p>";
+                    return;
+                }
+
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const id = docSnap.id;
+
+                    const couleursHTML = Array.isArray(data.couleurs)
+    ? data.couleurs.map(c =>
+        `<option value="${c.couleur}">${c.couleur} (${c.stock})</option>`
+      ).join("")
+    : "<option>Aucune couleur</option>";
+
+
+                    produitsContainer.innerHTML += `
+                        <div class="produit-card">
+                            <h3>${data.nom}</h3>
+                            <p><strong>ID:</strong> ${id}</p>
+                            <p><strong>Description:</strong> ${data.description}</p>
+                            <p><strong>Prix:</strong> ${data.prix} €</p>
+                            <p><strong>Couleurs:</strong>
+                                <select>${couleursHTML}</select>
+                            </p>
+                            <img src="${data.imageUrl}" alt="${data.nom}" width="100">
+                            <button class="btn btn-modifier" data-id="${id}" data-collection="${collectionName}">Modifier</button>
+                            <button class="btn btn-supprimer" data-id="${id}" data-collection="${collectionName}">Supprimer</button>
+                        </div>
+                    `;
+                });
+
+                ajouterEvenements();
+                console.log(`✅ ${collectionName} chargés.`);
+            } catch (err) {
+                console.error("Erreur récupération :", err);
+                alert("Erreur réseau ou Firestore indisponible.");
+            }
+        }
+
+        function ajouterEvenements() {
+            document.querySelectorAll(".btn-modifier").forEach(btn => {
+                btn.onclick = async () => {
+                    const id = btn.dataset.id;
+                    const collectionName = btn.dataset.collection;
+                    const docRef = doc(db, collectionName, id);
+                    const docSnap = await getDoc(docRef);
+
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        document.getElementById("nom-produit").value = data.nom;
+                        document.getElementById("description-produit").value = data.description;
+                        document.getElementById("prix-produit").value = data.prix;
+                        document.getElementById("image-url").value = data.imageUrl;
+
+                        const stockFields = document.getElementById("stock-fields");
+                        stockFields.innerHTML = "";
+                        document.getElementById("couleurs-produit").value = data.couleurs.map(c => c.couleur).join(", ");
+
+                        data.couleurs.forEach(({ couleur, stock }) => {
+                            stockFields.innerHTML += `
+                                <div>
+                                    <input type="text" value="${couleur}" disabled>
+                                    Stock: <input type="number" id="stock-${couleur}" value="${stock}" min="0">
+                                </div>
+                            `;
+                        });
+
+                        const btnSauvegarde = document.getElementById("btn-sauvegarde");
+                        btnSauvegarde.setAttribute("data-id", id);
+                        btnSauvegarde.textContent = "Mettre à jour le produit";
+                    }
+                };
+            });
+
+            document.querySelectorAll(".btn-supprimer").forEach(btn => {
+                btn.onclick = async () => {
+                    const id = btn.dataset.id;
+                    const collectionName = btn.dataset.collection;
+
+                    if (confirm("Supprimer ce produit ?")) {
+                        try {
+                            await deleteDoc(doc(db, collectionName, id));
+                            alert("✅ Supprimé !");
+                            obtenirProduits(collectionName);
+                        } catch (err) {
+                            console.error("Erreur suppression :", err);
+                            alert("Erreur de suppression.");
+                        }
+                    }
+                };
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            obtenirProduits("fleur");
+            obtenirProduits("porte clé");
+
+            document.getElementById("form-produit").addEventListener("submit", e => {
+                const hash = location.hash?.replace("#", "") || "fleur";
+                sauvegarderProduit(e, hash);
+            });
+        });
+    </script>
 </body>
 
 </html>

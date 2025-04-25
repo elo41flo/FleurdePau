@@ -323,81 +323,98 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
-            authDomain: "fleurdepau-1ce7d.firebaseapp.com",
-            projectId: "fleurdepau-1ce7d",
-            storageBucket: "fleurdepau-1ce7d.appspot.com",
-            messagingSenderId: "394738141831",
-            appId: "1:394738141831:web:a0cd5b9d0227267b248622",
-        };
+const firebaseConfig = {
+    apiKey: "AIzaSyA-NyzpyeUgA8ElI9-isZJNMBiCP76BYhs",
+    authDomain: "fleurdepau-1ce7d.firebaseapp.com",
+    projectId: "fleurdepau-1ce7d",
+    storageBucket: "fleurdepau-1ce7d.appspot.com",
+    messagingSenderId: "394738141831",
+    appId: "1:394738141831:web:a0cd5b9d0227267b248622",
+};
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
+// Vérifiez si la connexion Firebase fonctionne
+console.log("Firebase app initialized", app);
+
+    
         const produitsDiv = document.getElementById('produits');
-
+        const modal = document.getElementById('modal');
+        const modalImg = document.getElementById('modal-img');
+        const closeModal = document.querySelector(".close");
+    
         // Fonction pour afficher les produits
         onSnapshot(collection(db, "porte clé"), (snapshot) => {
-            produitsDiv.innerHTML = "";
-            snapshot.forEach((doc) => {
-                const produit = doc.data();
-                const produitElement = document.createElement('div');
-                produitElement.classList.add('produit');
-                produitElement.innerHTML = `
-                    <img src="${produit.imageUrl}" alt="${produit.nom}" class="produit-img" />
-                    <h3>${produit.nom}</h3>
-                    <p>${produit.description}</p>
-                    <div class="prix">${produit.prix}€</div>
-                    <button class="add-to-cart">Ajouter au panier</button>
-                `;
-
-                const modal = document.getElementById('modal');
-                const modalImg = document.getElementById('modal-img');
-                const img = produitElement.querySelector('.produit-img');
-
-                img.onclick = function () {
-                    modal.style.display = "block";
-                    modalImg.src = produit.imageUrl;
-                };
-
-                document.querySelector(".close").onclick = function () {
-                    modal.style.display = "none";
-                };
-
-                produitsDiv.appendChild(produitElement);
+            console.log("Snapshot received", snapshot);  // Vérifie si le snapshot est bien reçu
+            produitsDiv.innerHTML = ""; // Réinitialiser la div à chaque snapshot
+            if (snapshot.empty) {
+                console.log("La collection est vide !");
+                produitsDiv.innerHTML = "<p>Pas de produits disponibles.</p>";
+            } else {
+                snapshot.forEach((doc) => {
+                    const produit = doc.data();
+                    const produitElement = document.createElement('div');
+                    produitElement.classList.add('produit');
+                    produitElement.innerHTML = `
+                        <img src="${produit.imageUrl}" alt="${produit.nom}" class="produit-img" />
+                        <h3>${produit.nom}</h3>
+                        <p>${produit.description}</p>
+                        <div class="prix">${produit.prix}€</div>
+                        <button class="add-to-cart">Ajouter au panier</button>
+                    `;
+            
+                    // Écouteur d'événement pour ouvrir le modal à l'image du produit
+                    const img = produitElement.querySelector('.produit-img');
+                    img.onclick = function () {
+                        modal.style.display = "block";
+                        modalImg.src = produit.imageUrl;
+                    };
+        
+                    produitsDiv.appendChild(produitElement);
+                });
+            }
+        }, (error) => {
+            console.error("Erreur de récupération des produits Firestore: ", error);
+            produitsDiv.innerHTML = "<p>Erreur de chargement des produits. Veuillez réessayer plus tard.</p>";
+        });
+        
+    
+        // Fermeture du modal
+        closeModal.onclick = function () {
+            modal.style.display = "none";
+        };
+    </script>
+    
+    <script>
+        // Attendre que le DOM soit entièrement chargé
+        document.addEventListener("DOMContentLoaded", function () {
+            const boutiqueLink = document.getElementById("boutique-link");
+            const submenuContainer = document.getElementById("submenu-container");
+    
+            // Par défaut, cacher le sous-menu
+            submenuContainer.style.display = "none";
+    
+            // Ajouter un événement pour afficher/masquer les sous-menus lorsque "Boutique" est cliqué
+            boutiqueLink.addEventListener("click", function (event) {
+                event.preventDefault(); // Empêcher le comportement de lien par défaut
+    
+                // Vérifier si le sous-menu est déjà visible ou non
+                if (submenuContainer.style.display === "none") {
+                    // Afficher le sous-menu
+                    submenuContainer.style.display = "block";
+                } else {
+                    // Cacher le sous-menu
+                    submenuContainer.style.display = "none";
+                }
             });
         });
     </script>
-    <script>
-        // Attendre que le DOM soit entièrement chargé
- document.addEventListener("DOMContentLoaded", function() {
-     const boutiqueLink = document.getElementById("boutique-link");
-     const submenuContainer = document.getElementById("submenu-container");
- 
-     // Par défaut, cacher le sous-menu
-     submenuContainer.style.display = "none";
- 
-     // Ajouter un événement pour afficher/masquer les sous-menus lorsque "Boutique" est cliqué
-     boutiqueLink.addEventListener("click", function(event) {
-         event.preventDefault(); // Empêcher le comportement de lien par défaut
- 
-         // Vérifier si le sous-menu est déjà visible ou non
-         if (submenuContainer.style.display === "none") {
-             // Afficher le sous-menu
-             submenuContainer.style.display = "block";
-         } else {
-             // Cacher le sous-menu
-             submenuContainer.style.display = "none";
-         }
-     });
- });
- 
-     </script>
+    
 </body>
 
 </html>
