@@ -347,31 +347,82 @@
             snapshot.forEach((doc) => {
                 const produit = doc.data();
                 const produitElement = document.createElement('div');
+        
+                // Récupérer les couleurs et les stocks
+                const couleurs = produit.couleurs.map(couleur => {
+                    return `${couleur.couleur} (${couleur.stock} en stock)`;
+                }).join(", ");
+        
+                // Créer un sélecteur de couleur
+                const couleurSelect = document.createElement('select');
+                produit.couleurs.forEach(couleur => {
+                    const option = document.createElement('option');
+                    option.value = couleur.couleur;
+                    option.textContent = `${couleur.couleur} (${couleur.stock} en stock)`;
+                    couleurSelect.appendChild(option);
+                });
+        
                 produitElement.classList.add('produit');
                 produitElement.innerHTML = `
                     <img src="${produit.imageUrl}" alt="${produit.nom}" class="produit-img" />
                     <h3>${produit.nom}</h3>
                     <p>${produit.description}</p>
-                    <div class="prix">${produit.prix}€</div>
-                    <button class="add-to-cart">Ajouter au panier</button>
+                    <p><strong>Couleurs disponibles :</strong> </p>
                 `;
-
+                
+                produitElement.appendChild(couleurSelect); // Ajouter le sélecteur de couleur
+                
+                const prixElement = document.createElement('div');
+                prixElement.classList.add('prix');
+                prixElement.textContent = `${produit.prix}€`;
+                produitElement.appendChild(prixElement);
+        
+                // Ajouter le bouton "Ajouter au panier"
+                const addToCartButton = document.createElement('button');
+                addToCartButton.classList.add('add-to-cart');
+                addToCartButton.textContent = "Ajouter au panier";
+                produitElement.appendChild(addToCartButton);
+        
+                // Gérer l'ajout au panier
+                addToCartButton.onclick = function () {
+                    const selectedCouleur = couleurSelect.value; // Récupérer la couleur sélectionnée
+                    const couleurChoisie = produit.couleurs.find(couleur => couleur.couleur === selectedCouleur);
+                    
+                    // Ajouter le produit sélectionné au panier (dans localStorage)
+                    const panier = JSON.parse(localStorage.getItem('panier')) || []; // Récupérer le panier actuel ou créer un tableau vide
+                    
+                    const produitDansPanier = {
+                        nom: produit.nom,
+                        prix: produit.prix,
+                        couleur: couleurChoisie.couleur,
+                        stock: couleurChoisie.stock,
+                        imageUrl: produit.imageUrl,
+                        description: produit.description
+                    };
+        
+                    panier.push(produitDansPanier);
+                    localStorage.setItem('panier', JSON.stringify(panier)); // Sauvegarder le panier mis à jour dans localStorage
+        
+                    alert(`Produit ajouté au panier: ${produit.nom} - Couleur: ${couleurChoisie.couleur}`);
+                };
+        
                 const modal = document.getElementById('modal');
                 const modalImg = document.getElementById('modal-img');
                 const img = produitElement.querySelector('.produit-img');
-
+        
                 img.onclick = function () {
                     modal.style.display = "block";
                     modalImg.src = produit.imageUrl;
                 };
-
+        
                 document.querySelector(".close").onclick = function () {
                     modal.style.display = "none";
                 };
-
+        
                 produitsDiv.appendChild(produitElement);
             });
         });
+                
     </script>
     <script>
         // Attendre que le DOM soit entièrement chargé
