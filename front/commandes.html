@@ -131,22 +131,36 @@
                 commandesSnapshot.forEach((docSnapshot) => {
                     const data = docSnapshot.data();
                     const pointRelais = data.point_relais || {}; // Récupération du point relais
-        
+                    const produits = data.produits || []; // Récupération des produits de la commande
+                
                     const commandeCard = document.createElement('div');
                     commandeCard.classList.add('commande-card');
-        
+                
+                    let produitsHtml = "";
+                    produits.forEach((produit) => {
+                        produitsHtml += `
+                            <p><strong>Produit :</strong> ${produit.nom} (Couleur: ${produit.couleur})</p>
+                            <p><strong>Quantité :</strong> ${produit.quantite}</p>
+                            <p><strong>Prix :</strong> ${produit.prix}€</p>
+                            <hr />
+                        `;
+                    });
+                
                     commandeCard.innerHTML = `
                         <h3>Commande #${docSnapshot.id}</h3>
                         <p><strong>Client :</strong> ${data.nom}</p>
                         <p><strong>E-mail :</strong> ${data.email}</p>
                         <p><strong>Téléphone :</strong> ${data.telephone}</p>
-        
+                
                         <h4>📦 Point Relais</h4>
                         <p><strong>Nom :</strong> ${pointRelais.Nom || "Non spécifié"}</p>
                         <p><strong>Adresse :</strong> ${pointRelais.Adresse1 || "Non spécifiée"}</p>
                         <p><strong>Code Postal :</strong> ${pointRelais.CP || "Non spécifié"}</p>
                         <p><strong>Ville :</strong> ${pointRelais.Ville || "Non spécifiée"}</p>
-        
+                
+                        <h4>🛍️ Produits Commandés</h4>
+                        ${produitsHtml}
+                
                         <p><strong>Statut :</strong> ${data.statut}</p>
                         <p><strong>Payée :</strong> ${data.payée ? 'Oui' : 'Non'}</p>
                         <button class="btn statut-btn" data-id="${docSnapshot.id}" data-statut="${data.statut}">
@@ -156,9 +170,9 @@
                             Archiver
                         </button>
                     `;
-        
+                
                     commandesContainer.appendChild(commandeCard);
-                });
+                });                
         
                 // Ajouter les événements aux boutons après le chargement des commandes
                 document.querySelectorAll('.statut-btn').forEach(button => {
